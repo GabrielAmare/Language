@@ -1,2 +1,4 @@
 *.bat
 !setup.bat
+!test.bat
+*.pyc
