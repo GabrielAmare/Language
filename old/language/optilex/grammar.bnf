@@ -1,0 +1,33 @@
+string INDENT '    ' ignore
+regex Integer '\-?\d+'
+regex Variable '[a-zA-Z_]\w*'
+regex String '\"(?:\\\"|[^\"])*?\"|\'(?:\\\'|[^\'])*?\''
+regex WHITESPACE '\s+' ignore
+
+alias  S  := $' '
+alias  N  := $'\n'
+alias  AS := <S> '&' <S>
+alias  ColS := ':' <S>
+
+branch Include := 'INCLUDE'
+branch Inverted := 'NOT'
+branch Clear := 'CLEAR'
+
+alias  IncludeAL := <S> <Include as include_>
+alias  BuildAL   := <S> 'BUILD' '(' <Variable as build> ')'
+alias  GotoAL    := <S> 'GOTO' '(' <Integer as goto> ')'
+alias  ClearAL   := <S> <Clear as clear>
+
+alias  DefaultAL := <N> 'DEFAULT' <ColS> <ActionList as default>
+
+branch Action       := ?<IncludeAL> ?<BuildAL> ?<GotoAL> ?<ClearAL>
+branch ActionList   := <AS>..<Action in items>
+branch Charset      := ?<Inverted as inverted> <String as items>
+branch Outcome      := <N> <Charset as charset> <ColS> <ActionList as actions>
+branch Block '    ' := *<Outcome in outcomes> ?<DefaultAL>
+branch GroupSelect  := <Integer as origin> <S> '{' <Block as block> <N> '}'
+branch OriginSelect := <N>.<GroupSelect in cases>
+
+group All := ActionList | Action | Charset | Outcome | Block | GroupSelect | OriginSelect | Include | Inverted | Clear | Integer | Variable | String
+
+>OriginSelect

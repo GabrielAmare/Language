@@ -1,0 +1,31 @@
+# conventions used throughout the language package.
+# TODO : split rules in categories. (i.e. Modules / General / Structure / ...)
+
+1 - The main language is english.
+2 - Modules must be named using snake case (no capital letters & underscore separator).
+3 - Every function/method should have a docstring.
+4 - Every sentence (comments/documentation/...) must end with a dot.
+5 - Prefer code that can be analyzed easily by the tools in place.
+5.1 - But create a to-do annotation containing a more readable/optimized code for further upgrades.
+6 - Scoping is important at all levels (Package/Module/Functions), put together things that do/represent similar things.
+7 - Typing is required as much as possible.
+8 - Constants must be named in 'Screaming Snake Case' [1].
+9 - Follow as much as possible/known the PEP-8 style guide [2].
+10 - Apply the Single Responsibility Principle [3].
+11 - Apply a strategy of micro-commit as much as possible.
+# TODO : specify precisely the canonical form.
+12 - Write you code in canonical form (Ctrl+Alt+L & Ctrl+Alt+O on PyCharm).
+13 - Be a Grammar Nazi, as things are already complicated enough.
+
+
+references :
+    [1] name the variables -> https://doc.rust-lang.org/1.0.0/style/style/naming/README.html
+    [2] style guide for python code -> https://peps.python.org/pep-0008/
+    [3] S.O.L.I.D -> https://www.youtube.com/watch?v=pTB30aXS77U
+
+
+General references :
+    -> https://www.youtube.com/c/ContinuousDelivery
+    -> https://www.youtube.com/c/ArjanCodes
+    -> https://www.youtube.com/c/UnderscoreTalk
+    -> https://www.youtube.com/c/WebDevSimplified

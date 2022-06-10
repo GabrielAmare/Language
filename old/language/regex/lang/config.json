@@ -1,0 +1,9 @@
+{
+  "lang": "regex",
+  "version": "1.0.0",
+  "engine": {
+    "lang": "bnf",
+    "version": "1.0.0"
+  },
+  "changelog": ""
+}

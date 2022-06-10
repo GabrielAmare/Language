@@ -1,0 +1,31 @@
+regex Integer '\d+'
+regex Variable '[a-zA-Z]\w*'
+regex WHITESPACE '\s+' ignore
+
+alias  S := $' '
+alias  CS := ',' <S>
+
+branch BlocP := '(' <Expr as item> ')'
+group  Atom  := BlocP | Integer | Variable
+
+branch Attribution  := <Primary as obj> '.' <Variable as key>
+branch Subscription := <Primary as obj> '[' <Expr as expr> ']'
+branch Call         := <Primary as obj> '(' <CS>.<Expr in args> ')'
+group  Primary      := Attribution | Subscription | Call | Atom
+
+branch Pow    := <Primary as left> <S> '**' <S> <Factor as right>
+group  Power  := Pow | Primary
+
+branch UAdd   := '+' <Factor as right>
+branch USub   := '-' <Factor as right>
+group  Factor := UAdd | USub | Power
+
+branch Mul    := <Term as left> <S> '*' <S> <Factor as right>
+branch Div    := <Term as left> <S> '/' <S> <Factor as right>
+group  Term   := Mul | Div | Factor
+
+branch Add    := <Expr as left> <S> '+' <S> <Term as right>
+branch Sub    := <Expr as left> <S> '-' <S> <Term as right>
+group  Expr   := Add | Sub | Term
+
+> Expr

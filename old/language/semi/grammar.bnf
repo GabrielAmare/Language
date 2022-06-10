@@ -1,0 +1,40 @@
+regex  Variable '[a-zA-Z_]\w+'
+regex  Integer '\d+'
+regex  String '\".*?\"'
+regex  WHITESPACE '\s+' ignore
+string SPACE ' ' ignore
+
+branch Inverted := '~'
+branch Include  := '+'
+branch Ignore   := 'ignore'
+branch Group    := ?<Inverted as inverted> <String as items>
+
+branch Valid    := 'VALID'
+branch Excluded := 'EXCLUDED'
+branch Error    := 'ERROR'
+group  EmptyGR  := Valid | Excluded | Error
+
+branch Match := <Group as group_>
+group  MatchGR := Match | EmptyGR
+
+branch Grouping   := '[' <ParallelGR as rule> ']'
+group  GroupingGR := Grouping | MatchGR
+
+branch Repeat     := '{' ?<Integer as mn> ',' ?<Integer as mx> '}' <GroupingGR as rule>
+group  RepeatGR   := Repeat | GroupingGR
+
+branch Sequence   := $' '..<RepeatGR in rules>
+group  SequenceGR := Sequence | RepeatGR
+
+branch Parallel   := [$' ' '|' $' ']..<SequenceGR in rules>
+group  ParallelGR := Parallel | SequenceGR
+
+branch Branch    := <Variable as type> ?['[' <Integer as priority> ']'] ?[$' ' <Ignore as ignore_>] $' ' <ParallelGR as rule>
+branch BranchSet := '\n'.<Branch in branches>
+group  BranchGR  := BranchSet | Branch
+
+group  Buildable := BranchGR | ParallelGR
+
+group  AllGR := Buildable | Group | Ignore | Include | Inverted | Integer | String | Variable
+
+>BranchSet

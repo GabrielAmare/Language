@@ -1,0 +1,6 @@
+regex   String '\".*?\"|\'.*?\''
+regex   Integer '\-?\d+'
+regex   Variable '[a-zA-Z_]\w*'
+regex   MetaVariable '\$[a-zA-Z_]\w*'
+regex   WHITESPACE '\s+' ignore
+regex   COMMENT '#.*' ignore

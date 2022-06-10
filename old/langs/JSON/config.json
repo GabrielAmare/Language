@@ -1,0 +1,13 @@
+{
+  "lang": "json",
+  "src": {
+    "grammar": "grammar.bnf"
+  },
+  "dst": {
+    "root": "lang",
+    "reader": "reader.py",
+    "models": "models.py",
+    "engine": "engine.py",
+    "grammar": "grammar.bnf"
+  }
+}

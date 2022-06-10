@@ -1,0 +1,15 @@
+branch ExprEnum := <CS>.<Expression in items>
+group  Returnable := Expression | ExprEnum
+
+branch NamedArgument := <Variable as name> '=' <Expression as expr>  # TODO : renamed attribute expr to value, then use the alias DefaultValue
+branch SArgument := '*' <Expression as expr>
+branch SSArgument := '**' <Expression as expr>
+group  CallArgumentGR := NamedArgument | SArgument | SSArgument | Expression
+
+branch Except := <N> 'except' <S> <Expression as error> ?[<S> 'as' <S> <Variable as as_>] ':' <Block as block>
+
+branch Module := <N>.<Statement in statements>
+
+group  CodeGR := DottedAsName | EmptyLine | ForIfClause | Args | ImportFromTargets | ImportRelative | StarTargetsGR | SliceGR | IndentedCallBody | Decorator | WithItem | Alias | EmptyLine | CallArgumentGR | DefArgumentGR | Module | Statement | Block | ElseGR | DictItem | ImportPath | Except | Returnable | IndentedExprEnum
+
+>Module

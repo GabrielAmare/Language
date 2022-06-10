@@ -1,0 +1,14 @@
+{
+  "src": {
+    "grammar": "grammar.bnf",
+    "imports": []
+  },
+  "dst": {
+    "root": "lang",
+    "reader": true,
+    "models": true,
+    "engine": true,
+    "grammar": true,
+    "config": true
+  }
+}

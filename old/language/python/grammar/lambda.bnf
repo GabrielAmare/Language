@@ -1,0 +1,27 @@
+# TODO : implement LambdaDef
+branch LambdaDef := '$' #'lambda' <S> ?<LambdaParams as params> ':' <S> <Expression as expr>
+
+#branch LambdaParams1 := <LambdaSlashNoDefault> *<LambdaParamNoDefault> *<LambdaParamWithDefault> ?<LambdaStarEtc>
+#branch LambdaParams2 := <LambdaSlashWithDefault> *<LambdaParamWithDefault> ?<LambdaStarEtc>
+#branch LambdaParams3 := +<LambdaParamNoDefault> *<LambdaParamWithDefault> ?<LambdaStarEtc>
+#branch LambdaParams4 := +<LambdaParamWithDefault> ?<LambdaStarEtc>
+#branch LambdaParams5 := <LambdaStarEtc>
+#group  LambdaParams  := LambdaParams1 | LambdaParams2 | LambdaParams3 | LambdaParams4 | LambdaParams5
+
+#branch LambdaSlashNoDefault1 := +<LambdaParamNoDefault> <SlashComma>
+#branch LambdaSlashNoDefault2 := +<LambdaParamNoDefault> <SlashColon>
+#group  LambdaSlashNoDefault  := LambdaSlashNoDefault1 | LambdaSlashNoDefault2
+
+#branch LambdaSlashWithDefault1 := *<LambdaParamNoDefault> +<LambdaParamWithDefault> <SlashComma>
+#branch LambdaSlashWithDefault2 := *<LambdaParamNoDefault> +<LambdaParamWithDefault> <SlashColon>
+#group  LambdaSlashWithDefault  := LambdaSlashWithDefault1 | LambdaSlashWithDefault2
+
+#branch LambdaStarEtc1 := '*' <LambdaParamNoDefault> *<LambdaParamMaybeDefault> ?<LambdaKeywords>
+#branch LambdaStarEtc2 := '*' ',' +<LambdaParamMaybeDefault> ?<LambdaKeywords>
+#branch LambdaKeywords := '**' <LambdaParamNoDefault>
+#group  LambdaStarEtc  := LambdaStarEtc1 | LambdaStarEtc2 | LambdaKeywords
+
+#branch LambdaParamNoDefault := <Variable as name> <CommaOrColon>
+
+#branch LambdaParamWithDefault  := <Variable as name> <DefaultValue> <CommaOrColon>
+#branch LambdaParamMaybeDefault := <Variable as name> ?<DefaultValue> <CommaOrColon>

@@ -1,0 +1,14 @@
+{
+  "lang": "test_processor_recursion",
+  "src": {
+    "grammar": "grammar.bnf",
+    "imports": []
+  },
+  "dst": {
+    "root": "lang",
+    "reader": "reader.py",
+    "models": "models.py",
+    "engine": "engine.py",
+    "grammar": "grammar.bnf"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "lang": "semi",
+  "src": {
+    "grammar": "grammar.bnf",
+    "imports": [
+      "imports/groups.py",
+      "imports/serializers.py",
+      "imports/constructors.py",
+      "imports/processing.py",
+      "imports/constants.py",
+      "imports/from_regex.py",
+      "imports/from_bnf.py",
+      "imports/to_optilex.py"
+    ]
+  },
+  "options": {
+    "remove-comments": true,
+    "remove-double-newline": true,
+    "remove-trailing-newline": true,
+    "force-newline-after-group": true,
+    "align-definitions": true,
+    "models-annotations": true,
+    "models-str": true,
+    "models-parse": false,
+    "models-dataclass": true,
+    "models-dataclass-frozen": true,
+    "models-dataclass-order": true
+  },
+  "dst": {
+    "root": "lang",
+    "reader": true,
+    "models": true,
+    "engine": true,
+    "grammar": true,
+    "config": true
+  }
+}

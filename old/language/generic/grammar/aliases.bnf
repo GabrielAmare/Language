@@ -1,0 +1,9 @@
+alias S := $' '
+alias N := '\n'
+alias CS := ',' <S>
+
+alias  SubScope        := <S> '{' <Block as block> <N> '}'
+alias  Condition       := <S> '(' <Expression as test> ')'
+alias  Iterable        := <S> 'in' <S> <Expression as iterable>
+alias  ExpressionValue := <S> <Expression as value>
+alias  DuckType        := ':' <S> <Expression as type>

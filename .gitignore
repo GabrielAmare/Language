@@ -2,3 +2,21 @@
 !setup.bat
 !test.bat
 *.pyc
+
+__ag__*
+§*
+§*/
+
+# Ignore the auto-generated lang directories in langs.
+old/langs/*/lang/
+
+# Ignore the non-required langs
+old/language/shell/lang/
+
+# Ignore the auto-generated files in language.
+old/language/bnf/lang/grammar.bnf
+old/language/python/lang/grammar.bnf
+old/language/regex/lang/grammar.bnf
+
+/old/language/update_language.py
+*.xml

@@ -1,0 +1,51 @@
+branch FalseClass   := 'false'
+branch TrueClass    := 'true'
+branch NullClass    := 'null'
+group  Constant     := FalseClass | TrueClass | NullClass
+
+branch Paren        := '(' <Expression as expr> ')'
+group  AtomGR       := Paren | Variable | String | Integer | Constant
+
+branch DictItem     := <Primary as key> ':' <RExpr>
+branch Dict         := '{' <CS>.<DictItem in items> '}'
+branch List         := '[' <CS>.<Expression in items> ']'
+branch GetAttr      := <Primary as left> '.' <Variable as right>
+branch Call         := <Primary as left> '(' <CallArgs as args> ')'
+branch NewObject    := 'new' <S> <Variable as name> '(' <CallArgs as args> ')'
+group  Primary      := GetAttr | Call | Dict | List | NewObject | AtomGR
+
+branch Pow          := <Primary as left> <S> '**' <S> <Factor as right>
+group  Power        := Pow | Primary
+
+branch Pos          := '+' <Factor as obj>
+branch Neg          := '-' <Factor as obj>
+group  Factor       := Pos | Neg | Power
+
+branch Mul          := <Term as left> <S> '*' <S> <Factor as right>
+branch Div          := <Term as left> <S> '/' <S> <Factor as right>
+group  Term         := Mul | Div | Factor
+
+branch Add          := <Sum as left> <S> '+' <S> <Term as right>
+branch Sub          := <Sum as left> <S> '-' <S> <Term as right>
+group  Sum          := Add | Sub | Term
+
+branch Eq           := <LExpr> '==' <RExpr>
+branch EqStrong     := <LExpr> '===' <RExpr>
+branch Ne           := <LExpr> '!=' <RExpr>
+branch Lt           := <LExpr> '<' <RExpr>
+branch Le           := <LExpr> '<=' <RExpr>
+branch Gt           := <LExpr> '>' <RExpr>
+branch Ge           := <LExpr> '>=' <RExpr>
+branch InstanceOf   := <LExpr> 'instanceof' <RExpr>
+group  Comparison   := Eq | EqStrong | Ne | Lt | Le | Gt | Ge | InstanceOf | Sum
+
+branch Not          := '!' <Inversion as right>
+group  Inversion    := Not | Comparison
+
+branch And          := <Conjunction as left> <S> '&&' <S> <Inversion as right>
+group  Conjunction  := And | Inversion
+
+branch Or           := <Disjunction as left> <S> '||' <S> <Conjunction as right>
+group  Disjunction  := Or | Conjunction
+
+group  Expression   := Disjunction

@@ -1,0 +1,34 @@
+#group  ImportStmt   := ImportName | ImportFrom
+#branch ImportName   := 'import' ','.<DottedAsName>
+#branch DottedAsName := <DottedName as name> ?<AsName>
+
+#branch ImportFrom1 := 'from' *<ImportRelative in relatives> <DottedName> 'import' <ImportFromTargets>
+#branch ImportFrom2 := 'from' +<ImportRelative in relatives> 'import' <ImportFromTargets>
+#group  ImportFromAlt  := ImportFrom1 | ImportFrom2
+
+#branch ImportFromTargetsC := ','.<ImportFromAsName in names> !','
+#branch ImportFromTargetsP := '(' ','.<ImportFromAsName in names> [','] ')'
+#branch ImportStar         := '*' # to import all
+#group  ImportFromTargets  := ImportFromTargetsP | ImportFromTargetsC | ImportStar
+
+#branch ImportFromAsName   := <Variable as name> ?<AsName> # TODO : alias ?
+#branch DottedName         := '.'.<Variable in vars>
+
+branch Alias              := <Variable as name> ?<AsName>
+branch ImportAliases      := <CS>.<Alias in names> # TODO : rename `AliasList`.
+branch ImportAll          := '*'
+group  ImportFromTargets  := ImportAliases | ImportAll
+
+branch DottedAsName       := '.'.<Variable in names> ?<AsName>
+
+branch ImportFrom         := 'from' <S> <ImportPath as path> <S> 'import' <S> <ImportFromTargets as targets>
+branch Import             := 'import' <S> <CS>.<DottedAsName in targets>
+group  ImportGR           := ImportFrom | Import
+
+branch ImportDot := '.' # for relative paths
+branch ImportEllipsis := '...' # for relative paths (because '...' is matched for Ellipsis)
+group  ImportRelative := ImportDot | ImportEllipsis
+
+branch AbsoluteImportPath := '.'.<Variable in variables>
+branch RelativeImportPath := +<ImportRelative in relatives> '.'.<Variable in variables>
+group  ImportPath         := AbsoluteImportPath | RelativeImportPath
