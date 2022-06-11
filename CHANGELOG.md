@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/GabrielAmare/Language/compare/v0.0.1...HEAD)
 
-###Added
+### Added
 
 - `base/decorators` which implement useful decorators for auto-generation code.
 - `base/models` which implement classes & attributes descriptors
@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `core/langs/bnf` which implement the initial version for
   the [bnf](https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form)-like language package.
 - `core/langs/python` which implement the initial version for the python language package.
+
 ## [0.0.1](https://github.com/GabrielAmare/Language/releases/tag/v0.0.1) - 2022-06-07
 
 ### Added
