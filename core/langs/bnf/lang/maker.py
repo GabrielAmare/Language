@@ -1,7 +1,9 @@
 import dataclasses
 import functools
+import typing
 
 from base.building import builder
+from base.processing import Element
 from .base import Reader
 from .processor import Processor
 from .tokenizer import tokenizer
@@ -10,13 +12,16 @@ __all__ = [
     'Engine'
 ]
 
+R = typing.TypeVar('R')
+
 
 @dataclasses.dataclass
-class Engine:
+class Engine(typing.Generic[R]):
     reader: Reader
     models: object
     single_line_errors: bool = False
     max_repeat_iterations: int = 100
+    custom_build: typing.Callable[[Element], R] | None = None
 
     @functools.cached_property
     def tokenize(self):
@@ -34,10 +39,13 @@ class Engine:
         )
 
     @functools.cached_property
-    def build(self):
-        return builder(self.models)
+    def build(self) -> typing.Callable[[Element], R]:
+        if self.custom_build:
+            return self.custom_build
+        else:
+            return builder(self.models)
 
-    def __call__(self, text: str):
+    def __call__(self, text: str) -> R:
         tok = self.tokenize(text)
         ast = self.process(tok)
         obj = self.build(ast)
