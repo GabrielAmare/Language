@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ###Added
 
-- Implemented `base/decorators` which implement useful decorators for auto-generation code.
-- Implemented `base/models` which implement classes & attributes descriptors
-
+- `base/decorators` which implement useful decorators for auto-generation code.
+- `base/models` which implement classes & attributes descriptors
+- `base/processing` which implement base classes for language processing
 ## [0.0.1](https://github.com/GabrielAmare/Language/releases/tag/v0.0.1) - 2022-06-07
 
 ### Added
