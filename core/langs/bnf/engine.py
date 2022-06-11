@@ -7,7 +7,7 @@ __all__ = [
 
 
 def engine(text: str):
-    from website.language.core.make_engine import make_engine
+    from core.langs.bnf.base_engine import make_engine
     return make_engine(
         reader=reader.simplify(),
         models=models,
