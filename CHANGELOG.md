@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/GabrielAmare/Language/compare/v0.0.1...HEAD)
 
+###Added
+
 - Implemented `base/decorators` which implement useful decorators for auto-generation code.
+- Implemented `base/models` which implement classes & attributes descriptors
 
 ## [0.0.1](https://github.com/GabrielAmare/Language/releases/tag/v0.0.1) - 2022-06-07
 
