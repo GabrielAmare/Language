@@ -11,5 +11,5 @@ engine = Engine(
     models=models,
     single_line_errors=False,
     max_repeat_iterations=100,
-    custom_build=models.Module.parse
+    custom_build=models.ParallelGR.parse
 )

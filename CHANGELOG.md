@@ -11,22 +11,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `base/`
     - `base/decorators` which implement useful decorators for auto-generation code.
-    - `base/models` which implement classes & attributes descriptors
-    - `base/processing` which implement base classes for language processing
+    - `base/models` which implement classes & attributes descriptors.
+    - `base/processing` which implement base classes for language processing.
     - `base/building` which implement the builder function that can construct an object from a `base.processing.Element`
-      object
+      object.
+    - `base/groups` which implement `Charset` class representing a group that can be inverted.
+      <br>
+      <pre>
+        obj = Charset({'x', 'y', 'z'}, inverted=True))
+        # `obj` represent the set of elements that are <strong>not</strong>
+        # in the set {'x', 'y', 'z'}
+      </pre>
 
 - `core/`
     - `core/langs` package which contains all the required langs of the project.
     - `core/langs/bnf` which implement the initial version for
       the [bnf](https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form)-like language package.
     - `core/langs/python` which implement the initial version for the python language package.
-    - simple integrity test for `core/langs/bnf` & `core/langs/python`
+    - `core/langs/regex` which implement the initial version for the regex language package.
+    - simple integrity test for `core/langs/bnf`, `core/langs/python` & `core/langs/regex`.
 
 - `tools/`
     - `graphs` simple implementation for graphs structure.
     - `queries` simple implementation for queries (js like array) syntax.
-    - `console` simple debugging tool to prettify console display
+    - `console` simple debugging tool to prettify console display.
 
 ## [0.0.1](https://github.com/GabrielAmare/Language/releases/tag/v0.0.1) - 2022-06-07
 

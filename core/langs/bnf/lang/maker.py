@@ -4,7 +4,7 @@ import typing
 
 from base.building import builder
 from base.processing import Element
-from .base import Reader
+from .base.models import Reader
 from .processor import Processor
 from .tokenizer import tokenizer
 

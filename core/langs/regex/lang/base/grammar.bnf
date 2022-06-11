@@ -1,0 +1,51 @@
+string[5] AnyDigit '\d'
+string[5] AnyNonDigit '\D'
+string[5] AnyWhitespace '\s'
+string[5] AnyNonWhitespace '\S'
+string[5] AnyWord '\w'
+string[5] AnyNonWord '\W'
+string[4] Dash '-'
+string[4] Dot '.'
+regex[3] Character '.'
+regex[2] Digit '\d'
+regex[1] EscapedCharacter '\\\\.'
+regex[10] WHITESPACE '\s+' ignore
+
+branch Integer     := +<Digit in digits>
+group  CharacterGR := Dot | Dash | Digit | Character
+
+group  AtomGR := AnyDigit | AnyWhitespace | AnyWord | AnyNonDigit | AnyNonWhitespace | AnyNonWord | EscapedCharacter | CharacterGR
+
+
+branch Range  := <CharacterGR as start> <Dash> <CharacterGR as end>
+group  RangeGR := Range | AtomGR
+
+branch GroupInner    := '[' *<RangeGR in items> ']'
+branch GroupInnerNot := '[' '^' *<RangeGR in items> ']'
+group  GroupInnerGR  := GroupInner | GroupInnerNot | AtomGR
+
+branch PositiveLookAhead  := '(' '?' '=' <ParallelGR as rule> ')'
+branch NegativeLookAhead  := '(' '?' '!' <ParallelGR as rule> ')'
+branch PositiveLookBehind := '(' '?' '<' '=' <ParallelGR as rule> ')'
+branch NegativeLookBehind := '(' '?' '<' '!' <ParallelGR as rule> ')'
+branch GroupIgnore        := '(' '?' ':' *<ParallelGR in items> ')'
+branch GroupOuter         := '(' *<ParallelGR in items> ')'
+group  GroupOuterGR       := PositiveLookAhead | NegativeLookAhead | PositiveLookBehind | NegativeLookBehind | GroupIgnore | GroupOuter | GroupInnerGR
+
+branch LazyRepeatStar := <GroupOuterGR as item> '*' '?'
+branch LazyRepeatPlus := <GroupOuterGR as item> '+' '?'
+branch RepeatStar     := <GroupOuterGR as item> '*'
+branch RepeatPlus     := <GroupOuterGR as item> '+'
+branch Repeat         := <GroupOuterGR as item> '{' ?<Integer as mn> ',' ?<Integer as mx> '}'
+branch Optional       := <GroupOuterGR as item> '?'
+group  RepeatGR       := LazyRepeatStar | LazyRepeatPlus | RepeatStar | RepeatPlus | Repeat | Optional | GroupOuterGR
+
+branch Sequence   := {2,}<RepeatGR in items>
+group  SequenceGR := Sequence | RepeatGR
+
+branch Parallel   := '|'..<SequenceGR in items>
+group  ParallelGR := Parallel | SequenceGR
+
+group  AllGR := ParallelGR | Integer
+
+>ParallelGR
