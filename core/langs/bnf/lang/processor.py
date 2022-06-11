@@ -6,7 +6,7 @@ import functools
 import typing
 
 from base.processing import *
-from core.langs.bnf.lang.models import *
+from .base import *
 
 __all__ = [
     'Processor',

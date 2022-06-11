@@ -2,7 +2,7 @@ import re
 from functools import singledispatch
 
 from base.processing import Token
-from core.langs.bnf.lang import *
+from .base import *
 
 
 def tokenizer(lexer: Lexer, make_list: bool = False, single_line_errors: bool = False):

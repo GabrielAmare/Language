@@ -3,7 +3,7 @@ import operator
 
 from base.decorators import *
 from base.models import Descriptor, Attribute
-from core.langs.bnf.lang.models import *
+from core.langs.bnf.lang import *
 
 
 @__property__

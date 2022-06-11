@@ -1,2 +1,2 @@
-from .engine import engine
-from .lang import *
+from core.langs.bnf.lang.engine import engine
+from core.langs.bnf.lang import *

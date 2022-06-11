@@ -1,5 +1,4 @@
-from core.langs.bnf.base_engine.processor import Processor
-from core.langs.bnf.base_engine.tokenizer import tokenizer
+from core.langs.bnf import tokenizer, Processor
 from . import models
 from .reader import reader
 

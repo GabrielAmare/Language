@@ -1,4 +1,4 @@
-from core.langs.bnf.lang.models import *
+from core.langs.bnf.lang import *
 from .patterns import *
 
 __all__ = [

@@ -1,5 +1,5 @@
 """Auto generated module.Any manual changes might be overwritten."""
-from core.langs.bnf.lang.models import *
+from core.langs.bnf.lang.base.models import *
 
 __all__ = [
     'reader'

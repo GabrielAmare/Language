@@ -1,4 +1,4 @@
-from core.langs.bnf.lang.models import *
+from core.langs.bnf.lang import *
 from .lexing import *
 from .parsing import *
 from .patterns import *

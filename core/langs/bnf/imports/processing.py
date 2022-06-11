@@ -1,7 +1,7 @@
 import typing
 
 from base.decorators import *
-from core.langs.bnf.lang.models import *
+from core.langs.bnf.lang import *
 
 
 @__property__

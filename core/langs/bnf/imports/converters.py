@@ -1,5 +1,5 @@
 from base.decorators import *
-from core.langs.bnf.lang.models import *
+from core.langs.bnf.lang import *
 
 
 @__method__
