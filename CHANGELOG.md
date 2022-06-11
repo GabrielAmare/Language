@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `base/decorators` which implement useful decorators for auto-generation code.
 - `base/models` which implement classes & attributes descriptors
 - `base/processing` which implement base classes for language processing
+- `base/building` which implement the builder function that can construct an object from a `base.processing.Element`
+  object
+
 ## [0.0.1](https://github.com/GabrielAmare/Language/releases/tag/v0.0.1) - 2022-06-07
 
 ### Added
