@@ -1,0 +1,17 @@
+########################################################################################################################
+# ALIASES USED THROUGHOUT THE PARSER :
+########################################################################################################################
+
+alias  S            := $' '    # simple space
+alias  N            := $'\n'   # newline
+alias  CS           := ',' <S> # comma then space
+alias  CN           := ',' <N> # comma then newline
+
+alias  SlashComma   := '/' ','
+alias  SlashColon   := '/' ':' # TODO : implement positive lokahead with '&' and turn this to ',' &':'
+alias  CommaOrColon := ',' | ':' # TODO : implement positive lokahead with '&' and turn this to ',' | &':'
+
+alias  DefaultValue := '=' <Expression as value>
+alias  AsName       := <S> 'as' <S> <Variable as as_name>
+
+alias  ForPrefix    := 'for' <S> <StarTargetsGR as target> <S> 'in' <S>

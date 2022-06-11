@@ -1,0 +1,71 @@
+########################################################################################################################
+# EXPRESSIONS :
+# -> Disjunction
+# -> Conjunction
+# -> Inversion
+# -> Comparison
+# -> Bitwise(Or|Xor|And)
+# -> Shift(Left|Right)
+# -> Sum
+# -> Term
+# -> Factor
+# -> Power
+########################################################################################################################
+
+branch Or           := <Disjunction as left> <S> 'or' <S> <Conjunction as right>
+group  Disjunction  := Or | Conjunction
+
+branch And          := <Conjunction as left> <S> 'and' <S> <Inversion as right>
+group  Conjunction  := And | Inversion
+
+branch Not          := 'not' <S> <Inversion as right>
+group  Inversion    := Not | Comparison
+
+alias  ComparisonL  := <Comparison as left> <S>
+alias  ComparisonR  := <S> <BitwiseOrGR as right>
+branch In           := <ComparisonL> 'in' <ComparisonR>
+branch Is           := <ComparisonL> 'is' <ComparisonR>
+branch NotIn        := <ComparisonL> 'not' <S> 'in' <ComparisonR>
+branch IsNot        := <ComparisonL> 'is' <S> 'not' <ComparisonR>
+branch Eq           := <ComparisonL> '==' <ComparisonR>
+branch Ne           := <ComparisonL> '!=' <ComparisonR>
+branch Le           := <ComparisonL> '<=' <ComparisonR>
+branch Lt           := <ComparisonL> '<' <ComparisonR>
+branch Ge           := <ComparisonL> '>=' <ComparisonR>
+branch Gt           := <ComparisonL> '>' <ComparisonR>
+group  Comparison   := NotIn | In | IsNot | Is | Eq | Ne | Le | Lt | Ge | Gt | BitwiseOrGR # TODO : rename Comparison
+
+branch BitwiseOr    := <BitwiseOrGR as left> <S> '|' <S> <BitwiseXorGR as right>
+group  BitwiseOrGR  := BitwiseOr | BitwiseXorGR
+
+branch BitwiseXor   := <BitwiseXorGR as left> <S> '^' <S> <BitwiseAndGR as right>
+group  BitwiseXorGR := BitwiseXor | BitwiseAndGR
+
+branch BitwiseAnd   := <BitwiseAndGR as left> <S> '&' <S> <ShiftExpr as right>
+group  BitwiseAndGR := BitwiseAnd | ShiftExpr
+
+branch LShift       := <ShiftExpr as left> <S> '<<' <S> <Sum as right>
+branch RShift       := <ShiftExpr as left> <S> '>>' <S> <Sum as right>
+group  ShiftExpr    := LShift | RShift | Sum
+
+branch Add          := <Sum as left> <S> '+' <S> <Term as right>
+branch Sub          := <Sum as left> <S> '-' <S> <Term as right>
+group  Sum          := Add | Sub | Term
+
+branch Mul          := <Term as left> <S> '*' <S> <Factor as right>
+branch TrueDiv      := <Term as left> <S> '/' <S> <Factor as right>
+branch FloorDiv     := <Term as left> <S> '//' <S> <Factor as right>
+branch Mod          := <Term as left> <S> '%' <S> <Factor as right>
+branch MatMul       := <Term as left> <S> '@' <S> <Factor as right>
+group  Term         := Mul | TrueDiv | FloorDiv | Mod | MatMul | Factor
+
+branch UAdd         := '+' <Factor as factor>
+branch USub         := '-' <Factor as factor>
+branch Invert       := '~' <Factor as factor>
+group  Factor       := UAdd | USub | Invert | Power
+
+branch Pow          := <Primary as left> <S> '**' <S> <Factor as right>
+group  Power        := Pow | Primary
+
+branch IfExp := <Disjunction as body> <S> 'if' <S> <Disjunction as test> <S> 'else' <S> <Disjunction as or_else>
+group  Expression := IfExp | LambdaDef | Disjunction
