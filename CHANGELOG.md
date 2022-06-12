@@ -30,11 +30,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `core/langs/python` which implement the initial version for the python language package.
     - `core/langs/regex` which implement the initial version for the regex language package.
     - simple integrity test for `core/langs/bnf`, `core/langs/python` & `core/langs/regex`.
-
+    - `core/builder` which implement the lang package generation
+        - `core/builder/loaders` which defines the classes to load files
+        - `core/builder/builders` which defines the classes to build files
+        - `core/builder/options` module which regroup the possible options for build
+        - `core/builder/params` module which regroup the possible params for build (they all have default value)
+        - `core/builder/config` module to handle the lang-package build config file (`config.json` by default)
+        - `core/builder/package` module which the package entry point, implementing the class `LangPackage` which is
+          responsible for the whole package build
 - `tools/`
     - `graphs` simple implementation for graphs structure.
     - `queries` simple implementation for queries (js like array) syntax.
     - `console` simple debugging tool to prettify console display.
+    - `files` functions & classes to manage files.
+    - `style_case` functions to handle string cases (checking & converting)
 
 ## [0.0.1](https://github.com/GabrielAmare/Language/releases/tag/v0.0.1) - 2022-06-07
 

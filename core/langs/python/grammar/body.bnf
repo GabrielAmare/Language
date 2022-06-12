@@ -1,5 +1,5 @@
 branch Block '    ' := *[<N> <Statement in statements>]
-branch Args := <CS>.<Variable in variables>
+branch Args := <CS>.<Primary in variables>
 
 branch Argument           := <Variable as name> ?[':' <S> <Expression as type>] ?[<S> '=' <S> <Expression as default>]
 branch NonKeywordArgument := '*' <Variable as name> ?[':' <S> <Expression as type>]

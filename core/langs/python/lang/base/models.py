@@ -263,9 +263,9 @@ class Alias(CodeGR):
 class Args(CodeGR):
     """
         This class has been generated automatically from the bnf rule :
-        branch Args := <COMMA> $' '.<Variable in variables>
+        branch Args := <COMMA> $' '.<Primary in variables>
     """
-    variables: list[Variable]
+    variables: list[Primary]
 
     @_flat_str
     def __str__(self) -> typing.Iterator[str]:
@@ -286,9 +286,9 @@ class Args(CodeGR):
     @classmethod
     def from_ast(cls, obj: ast.expr) -> Args:
         if isinstance(obj, ast.Tuple):
-            return cls(variables=list(map(Variable.from_ast, obj.elts)))
+            return cls(variables=list(map(Primary.__from_ast__, obj.elts)))
         elif isinstance(obj, ast.Name):
-            return cls(variables=[Variable.from_ast(obj)])
+            return cls(variables=[Primary.__from_ast__(obj)])
         else:
             raise NotImplementedError(ERR_8, obj)
 

@@ -1,6 +1,6 @@
 import unittest
+
 from core.langs import python
-import ast
 
 
 class TestCorePython(unittest.TestCase):
@@ -10,9 +10,7 @@ class TestCorePython(unittest.TestCase):
                "z = x + y\n"
                "print(x, y, z)\n")
 
-        ele = ast.parse(src)
-
-        obj = python.Module.from_ast(ele)
+        obj = python.Module.from_text(src)
 
         self.assertIsInstance(obj, python.Module)
 

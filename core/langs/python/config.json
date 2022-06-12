@@ -23,11 +23,11 @@
     ]
   },
   "options": {
-    "remove-comments": true,
-    "remove-double-newline": true,
-    "remove-trailing-newline": true,
-    "force-newline-after-group": true,
-    "align-definitions": true,
+    "grammar-remove-comments": true,
+    "grammar-remove-double-newline": true,
+    "grammar-remove-trailing-newline": true,
+    "grammar-force-newline-after-group": true,
+    "grammar-align-definitions": true,
     "models-annotations": true,
     "models-str": true,
     "models-parse": true,

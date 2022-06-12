@@ -7,7 +7,7 @@
     ]
   },
   "dst": {
-    "root": "lang",
+    "root": "lang/base",
     "reader": true,
     "models": true,
     "engine": true,

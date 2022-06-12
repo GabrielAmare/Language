@@ -816,10 +816,10 @@ def from_ast(cls: Else.__class__, statements: list[ast.stmt]) -> Else:
 @__class_method__
 def from_ast(cls: Args.__class__, obj: ast.expr) -> Args:
     if isinstance(obj, ast.Tuple):
-        return cls(variables=list(map(Variable.from_ast, obj.elts)))
+        return cls(variables=list(map(Primary.__from_ast__, obj.elts)))
 
     elif isinstance(obj, ast.Name):
-        return cls(variables=[Variable.from_ast(obj)])
+        return cls(variables=[Primary.__from_ast__(obj)])
 
     else:
         raise NotImplementedError(ERR_8, obj)
