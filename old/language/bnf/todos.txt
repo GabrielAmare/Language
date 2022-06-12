@@ -1,2 +1,0 @@
-# TODO : merge Parser & Lexer in Reader with only TopLevel items (PatternGR & BranchGR ).
-# TODO : find a way to turn Variable to str, Integer to int, automatically (maybe with an option)
