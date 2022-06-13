@@ -5,4 +5,5 @@ from .ImportManager import *
 from .ModuleMaker import *
 from .TypeSwitch import *
 from .base import *
+from .functions import *
 from .shortcuts import *
