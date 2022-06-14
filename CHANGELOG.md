@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `console` simple debugging tool to prettify console display.
     - `files` functions & classes to manage files.
     - `style_case` functions to handle string cases (checking & converting)
+    - `flow` package to handle element processing
 
 ## [0.0.1](https://github.com/GabrielAmare/Language/releases/tag/v0.0.1) - 2022-06-07
 
