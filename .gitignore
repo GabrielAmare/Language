@@ -11,3 +11,4 @@ __ag__*
 todo.txt
 
 *.xml
+examples/flow/*.json

@@ -44,7 +44,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `console` simple debugging tool to prettify console display.
     - `files` functions & classes to manage files.
     - `style_case` functions to handle string cases (checking & converting)
-    - `flow` package to handle element processing
+    - `flow/` package to handle element processing
+        - `flow/tokenizer/` package to handle tokenization base on `tools/flow` containing base implementation,
+          proxies (to build tokenizers the easy way), and a model function that does not rely on the `tools/flow`
+          package and is built only with basic algorithmic statements (easy to rewrite the function in a different
+          language). <br><pre>from tools.flow.tokenizer import *
+          <br>tokenizer = Flow()
+          <br>... # define your tokenizer
+          <br>data = tokenizer.data
+          <br>... # save the data into a json file<br></pre>
 
 ## [0.0.1](https://github.com/GabrielAmare/Language/releases/tag/v0.0.1) - 2022-06-07
 
