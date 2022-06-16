@@ -43,9 +43,13 @@ def load_json_file(path: str) -> dict | list:
         return json.load(file)
 
 
-def save_json_file(path: str, data: dict | list, indent: int = None):
+def save_json_file(path: str, data: dict | list | tuple, indent: int = None, compact: bool = False):
+    if compact:
+        separators = (',', ':')
+    else:
+        separators = None
     with open(_force_suffix(path, '.json'), mode='w', encoding='utf-8') as file:
-        json.dump(data, file, indent=indent)
+        json.dump(data, file, indent=indent, separators=separators)
 
 
 @dataclasses.dataclass
