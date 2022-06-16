@@ -19,22 +19,21 @@ export default function makeTokenizer(struct) {
         if (!action) {
           throw new SyntaxError();
         }
-        if (action[0]) { // add
+        if (action[0]) // add
           content += char;
-        }
-        if (action[1]) { // use
-          to++;
+        if (action[1]) // use
+          to++
+        if (action[2]) // use
           char = null;
-        }
-        if (action[2]) { // build
-          if (!omits.includes(action[2])) {
-            let token = {type: action[2], content: content, at: at, to: to};
+        if (action[3]) { // build
+          if (!omits.includes(action[3])) {
+            let token = {type: action[3], content: content, at: at, to: to};
             tokens.push(token)
           }
           content = '';
           at = to;
         }
-        state = action[3];
+        state = action[4];
       }
     }
     return tokens;

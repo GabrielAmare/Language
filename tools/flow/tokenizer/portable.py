@@ -17,26 +17,27 @@ def make_tokenizer_function(struct: FlowData) -> typing.Callable[[str], typing.I
         managers, omits = struct
         for char in text + EOT:
             while char:
-                handlers, default = managers[state]
-                for handler in handlers:
+                manager = managers[state]
+                action = manager[1]
+                for handler in manager[0]:
                     if char in handler[0]:
                         action = handler[1]
                         break
-                else:
-                    if not default:
-                        raise NotImplementedError
-                    action = default
-                add, use, build, state = action
-                if add:
+                if not action:
+                    raise NotImplementedError
+                if action[0]:  # add
                     content += char
-                if use:
+                if action[1]:  # use
                     to += 1
+                if action[2]:  # clr
                     char = None
+                build = action[3]
                 if build:
-                    token = Token(type=build, content=content, at=at, to=to)
-                    content = ''
-                    at = to
                     if token.type not in omits:
                         yield token
+                        token = Token(type=build, content=content, at=at, to=to)
+                    content = ''
+                    at = to
+                state = action[4]
 
     return tokenizer

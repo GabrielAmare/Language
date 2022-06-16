@@ -40,16 +40,19 @@ class Condition(flow.Condition):
 
 @dataclasses.dataclass
 class Action(flow.Action):
-    do: object = NOTHING
-    _build: str | None = None
-    to: int = 0
+    add: bool
+    use: bool
+    clr: bool
+    _build: str | None
+    to: int
 
     def __str__(self) -> str:
         parts = []
-        if self.do is INCLUDE:
-            parts.append("include()")
-        elif self.do is EXCLUDE:
-            parts.append("exclude()")
+        if self.add:
+            parts.append("add()")
+
+        if self.use:
+            parts.append("use()")
 
         if self._build:
             parts.append(f"build({self._build!r})")
@@ -58,12 +61,13 @@ class Action(flow.Action):
         return " -> ".join(parts)
 
     def execute(self, context: Context, element: str) -> tuple[int, str | None]:
-        if self.do is INCLUDE:
+        if self.add:
             context.content += element
+
+        if self.use:
             context.to += 1
-            element = None
-        elif self.do is EXCLUDE:
-            context.to += 1
+
+        if self.clr:
             element = None
 
         if self._build:
@@ -74,30 +78,9 @@ class Action(flow.Action):
 
         return self.to, element
 
-    def include(self) -> Action:
-        self.do = True
-        return self
-
-    def build(self, __type: str) -> Action:
-        self._build = __type
-        return self
-
-    def goto(self, __state: int) -> Action:
-        self.to = __state
-        return self
-
     @property
     def data(self) -> ActionData:
-        if self.do is INCLUDE:
-            add, use = 1, 1
-        elif self.do is EXCLUDE:
-            add, use = 0, 1
-        elif self.do is NOTHING:
-            add, use = 0, 0
-        else:
-            raise NotImplementedError
-
-        return add, use, '' if self._build is None else self._build, self.to
+        return int(self.add), int(self.use), int(self.clr), '' if self._build is None else self._build, self.to
 
 
 @dataclasses.dataclass

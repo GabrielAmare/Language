@@ -6,10 +6,6 @@ __all__ = [
     'VALID',
     'ERROR',
 
-    'INCLUDE',
-    'EXCLUDE',
-    'NOTHING',
-
     'NEW',
     'STAY',
     'ENTRY',
@@ -31,10 +27,6 @@ class NamedConstant:
 EOT = '\0'
 VALID = -1
 ERROR = -2
-
-INCLUDE = NamedConstant('INCLUDE')
-EXCLUDE = NamedConstant('EXCLUDE')
-NOTHING = NamedConstant('NOTHING')
 
 NEW = NamedConstant('NEW')
 STAY = NamedConstant('STAY')
