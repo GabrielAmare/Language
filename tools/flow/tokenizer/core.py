@@ -43,7 +43,8 @@ class Action(flow.Action):
     add: bool
     use: bool
     clr: bool
-    _build: str | None
+    build: str
+    clear: bool
     to: int
 
     def __str__(self) -> str:
@@ -70,9 +71,11 @@ class Action(flow.Action):
         if self.clr:
             element = None
 
-        if self._build:
-            token = Token(type=self._build, content=context.content, at=context.at, to=context.to)
+        if self.build:
+            token = Token(type=self.build, content=context.content, at=context.at, to=context.to)
             context.tokens.append(token)
+
+        if self.clear:
             context.content = ''
             context.at = context.to
 
@@ -80,7 +83,7 @@ class Action(flow.Action):
 
     @property
     def data(self) -> ActionData:
-        return int(self.add), int(self.use), int(self.clr), '' if self._build is None else self._build, self.to
+        return int(self.add), int(self.use), int(self.clr), self.build, self.clear, self.to
 
 
 @dataclasses.dataclass
@@ -129,7 +132,6 @@ def indent(s: str) -> str:
 @dataclasses.dataclass
 class Flow(flow.Flow):
     managers: dict[int, Manager] = dataclasses.field(default_factory=dict)
-    omits: set[str] = dataclasses.field(default_factory=set)
 
     @property
     def states(self) -> list[int]:
@@ -155,16 +157,12 @@ class Flow(flow.Flow):
     def __setitem__(self, state: int, manager: Manager) -> None:
         self.managers[state] = manager
 
-    def omit(self, *types: str) -> None:
-        self.omits = self.omits.union(set(types))
-
     def __call__(self, src: str) -> typing.Iterator[Token]:
         context = Context()
         state = self.run(context, src)
 
         for token in context.tokens:
-            if token.type not in self.omits:
-                yield token
+            yield token
 
         # if state == ERROR:
         #     raise TokenizerError(Token(type='$ERROR', content=context.content, at=context.at, to=context.to))
@@ -174,11 +172,11 @@ class Flow(flow.Flow):
         sizes = set()
         for manager in self.managers.values():
             for handler in manager.handlers:
-                build = handler.action._build
+                build = handler.action.build
                 if isinstance(build, str):
                     sizes.add(len(build))
 
-            build = manager.default._build
+            build = manager.default.build
             if isinstance(build, str):
                 sizes.add(len(build))
 
@@ -201,4 +199,4 @@ class Flow(flow.Flow):
             state += 1
         data.append([[], 0])  # FOR VALID STATE (-1)
         data.append([[], 0])  # FOR ERROR STATE (-2)
-        return data, sorted(self.omits)
+        return data

@@ -1,11 +1,10 @@
-export default function makeTokenizer(struct) {
+export default function makeTokenizer(managers) {
   return function tokenizer(text) {
     let state = 0;
     let content = '';
     let at = 0;
     let to = 0;
     let tokens = [];
-    const [managers, omits] = struct;
     for (let char of text + '\0') {
       while (char !== null) {
         const manager = managers[state];
@@ -23,17 +22,17 @@ export default function makeTokenizer(struct) {
           content += char;
         if (action[1]) // use
           to++
-        if (action[2]) // use
+        if (action[2]) // clr
           char = null;
         if (action[3]) { // build
-          if (!omits.includes(action[3])) {
-            let token = {type: action[3], content: content, at: at, to: to};
-            tokens.push(token)
-          }
+          let token = {type: action[3], content: content, at: at, to: to};
+          tokens.push(token)
+        }
+        if (action[4]) { // clear
           content = '';
           at = to;
         }
-        state = action[4];
+        state = action[5];
       }
     }
     return tokens;

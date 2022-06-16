@@ -8,13 +8,12 @@ __all__ = [
 ]
 
 
-def make_tokenizer_function(struct: FlowData) -> typing.Callable[[str], typing.Iterator[Token]]:
+def make_tokenizer_function(managers: FlowData) -> typing.Callable[[str], typing.Iterator[Token]]:
     def tokenizer(text: str) -> typing.Iterator[Token]:
         state = 0
         content = ''
         at = 0
         to = 0
-        managers, omits = struct
         for char in text + EOT:
             while char:
                 manager = managers[state]
@@ -31,13 +30,12 @@ def make_tokenizer_function(struct: FlowData) -> typing.Callable[[str], typing.I
                     to += 1
                 if action[2]:  # clr
                     char = None
-                build = action[3]
-                if build:
-                    if build not in omits:
-                        token = Token(type=build, content=content, at=at, to=to)
-                        yield token
+                if action[3]:
+                    token = Token(type=action[3], content=content, at=at, to=to)
+                    yield token
+                if action[4]:
                     content = ''
                     at = to
-                state = action[4]
+                state = action[5]
 
     return tokenizer

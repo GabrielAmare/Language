@@ -46,11 +46,11 @@ class ManagerProxyInterface(abc.ABC):
 @dataclasses.dataclass
 class ManagerDefaultProxyInterface(abc.ABC):
     @abc.abstractmethod
-    def success(self, /, *, add=False, use=True, clr=True, build=None) -> None:
+    def success(self, /, *, add=False, use=True, clr=True, build='', clear=False) -> None:
         """"""
 
     @abc.abstractmethod
-    def failure(self, /, *, add=False, use=True, clr=True, build=None) -> None:
+    def failure(self, /, *, add=False, use=True, clr=True, build='', clear=False) -> None:
         """"""
 
     @abc.abstractmethod
@@ -94,32 +94,32 @@ class AbstractManagerProxy:
         if self.state not in self.flow.managers:
             self.flow.managers[self.state] = Manager()
 
-    def _action(self, add: bool, use: bool, clr: bool, build: str | None, to: int | object) -> Action:
+    def _action(self, add: bool, use: bool, clr: bool, build: str, clear: bool, to: int | object) -> Action:
         self.init()
-        return Action(add=add, use=use, clr=clr, _build=build, to=self._state(to))
+        return Action(add=add, use=use, clr=clr, build=build, clear=clear, to=self._state(to))
 
 
 @dataclasses.dataclass
 class ManagerDefaultProxy(AbstractManagerProxy, ManagerDefaultProxyInterface):
-    def _on(self, /, *, add: bool, use: bool, clr: bool, build: str | None, to: int | object) -> ManagerProxy:
-        action = self._action(add, use, clr, build, to)
+    def _on(self, /, *, add: bool, use: bool, clr: bool, build: str, clear: bool, to: int | object) -> ManagerProxy:
+        action = self._action(add, use, clr, build, clear, to)
         self.manager.default = action
         return ManagerProxy(flow=self.flow, state=action.to, entry=self.entry)
 
-    def success(self, /, *, add=False, use=True, clr=True, build=None) -> None:
+    def success(self, /, *, add=False, use=True, clr=True, build=None, clear=False) -> None:
         pass
 
-    def failure(self, /, *, add=False, use=True, clr=True, build=None) -> None:
+    def failure(self, /, *, add=False, use=True, clr=True, build=None, clear=False) -> None:
         pass
 
     def build(self: _I, build: str, /, *, add=False, use=False, clr=False, to=ENTRY) -> ManagerProxy:
-        return self._on(add=add, use=use, clr=clr, to=to, build=build)
+        return self._on(add=add, use=use, clr=clr, to=to, build=build, clear=bool(build))
 
     def match(self: _I, /, *, add=True, use=True, clr=True, to=NEW) -> ManagerProxy:
-        return self._on(add=add, use=use, clr=clr, to=to, build=None)
+        return self._on(add=add, use=use, clr=clr, to=to, build='', clear=False)
 
     def repeat(self: _I, /, *, add=True, use=True, clr=True, build=None) -> ManagerProxy:
-        return self._on(add=add, use=use, clr=clr, build=build, to=STAY)
+        return self._on(add=add, use=use, clr=clr, build=build, clear=bool(build), to=STAY)
 
 
 @dataclasses.dataclass
@@ -138,32 +138,33 @@ class ManagerProxy(AbstractManagerProxy, ManagerProxyInterface):
         if self.state not in self.flow.managers:
             self.flow.managers[self.state] = Manager()
 
-    def _action(self, add: bool, use: bool, clr: bool, build: str | None, to: int | object) -> Action:
+    def _action(self, add: bool, use: bool, clr: bool, build: str, clear: bool, to: int | object) -> Action:
         self.init()
         to = self._state(to)
-        return Action(add=add, use=use, clr=clr, _build=build, to=to)
+        return Action(add=add, use=use, clr=clr, build=build, clear=clear, to=to)
 
-    def _on(self, chars: str, /, *, add: bool, use: bool, clr: bool, build: str | None,
+    def _on(self, chars: str, /, *,
+            add: bool, use: bool, clr: bool,
+            build: str, clear: bool,
             to: int | object) -> ManagerProxy:
-        action = self._action(add, use, clr, build, to)
+        action = self._action(add, use, clr, build, clear, to)
         self.flow.managers[self.state].handlers.append(Handler(Condition(chars), action))
         return ManagerProxy(flow=self.flow, state=action.to, entry=self.entry)
 
-    def success(self, chars: str, /, *, add=False, use=False, clr=True, build=None) -> None:
-        self._on(chars, add=add, use=use, clr=clr, build=build, to=VALID)
+    def success(self, chars: str, /, *, add=False, use=False, clr=True, build='', clear=False) -> None:
+        self._on(chars, add=add, use=use, clr=clr, build=build, clear=clear, to=VALID)
 
-    def failure(self, chars: str, /, *, add=False, use=False, clr=True, build=None) -> None:
-        self._on(chars, add=add, use=use, clr=clr, build=build, to=ERROR)
+    def failure(self, chars: str, /, *, add=False, use=False, clr=True, build='', clear=False) -> None:
+        self._on(chars, add=add, use=use, clr=clr, build=build, clear=clear, to=ERROR)
 
-    def build(self, chars: str, build: str, /, *, add=True, use=True, clr=True,
-              to=ENTRY) -> ManagerProxy:
-        return self._on(chars, add=add, use=use, clr=clr, build=build, to=to)
+    def build(self, chars: str, build: str, /, *, add=True, use=True, clr=True, to=ENTRY) -> ManagerProxy:
+        return self._on(chars, add=add, use=use, clr=clr, build=build, clear=bool(build), to=to)
 
     def match(self, chars: str, /, *, add=True, use=True, clr=True, to=NEW) -> ManagerProxy:
-        return self._on(chars, add=add, use=use, clr=clr, to=to, build=None)
+        return self._on(chars, add=add, use=use, clr=clr, to=to, build='', clear=False)
 
     def repeat(self, chars: str, /, *, add=True, use=True, clr=True, build=None) -> ManagerProxy:
-        return self._on(chars, add=add, use=use, clr=clr, build=build, to=STAY)
+        return self._on(chars, add=add, use=use, clr=clr, build=build, clear=bool(build), to=STAY)
 
     ####################################################################################################################
     # COMPOUNDS
@@ -209,7 +210,7 @@ def finalize(flow: Flow) -> None:
 
     for manager in flow.managers.values():
         if manager.default is None:
-            manager.default = Action(add=True, use=True, clr=True, to=err_1.state, _build=None)
+            manager.default = Action(add=True, use=True, clr=True, to=err_1.state, build='', clear=False)
 
         # if not manager.verify(self.eot()):
         #     condition = Condition(self.eot())

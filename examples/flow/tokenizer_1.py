@@ -24,8 +24,7 @@ start.build('/', 'SLASH')
 start.repeat_plus(string.digits).default.build('Integer')
 
 # whitespace
-start.repeat_plus(string.whitespace).default.build('WHITESPACE')
-flow.omit('WHITESPACE')
+start.repeat_plus(string.whitespace).default.build('')
 
 # once everything is defined, finalize the tokenizer to add default fallback on non-handled cases and error handling.
 finalize(flow)

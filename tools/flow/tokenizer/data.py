@@ -7,7 +7,7 @@ __all__ = [
 ]
 
 ConditionData = str
-ActionData = tuple[int, int, int, str, int]
+ActionData = tuple[int, int, int, str, bool, int]
 HandlerData = tuple[ConditionData, ActionData]
 ManagerData = tuple[list[HandlerData], ActionData | int]
-FlowData = tuple[list[ManagerData], list[str]]
+FlowData = list[ManagerData]
