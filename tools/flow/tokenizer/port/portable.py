@@ -1,6 +1,6 @@
 import typing
 
-from tools.flow.tokenizer.core import FlowData, Token, EOT
+from tools.flow.tokenizer.core import *
 
 __all__ = [
     'make_tokenizer_function'
@@ -9,16 +9,25 @@ __all__ = [
 
 def make_tokenizer_function(managers: FlowData) -> typing.Callable[[str], typing.Iterator[Token]]:
     def tokenizer(text: str) -> typing.Iterator[Token]:
-        state = 0
-        content = ''
-        at = 0
-        to = 0
+        handler: HandlerData
+        action: ActionData
+        default: ActionData | None
+        chars: ConditionData
+        options: int
+        build: str
+        
+        state: int = 0
+        content: str = ''
+        at: int = 0
+        to: int = 0
         for char in text + EOT:
             while char:
-                handlers, action = managers[state]
+                handlers, default = managers[state]
                 for chars, action in handlers:
                     if char in chars:
                         break
+                else:
+                    action = default
                 if not action:
                     raise NotImplementedError
                 options, build = action[0]

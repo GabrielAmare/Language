@@ -37,15 +37,9 @@ class Action(typing.Generic[C, E], AbstractAction[C, E], abc.ABC):
 
 
 @dataclasses.dataclass
-class Handler(typing.Generic[C, E], AbstractCondition[E], AbstractAction[C, E]):
+class Handler(typing.Generic[C, E]):
     condition: Condition[E]
     action: Action[C, E]
-    
-    def verify(self, element: E) -> bool:
-        return self.condition.verify(element)
-    
-    def execute(self, context: C, element: E) -> tuple[int, E | None]:
-        return self.action.execute(context, element)
 
 
 @dataclasses.dataclass
@@ -54,18 +48,13 @@ class Manager(typing.Generic[C, E]):
     default: Action[C, E] | None = None
     
     def verify(self, element: E) -> bool:
-        return any(handler.verify(element) for handler in self.handlers)
+        return any(handler.condition.verify(element) for handler in self.handlers)
     
-    def on(self, context: C, element: E) -> tuple[int, E | None]:
+    def get_action(self, element: E) -> Action[C, E]:
         for handler in self.handlers:
-            if handler.verify(element):
-                return handler.execute(context, element)
-        
-        else:
-            if self.default is None:
-                raise NotImplementedError
-            
-            return self.default.execute(context, element)
+            if handler.condition.verify(element):
+                return handler.action
+        return self.default
 
 
 @dataclasses.dataclass
@@ -78,8 +67,11 @@ class Flow(typing.Generic[C, E], abc.ABC):
     
     def _on(self, state: int, context: C, element: E) -> int:
         while element:
-            manager = self.managers[state]
-            state, element = manager.on(context, element)
+            manager: Manager = self.managers[state]
+            action: Action = manager.get_action(element)
+            if action is None:
+                raise NotImplementedError
+            state, element = action.execute(context, element)
         return state
     
     def run(self, context: C, elements: typing.Iterable[E]) -> int:
