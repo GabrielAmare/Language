@@ -14,18 +14,14 @@ def finalize(flow: Flow) -> None:
     err_1 = Proxy(flow, flow.new_state())
     err_1.failure(EOT, build='~ERROR')
     
-    for manager in flow.managers.values():
+    for state, manager in flow.managers.items():
+        proxy = Proxy(flow, state)
+        
         if manager.default is None:
-            manager.default = Action(ActionParams(add=True, inc=True, clr=True, build='', clear=False), to=err_1.state)
+            proxy.default.match(to=err_1.state)
         
         if not manager.verify(EOT):
-            condition = Condition(EOT)
             if manager.default and manager.default.params.clear:
-                params = ActionParams(add=False, inc=False, clr=True, build=manager.default.params.build, clear=False)
-                action = Action(params, to=VALID)
+                proxy.success(EOT, build=manager.default.params.build, clear=True)
             else:
-                params = ActionParams(add=False, inc=False, clr=True, build='~ERROR', clear=False)
-                action = Action(params, to=ERROR)
-            
-            handler = Handler(condition, action)
-            manager.handlers.append(handler)
+                proxy.failure(EOT, build='~ERROR', clear=True)
