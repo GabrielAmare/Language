@@ -23,46 +23,46 @@ __all__ = [
 @dataclasses.dataclass
 class ManagerProxyInterface(abc.ABC):
     @abc.abstractmethod
-    def success(self, chars: str, /, *, add=False, use=True, clr=True, build=None) -> None:
+    def success(self, chars: str, /, *, add=False, inc=True, clr=True, build=None) -> None:
         """"""
     
     @abc.abstractmethod
-    def failure(self, chars: str, /, *, add=False, use=True, clr=True, build=None) -> None:
+    def failure(self, chars: str, /, *, add=False, inc=True, clr=True, build=None) -> None:
         """"""
     
     @abc.abstractmethod
-    def build(self: _I, chars: str, build: str, /, *, add=True, use=True, clr=True, to=ENTRY) -> _I:
+    def build(self: _I, chars: str, build: str, /, *, add=True, inc=True, clr=True, to=ENTRY) -> _I:
         """"""
     
     @abc.abstractmethod
-    def match(self: _I, chars: str, /, *, add=True, use=True, clr=True, to=NEW) -> _I:
+    def match(self: _I, chars: str, /, *, add=True, inc=True, clr=True, to=NEW) -> _I:
         """"""
     
     @abc.abstractmethod
-    def repeat(self: _I, chars: str, /, *, add=True, use=True, clr=True, build=None) -> _I:
+    def repeat(self: _I, chars: str, /, *, add=True, inc=True, clr=True, build=None) -> _I:
         """"""
 
 
 @dataclasses.dataclass
 class ManagerDefaultProxyInterface(abc.ABC):
     @abc.abstractmethod
-    def success(self, /, *, add=False, use=True, clr=True, build='', clear=False) -> None:
+    def success(self, /, *, add=False, inc=True, clr=True, build='', clear=False) -> None:
         """"""
     
     @abc.abstractmethod
-    def failure(self, /, *, add=False, use=True, clr=True, build='', clear=False) -> None:
+    def failure(self, /, *, add=False, inc=True, clr=True, build='', clear=False) -> None:
         """"""
     
     @abc.abstractmethod
-    def build(self: _I, build: str, /, *, add=False, use=False, to=ENTRY) -> _I:
+    def build(self: _I, build: str, /, *, add=False, inc=False, to=ENTRY) -> _I:
         """"""
     
     @abc.abstractmethod
-    def match(self: _I, /, *, add=True, use=True, clr=True, to=NEW) -> _I:
+    def match(self: _I, /, *, add=True, inc=True, clr=True, to=NEW) -> _I:
         """"""
     
     @abc.abstractmethod
-    def repeat(self: _I, /, *, add=True, use=True, clr=True, build=None) -> _I:
+    def repeat(self: _I, /, *, add=True, inc=True, clr=True, build=None) -> _I:
         """"""
 
 
@@ -106,22 +106,22 @@ class ManagerDefaultProxy(AbstractManagerProxy, ManagerDefaultProxyInterface):
         self.manager.default = action
         return ManagerProxy(flow=self.flow, state=action.to, entry=self.entry)
     
-    def success(self, /, *, add=False, use=True, clr=True, build=None, clear=False) -> None:
+    def success(self, /, *, add=False, inc=True, clr=True, build=None, clear=False) -> None:
         pass
     
-    def failure(self, /, *, add=False, use=True, clr=True, build=None, clear=False) -> None:
+    def failure(self, /, *, add=False, inc=True, clr=True, build=None, clear=False) -> None:
         pass
     
-    def build(self: _I, build: str, /, *, add=False, use=False, clr=False, to=ENTRY) -> ManagerProxy:
-        params = ActionParams(add=add, use=use, clr=clr, build=build, clear=True)
+    def build(self: _I, build: str, /, *, add=False, inc=False, clr=False, to=ENTRY) -> ManagerProxy:
+        params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=True)
         return self._on(params, to)
     
-    def match(self: _I, /, *, add=True, use=True, clr=True, to=NEW) -> ManagerProxy:
-        params = ActionParams(add=add, use=use, clr=clr, build='', clear=False)
+    def match(self: _I, /, *, add=True, inc=True, clr=True, to=NEW) -> ManagerProxy:
+        params = ActionParams(add=add, inc=inc, clr=clr, build='', clear=False)
         return self._on(params, to=to)
     
-    def repeat(self: _I, /, *, add=True, use=True, clr=True, build=None) -> ManagerProxy:
-        params = ActionParams(add=add, use=use, clr=clr, build=build, clear=bool(build))
+    def repeat(self: _I, /, *, add=True, inc=True, clr=True, build=None) -> ManagerProxy:
+        params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=bool(build))
         return self._on(params, to=STAY)
 
 
@@ -179,24 +179,24 @@ class ManagerProxy(AbstractManagerProxy, ManagerProxyInterface):
         self.add_handler(Handler(Condition(chars), action))
         return ManagerProxy(flow=self.flow, state=action.to, entry=self.entry)
     
-    def success(self, chars: str, /, *, add=False, use=False, clr=True, build='', clear=False) -> None:
-        params = ActionParams(add=add, use=use, clr=clr, build=build, clear=clear)
+    def success(self, chars: str, /, *, add=False, inc=False, clr=True, build='', clear=False) -> None:
+        params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=clear)
         self._on(chars, params, to=VALID)
     
-    def failure(self, chars: str, /, *, add=False, use=False, clr=True, build='', clear=False) -> None:
-        params = ActionParams(add=add, use=use, clr=clr, build=build, clear=clear)
+    def failure(self, chars: str, /, *, add=False, inc=False, clr=True, build='', clear=False) -> None:
+        params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=clear)
         self._on(chars, params, to=ERROR)
     
-    def build(self, chars: str, build: str, /, *, add=True, use=True, clr=True, to=ENTRY) -> ManagerProxy:
-        params = ActionParams(add=add, use=use, clr=clr, build=build, clear=True)
+    def build(self, chars: str, build: str, /, *, add=True, inc=True, clr=True, to=ENTRY) -> ManagerProxy:
+        params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=True)
         return self._on(chars, params, to=to)
     
-    def match(self, chars: str, /, *, add=True, use=True, clr=True, to=NEW) -> ManagerProxy:
-        params = ActionParams(add=add, use=use, clr=clr, build='', clear=False)
+    def match(self, chars: str, /, *, add=True, inc=True, clr=True, to=NEW) -> ManagerProxy:
+        params = ActionParams(add=add, inc=inc, clr=clr, build='', clear=False)
         return self._on(chars, params, to=to)
     
-    def repeat(self, chars: str, /, *, add=True, use=True, clr=True, build=None) -> ManagerProxy:
-        params = ActionParams(add=add, use=use, clr=clr, build=build, clear=bool(build))
+    def repeat(self, chars: str, /, *, add=True, inc=True, clr=True, build=None) -> ManagerProxy:
+        params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=bool(build))
         return self._on(chars, params, to=STAY)
     
     ####################################################################################################################
@@ -205,29 +205,29 @@ class ManagerProxy(AbstractManagerProxy, ManagerProxyInterface):
     
     def optional(self, chars: str, /, *, build=None, to=NEW):
         if build is None:
-            self.match(chars, add=True, use=True, clr=True, to=to)
-            return self.default.match(add=False, use=False, to=to)
+            self.match(chars, add=True, inc=True, clr=True, to=to)
+            return self.default.match(add=False, inc=False, to=to)
         else:
-            self.build(chars, build, add=True, use=True, clr=True, to=to)
-            return self.default.build(build, add=False, use=False, to=to)
+            self.build(chars, build, add=True, inc=True, clr=True, to=to)
+            return self.default.build(build, add=False, inc=False, to=to)
     
-    def sequence(self, *seq_chars: str, add=True, use=True, clr=True, build=None, to=None):
+    def sequence(self, *seq_chars: str, add=True, inc=True, clr=True, build=None, to=None):
         cur = self
         
         for chars in seq_chars[:-1]:
-            cur = cur.match(chars, add=add, use=use, clr=clr)
+            cur = cur.match(chars, add=add, inc=inc, clr=clr)
         
         if build is None:
             if to is None:
                 to = NEW
-            return cur.match(seq_chars[-1], add=add, use=use, clr=clr, to=to)
+            return cur.match(seq_chars[-1], add=add, inc=inc, clr=clr, to=to)
         else:
             if to is None:
                 to = ENTRY
-            return cur.build(seq_chars[-1], build, add=add, use=use, clr=clr, to=to)
+            return cur.build(seq_chars[-1], build, add=add, inc=inc, clr=clr, to=to)
     
-    def repeat_plus(self, chars: str, /, *, add=True, use=True, clr=True, build=None) -> ManagerProxy:
-        return self.match(chars).repeat(chars, add=add, use=use, clr=clr, build=build)
+    def repeat_plus(self, chars: str, /, *, add=True, inc=True, clr=True, build=None) -> ManagerProxy:
+        return self.match(chars).repeat(chars, add=add, inc=inc, clr=clr, build=build)
     
     def build_bloc(self, at_chars: str, to_chars: str, build: str, to=ENTRY) -> ManagerProxy:
         return self.match(at_chars).default.repeat().build(to_chars, build, to=to)
@@ -243,15 +243,15 @@ def finalize(flow: Flow) -> None:
     
     for manager in flow.managers.values():
         if manager.default is None:
-            manager.default = Action(ActionParams(add=True, use=True, clr=True, build='', clear=False), to=err_1.state)
+            manager.default = Action(ActionParams(add=True, inc=True, clr=True, build='', clear=False), to=err_1.state)
         
         if not manager.verify(EOT):
             condition = Condition(EOT)
             if manager.default and manager.default.params.clear:
-                params = ActionParams(add=False, use=False, clr=True, build=manager.default.params.build, clear=False)
+                params = ActionParams(add=False, inc=False, clr=True, build=manager.default.params.build, clear=False)
                 action = Action(params, to=VALID)
             else:
-                params = ActionParams(add=False, use=False, clr=True, build='~ERROR', clear=False)
+                params = ActionParams(add=False, inc=False, clr=True, build='~ERROR', clear=False)
                 action = Action(params, to=ERROR)
             
             handler = Handler(condition, action)

@@ -27,7 +27,7 @@ def make_tokenizer_function(managers: FlowData) -> typing.Callable[[str], typing
                 params = action[0]
                 if params[0]:  # add
                     content += char
-                if params[1]:  # use
+                if params[1]:  # inc
                     to += 1
                 if params[2]:  # clr
                     char = None

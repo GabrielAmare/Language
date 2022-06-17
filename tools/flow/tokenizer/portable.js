@@ -21,7 +21,7 @@ export default function makeTokenizer(managers) {
         const params = action[0];
         if (params[0]) // add
           content += char;
-        if (params[1]) // use
+        if (params[1]) // inc
           to++
         if (params[2]) // clr
           char = null;

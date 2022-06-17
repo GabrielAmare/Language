@@ -42,7 +42,7 @@ class Condition(flow.Condition):
 @dataclasses.dataclass
 class ActionParams:
     add: bool  # Add the char to the context content.
-    use: bool  # Increment the index.
+    inc: bool  # Increment the index.
     clr: bool  # Get rid of the element (this will ask a new element).
     build: str  # Build a token with the given type.
     clear: bool  # Clear the context content & move the at cursor to the current index.
@@ -53,8 +53,8 @@ class ActionParams:
         if self.add:
             parts.append("add()")
         
-        if self.use:
-            parts.append("use()")
+        if self.inc:
+            parts.append("inc()")
         
         if self.clr:
             parts.append("clr()")
@@ -71,7 +71,7 @@ class ActionParams:
         if self.add:
             context.content += element
         
-        if self.use:
+        if self.inc:
             context.to += 1
         
         if self.clr:
@@ -89,7 +89,7 @@ class ActionParams:
     
     @property
     def data(self) -> ActionParamsData:
-        return int(self.add), int(self.use), int(self.clr), self.build, self.clear
+        return int(self.add), int(self.inc), int(self.clr), self.build, self.clear
 
 
 @dataclasses.dataclass
