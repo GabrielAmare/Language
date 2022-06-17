@@ -4,9 +4,9 @@ import dataclasses
 import functools
 import typing
 
-from ... import flow
 from .base import *
 from .data import *
+from tools import flow
 
 __all__ = [
     'Condition',
