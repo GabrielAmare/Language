@@ -89,7 +89,7 @@ class ActionParams:
     
     @property
     def data(self) -> ActionParamsData:
-        return int(self.add), int(self.inc), int(self.clr), self.build, int(self.clear)
+        return int(self.add), int(self.inc), int(self.clr), int(self.clear), self.build
 
 
 @dataclasses.dataclass

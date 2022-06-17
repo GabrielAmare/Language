@@ -31,10 +31,10 @@ def make_tokenizer_function(managers: FlowData) -> typing.Callable[[str], typing
                     to += 1
                 if params[2]:  # clr
                     char = None
-                if params[3]:  # build
-                    token = Token(type=params[3], content=content, at=at, to=to)
+                if params[4]:  # build
+                    token = Token(type=params[4], content=content, at=at, to=to)
                     yield token
-                if params[4]:  # clear
+                if params[3]:  # clear
                     content = ''
                     at = to
                 state = action[1]

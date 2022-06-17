@@ -25,11 +25,11 @@ export default function makeTokenizer(managers) {
           to++
         if (params[2]) // clr
           char = null;
-        if (params[3]) { // build
-          let token = {type: params[3], content: content, at: at, to: to};
+        if (params[4]) { // build
+          let token = {type: params[4], content: content, at: at, to: to};
           tokens.push(token)
         }
-        if (params[4]) { // clear
+        if (params[3]) { // clear
           content = '';
           at = to;
         }
