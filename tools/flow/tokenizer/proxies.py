@@ -54,7 +54,7 @@ class ManagerDefaultProxyInterface(abc.ABC):
         """"""
     
     @abc.abstractmethod
-    def build(self: _I, build: str, /, *, add=False, inc=False, to=ENTRY) -> _I:
+    def build(self: _I, build: str, /, *, add=False, inc=False, clr=False, to=ENTRY) -> _I:
         """"""
     
     @abc.abstractmethod
