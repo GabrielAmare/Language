@@ -106,11 +106,13 @@ class ManagerDefaultProxy(AbstractManagerProxy, ManagerDefaultProxyInterface):
         self.manager.default = action
         return ManagerProxy(flow=self.flow, state=action.to, entry=self.entry)
     
-    def success(self, /, *, add=False, inc=True, clr=True, build=None, clear=False) -> None:
-        pass
+    def success(self, /, *, add=False, inc=False, clr=True, build=None, clear=False) -> None:
+        params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=clear)
+        self._on(params, to=VALID)
     
-    def failure(self, /, *, add=False, inc=True, clr=True, build=None, clear=False) -> None:
-        pass
+    def failure(self, /, *, add=False, inc=False, clr=True, build=None, clear=False) -> None:
+        params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=clear)
+        self._on(params, to=ERROR)
     
     def build(self: _I, build: str, /, *, add=False, inc=False, clr=False, to=ENTRY) -> ManagerProxy:
         params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=True)
