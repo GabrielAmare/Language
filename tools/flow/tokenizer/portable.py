@@ -24,18 +24,19 @@ def make_tokenizer_function(managers: FlowData) -> typing.Callable[[str], typing
                         break
                 if not action:
                     raise NotImplementedError
-                if action[0]:  # add
+                params = action[0]
+                if params[0]:  # add
                     content += char
-                if action[1]:  # use
+                if params[1]:  # use
                     to += 1
-                if action[2]:  # clr
+                if params[2]:  # clr
                     char = None
-                if action[3]:
-                    token = Token(type=action[3], content=content, at=at, to=to)
+                if params[3]:  # build
+                    token = Token(type=params[3], content=content, at=at, to=to)
                     yield token
-                if action[4]:
+                if params[4]:  # clear
                     content = ''
                     at = to
-                state = action[5]
+                state = action[1]
     
     return tokenizer

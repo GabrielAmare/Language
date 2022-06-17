@@ -18,21 +18,22 @@ export default function makeTokenizer(managers) {
         if (!action) {
           throw new SyntaxError();
         }
-        if (action[0]) // add
+        const params = action[0];
+        if (params[0]) // add
           content += char;
-        if (action[1]) // use
+        if (params[1]) // use
           to++
-        if (action[2]) // clr
+        if (params[2]) // clr
           char = null;
-        if (action[3]) { // build
-          let token = {type: action[3], content: content, at: at, to: to};
+        if (params[3]) { // build
+          let token = {type: params[3], content: content, at: at, to: to};
           tokens.push(token)
         }
-        if (action[4]) { // clear
+        if (params[4]) { // clear
           content = '';
           at = to;
         }
-        state = action[5];
+        state = action[1];
       }
     }
     return tokens;
