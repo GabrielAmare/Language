@@ -41,11 +41,11 @@ class Condition(flow.Condition):
 
 @dataclasses.dataclass
 class ActionParams:
-    add: bool
-    use: bool
-    clr: bool
-    build: str
-    clear: bool
+    add: bool  # Add the char to the context content.
+    use: bool  # Increment the index.
+    clr: bool  # Get rid of the element (this will ask a new element).
+    build: str  # Build a token with the given type.
+    clear: bool  # Clear the context content & move the at cursor to the current index.
     
     def __str__(self) -> str:
         parts = []
