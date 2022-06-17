@@ -223,6 +223,70 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
+    
+    def test_101(self):
+        """Test combination."""
+        flow = Flow()
+        origin = ManagerProxy(flow, 0)
+        
+        origin.match('x').build('y', 'XY')
+        origin.match('x').build('z', 'XZ')
+        
+        finalize(flow)
+        
+        # Failure (missing second element)
+        self.assertEqual(first=list(flow("x")), second=[
+            Token(type='~ERROR', content='x', at=0, to=1)
+        ], msg="")
+        
+        # Success (first pattern)
+        self.assertEqual(first=list(flow("xy")), second=[
+            Token(type='XY', content='xy', at=0, to=2)
+        ], msg="")
+        
+        # Success (second pattern)
+        self.assertEqual(first=list(flow("xz")), second=[
+            Token(type='XZ', content='xz', at=0, to=2)
+        ], msg="")
+        
+        # Failure (wrong second element)
+        self.assertEqual(first=list(flow("xt")), second=[
+            Token(type='~ERROR', content='xt', at=0, to=2)
+        ], msg="")
+    
+    def test_201(self):
+        """Test the combinining of integer & decimal."""
+        
+        flow = Flow()
+        origin = ManagerProxy(flow, 0)
+        
+        # integer
+        origin.repeat_plus(string.digits).default.build('Integer')
+        
+        # decimal
+        origin.repeat_plus(string.digits).match('.').repeat(string.digits).default.build('Decimal')
+        origin.match('.').repeat_plus(string.digits).default.build('Decimal')
+        
+        finalize(flow)
+        
+        self.assertEqual(first=list(flow("0")), second=[
+            Token(type='Integer', content='0', at=0, to=1)
+        ], msg="")
+        self.assertEqual(first=list(flow("1")), second=[
+            Token(type='Integer', content='1', at=0, to=1)
+        ], msg="")
+        self.assertEqual(first=list(flow("12")), second=[
+            Token(type='Integer', content='12', at=0, to=2)
+        ], msg="")
+        self.assertEqual(first=list(flow("0.1")), second=[
+            Token(type='Decimal', content='0.1', at=0, to=3)
+        ], msg="")
+        self.assertEqual(first=list(flow("0.")), second=[
+            Token(type='Decimal', content='0.', at=0, to=2)
+        ], msg="")
+        self.assertEqual(first=list(flow(".1")), second=[
+            Token(type='Decimal', content='.1', at=0, to=2)
+        ], msg="")
 
 
 if __name__ == '__main__':

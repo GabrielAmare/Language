@@ -113,13 +113,16 @@ class ManagerDefaultProxy(AbstractManagerProxy, ManagerDefaultProxyInterface):
         pass
     
     def build(self: _I, build: str, /, *, add=False, use=False, clr=False, to=ENTRY) -> ManagerProxy:
-        return self._on(add=add, use=use, clr=clr, to=to, build=build, clear=bool(build))
+        params = ActionParams(add=add, use=use, clr=clr, build=build, clear=bool(build))
+        return self._on(params, to)
     
     def match(self: _I, /, *, add=True, use=True, clr=True, to=NEW) -> ManagerProxy:
-        return self._on(add=add, use=use, clr=clr, to=to, build='', clear=False)
+        params = ActionParams(add=add, use=use, clr=clr, build='', clear=False)
+        return self._on(params, to=to)
     
     def repeat(self: _I, /, *, add=True, use=True, clr=True, build=None) -> ManagerProxy:
-        return self._on(add=add, use=use, clr=clr, build=build, clear=bool(build), to=STAY)
+        params = ActionParams(add=add, use=use, clr=clr, build=build, clear=bool(build))
+        return self._on(params, to=STAY)
 
 
 @dataclasses.dataclass
@@ -132,25 +135,32 @@ class ManagerProxy(AbstractManagerProxy, ManagerProxyInterface):
         return ManagerProxy(flow=self.flow, state=self._state(to), entry=self._state(entry))
     
     def add_handler(self, new_handler: Handler) -> None:
-        # for handler in self.flow.managers[self.state].handlers:
-        #     if handler.shadows(new_handler):
-        #         match new_handler:
-        #             case Handler(
-        #                 condition=handler.condition,
-        #                 action=Action(
-        #                     params=handler.action.params,
-        #                     to=to
-        #                 )
-        #             ):
-        #                 if to == handler.action.to:
-        #                     continue
-        #
-        #                 else:
-        #                     print('may be okay with', handler, new_handler, to)
-        #             case _:
-        #                 raise ValueError(f"{handler} is shadowing {new_handler}")
-        
-        self.flow.managers[self.state].handlers.append(new_handler)
+        add = True
+        for handler in self.flow.managers[self.state].handlers:
+            if handler.shadows(new_handler):
+                match new_handler:
+                    case Handler(
+                        condition=handler.condition,
+                        action=Action(
+                            params=handler.action.params,
+                            to=to
+                        )
+                    ):
+                        if to == handler.action.to:
+                            add = False
+                            continue
+                        
+                        if new_handler.action.to not in self.flow.managers:
+                            add = False
+                            new_handler.action.to = handler.action.to
+                            continue
+                        
+                        raise ValueError(f"[2] {handler} is shadowing {new_handler}")
+                    
+                    case _:
+                        raise ValueError(f"[1] {handler} is shadowing {new_handler}")
+        if add:
+            self.flow.managers[self.state].handlers.append(new_handler)
     
     def new(self) -> int:
         return self.flow.new_state()
@@ -235,8 +245,14 @@ def finalize(flow: Flow) -> None:
         if manager.default is None:
             manager.default = Action(ActionParams(add=True, use=True, clr=True, build='', clear=False), to=err_1.state)
         
-        # if not manager.verify(self.eot()):
-        #     condition = Condition(self.eot())
-        #     action = Action(add=False, use=True, clr=True, _build=manager.default._build, to=VALID)
-        #     handler = Handler(condition, action)
-        #     manager.append(handler)
+        if not manager.verify(EOT):
+            condition = Condition(EOT)
+            if manager.default and manager.default.params.build:
+                params = ActionParams(add=False, use=False, clr=True, build=manager.default.params.build, clear=False)
+                action = Action(params, to=VALID)
+            else:
+                params = ActionParams(add=False, use=False, clr=True, build='~ERROR', clear=False)
+                action = Action(params, to=ERROR)
+            
+            handler = Handler(condition, action)
+            manager.handlers.append(handler)
