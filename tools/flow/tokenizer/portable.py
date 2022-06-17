@@ -16,11 +16,9 @@ def make_tokenizer_function(managers: FlowData) -> typing.Callable[[str], typing
         to = 0
         for char in text + EOT:
             while char:
-                manager = managers[state]
-                action = manager[1]
-                for handler in manager[0]:
-                    if char in handler[0]:
-                        action = handler[1]
+                handlers, action = managers[state]
+                for chars, action in handlers:
+                    if char in chars:
                         break
                 if not action:
                     raise NotImplementedError
