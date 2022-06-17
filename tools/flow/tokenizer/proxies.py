@@ -20,11 +20,11 @@ class DefaultProxy(AbstractProxy, DefaultProxyInterface):
         self.manager.default = action
         return Proxy(flow=self.flow, state=action.to, entry=self.entry)
     
-    def success(self, /, *, add=False, inc=False, clr=True, build=None, clear=False) -> None:
+    def success(self, /, *, add=False, inc=False, clr=True, build='', clear=False) -> None:
         params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=clear)
         self._on(params, to=VALID)
     
-    def failure(self, /, *, add=False, inc=False, clr=True, build=None, clear=False) -> None:
+    def failure(self, /, *, add=False, inc=False, clr=True, build='', clear=False) -> None:
         params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=clear)
         self._on(params, to=ERROR)
     
@@ -36,7 +36,7 @@ class DefaultProxy(AbstractProxy, DefaultProxyInterface):
         params = ActionParams(add=add, inc=inc, clr=clr, build='', clear=False)
         return self._on(params, to=to)
     
-    def repeat(self, /, *, add=True, inc=True, clr=True, build=None) -> Proxy:
+    def repeat(self, /, *, add=True, inc=True, clr=True, build='') -> Proxy:
         params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=bool(build))
         return self._on(params, to=STAY)
 
