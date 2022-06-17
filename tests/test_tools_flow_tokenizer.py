@@ -1,340 +1,307 @@
+import dataclasses
 import string
+import typing
 import unittest
 
+import js2py
+
+from tools import files
 from tools.flow.tokenizer import *
 from tools.flow.tokenizer.port.portable import make_tokenizer_function
 
-
-def flow_x():
-    flow = Flow()
-    origin = Proxy(flow, 0)
-    
-    origin.build('x', 'X')
-    
-    finalize(flow)
-    
-    return flow
+_JS_FUNC_ECMA5 = js2py.eval_js(files.load_text_file('../tools/flow/tokenizer/port/portable_ecma5.js'))
 
 
-def flow_xy():
-    flow = Flow()
-    origin = Proxy(flow, 0)
-    
-    origin.match('x').build('y', 'XY')
-    
-    finalize(flow)
-    
-    return flow
+def _token_dict_to_list(token_dict: dict) -> str:
+    return f"{token_dict['at']} {token_dict['to']} {token_dict['type']} {token_dict['content']}"
 
 
-def flow_x_star_y_z():
-    flow = Flow()
-    origin = Proxy(flow, 0)
-    
-    origin.match('x').repeat('y').build('z', 'X*YZ')
-    
-    finalize(flow)
-    
-    return flow
+_TOKENIZER = typing.Callable[[str], list[str]]
 
 
-def flow_x_plus_y_z():
-    flow = Flow()
-    origin = Proxy(flow, 0)
+def _make_builtin_tokenizer(flow: Flow) -> _TOKENIZER:
+    def tokenize(src: str) -> list[str]:
+        return list(map(_token_dict_to_list, map(dataclasses.asdict, flow(src))))
     
-    origin.match('x').repeat_plus('y').build('z', 'X+YZ')
-    
-    finalize(flow)
-    
-    return flow
+    return tokenize
 
 
-def flow_integer_and_decimal():
-    flow = Flow()
-    origin = Proxy(flow, 0)
+def _make_portable_python_tokenizer(flow: Flow) -> _TOKENIZER:
+    tokenizer = make_tokenizer_function(flow.data)
     
-    # integer
-    origin.repeat_plus(string.digits).default.build('Integer')
+    def tokenize(src: str) -> list[str]:
+        return list(map(_token_dict_to_list, map(dataclasses.asdict, tokenizer(src))))
     
-    # decimal
-    origin.repeat_plus(string.digits).match('.').repeat(string.digits).default.build('Decimal')
-    origin.match('.').repeat_plus(string.digits).default.build('Decimal')
-    
-    finalize(flow)
-    
-    return flow
+    return tokenize
 
 
-def flow_xy_or_xz():
-    flow = Flow()
-    origin = Proxy(flow, 0)
+def _make_portable_javascript_ecma5_tokenizer(flow: Flow) -> _TOKENIZER:
+    tokenizer = _JS_FUNC_ECMA5(flow.data)
     
-    origin.match('x').build('y', 'XY')
-    origin.match('x').build('z', 'XZ')
+    def tokenize(src: str) -> list[str]:
+        return list(map(_token_dict_to_list, tokenizer(src)))
     
-    finalize(flow)
-    
-    return flow
+    return tokenize
+
+
+_TOKENIZER_MAKERS = {
+    "builtin": _make_builtin_tokenizer,
+    "portable_python": _make_portable_python_tokenizer,
+    "portable_javascript_ecma5": _make_portable_javascript_ecma5_tokenizer
+}
 
 
 class TestToolsFlowTokenizer(unittest.TestCase):
-    def test_001(self):
-        """Test the `build` method"""
-        internal = flow_x()
-        external = make_tokenizer_function(internal.data)
-        
-        for function in (internal, external):
-            # Success
-            self.assertEqual(
-                first=list(function('x')),
-                second=[
-                    Token('X', 'x', 0, 1)
-                ],
-                msg=""
-            )
-            
-            # Success -> Success
-            self.assertEqual(
-                first=list(function('xx')),
-                second=[
-                    Token('X', 'x', 0, 1),
-                    Token('X', 'x', 1, 2)
-                ],
-                msg=""
-            )
-            
-            # Failure
-            self.assertEqual(
-                first=list(function('y')),
-                second=[
-                    Token('~ERROR', 'y', 0, 1)
-                ],
-                msg=""
-            )
-            
-            # Success -> Failure
-            self.assertEqual(
-                first=list(function('xy')),
-                second=[
-                    Token('X', 'x', 0, 1),
-                    Token('~ERROR', 'y', 1, 2)
-                ],
-                msg=""
-            )
     
-    def test_002(self):
-        """Test the `match` method"""
-        internal = flow_xy()
-        external = make_tokenizer_function(internal.data)
-        
-        for function in (internal, external):
-            # Success
-            self.assertEqual(
-                first=list(function('xy')),
-                second=[
-                    Token(type='XY', content='xy', at=0, to=2)
-                ],
-                msg=""
-            )
-            
-            # Success -> Success
-            self.assertEqual(
-                first=list(function('xyxy')),
-                second=[
-                    Token(type='XY', content='xy', at=0, to=2),
-                    Token(type='XY', content='xy', at=2, to=4)
-                ],
-                msg=""
-            )
-            
-            # Failure (1st item)
-            self.assertEqual(
-                first=list(function('z')),
-                second=[
-                    Token(type='~ERROR', content='z', at=0, to=1)
-                ],
-                msg=""
-            )
-            
-            # Failure (2nd item)
-            self.assertEqual(
-                first=list(function('xz')),
-                second=[
-                    Token(type='~ERROR', content='xz', at=0, to=2)
-                ],
-                msg=""
-            )
+    def __testing(self, flow: Flow, cases: list[dict]):
+        for label, function in _TOKENIZER_MAKERS.items():
+            tokenize = function(flow)
+            for case in cases:
+                with self.subTest(f"{label}", label=case['label'], src=case['src']):
+                    self.assertEqual(first=tokenize(case['src']), second=case['tokens'], msg="")
     
-    def test_003(self):
-        """Test the `repeat` method"""
-        internal = flow_x_star_y_z()
-        external = make_tokenizer_function(internal.data)
+    def test_method_build(self):
+        flow = Flow()
+        origin = Proxy(flow, 0)
+        origin.build('x', 'X')
+        finalize(flow)
         
-        for function in (internal, external):
-            # Success (x0)
-            self.assertEqual(
-                first=list(function('xz')),
-                second=[
-                    Token(type='X*YZ', content='xz', at=0, to=2)
-                ],
-                msg=""
-            )
-            
-            # Success (x1)
-            self.assertEqual(
-                first=list(function('xyz')),
-                second=[
-                    Token(type='X*YZ', content='xyz', at=0, to=3)
-                ],
-                msg=""
-            )
-            
-            # Success (x2)
-            self.assertEqual(
-                first=list(function('xyyz')),
-                second=[
-                    Token(type='X*YZ', content='xyyz', at=0, to=4)
-                ],
-                msg=""
-            )
-            
-            # Failure (x0)
-            self.assertEqual(
-                first=list(function('xt')),
-                second=[
-                    Token(type='~ERROR', content='xt', at=0, to=2)
-                ],
-                msg=""
-            )
-            
-            # Failure (x1)
-            self.assertEqual(
-                first=list(function('xyt')),
-                second=[
-                    Token(type='~ERROR', content='xyt', at=0, to=3)
-                ],
-                msg=""
-            )
-            
-            # Failure (x2)
-            self.assertEqual(
-                first=list(function('xyyt')),
-                second=[
-                    Token(type='~ERROR', content='xyyt', at=0, to=4)
-                ],
-                msg=""
-            )
+        self.__testing(flow, [
+            {
+                "label": "Success",
+                "src": 'x',
+                "tokens": ['0 1 X x']
+            },
+            {
+                "label": "Success -> Success",
+                "src": "xx",
+                "tokens": ['0 1 X x', '1 2 X x']
+            },
+            {
+                "label": "Failure",
+                "src": "y",
+                "tokens": ['0 1 ~ERROR y']
+            },
+            {
+                "label": "Success -> Failure",
+                "src": "xy",
+                "tokens": ['0 1 X x', '1 2 ~ERROR y']
+            },
+        ])
     
-    def test_004(self):
-        """Test the `repeat` method"""
-        internal = flow_x_plus_y_z()
-        external = make_tokenizer_function(internal.data)
+    def test_method_match(self):
+        flow = Flow()
+        origin = Proxy(flow, 0)
         
-        for function in (internal, external):
-            # Success (x1)
-            self.assertEqual(
-                first=list(function('xyz')),
-                second=[
-                    Token(type='X+YZ', content='xyz', at=0, to=3)
-                ],
-                msg=""
-            )
-            
-            # Success (x2)
-            self.assertEqual(
-                first=list(function('xyyz')),
-                second=[
-                    Token(type='X+YZ', content='xyyz', at=0, to=4)
-                ],
-                msg=""
-            )
-            
-            # Failure : missing required item (x0)
-            self.assertEqual(
-                first=list(function('xz')),
-                second=[
-                    Token(type='~ERROR', content='xz', at=0, to=2)
-                ],
-                msg=""
-            )
-            
-            # Failure (x0)
-            self.assertEqual(
-                first=list(function('xt')),
-                second=[
-                    Token(type='~ERROR', content='xt', at=0, to=2)
-                ],
-                msg=""
-            )
-            
-            # Failure (x1)
-            self.assertEqual(
-                first=list(function('xyt')),
-                second=[
-                    Token(type='~ERROR', content='xyt', at=0, to=3)
-                ],
-                msg=""
-            )
-            
-            # Failure (x2)
-            self.assertEqual(
-                first=list(function('xyyt')),
-                second=[
-                    Token(type='~ERROR', content='xyyt', at=0, to=4)
-                ],
-                msg=""
-            )
+        origin.match('x').build('y', 'XY')
+        
+        finalize(flow)
+        
+        self.__testing(flow, [
+            {
+                "label": "Success",
+                "src": "xy",
+                "tokens": ['0 2 XY xy']
+            },
+            {
+                "label": "Success -> Success",
+                "src": "xyxy",
+                "tokens": ['0 2 XY xy', '2 4 XY xy']
+            },
+            {
+                "label": "Failure (1st item)",
+                "src": "z",
+                "tokens": ['0 1 ~ERROR z']
+            },
+            {
+                "label": "Failure (2nd item)",
+                "src": "xz",
+                "tokens": ['0 2 ~ERROR xz']
+            },
+        ])
     
-    def test_101(self):
+    def test_method_repeat(self):
+        flow = Flow()
+        origin = Proxy(flow, 0)
+        
+        origin.match('x').repeat('y').build('z', 'X*YZ')
+        
+        finalize(flow)
+        
+        self.__testing(flow, [
+            {
+                "label": "Success (x0)",
+                "src": "xz",
+                "tokens": ['0 2 X*YZ xz']
+            },
+            {
+                "label": "Success (x1)",
+                "src": "xyz",
+                "tokens": ['0 3 X*YZ xyz']
+            },
+            {
+                "label": "Success (x2)",
+                "src": "xyyz",
+                "tokens": ['0 4 X*YZ xyyz']
+            },
+            {
+                "label": "Failure (x0)",
+                "src": "xt",
+                "tokens": ['0 2 ~ERROR xt']
+            },
+            {
+                "label": "Failure (x1)",
+                "src": "xyt",
+                "tokens": ['0 3 ~ERROR xyt']
+            },
+            {
+                "label": "Failure (x2)",
+                "src": "xyyt",
+                "tokens": ['0 4 ~ERROR xyyt']
+            },
+        ])
+    
+    def test_method_repeat_plus(self):
+        flow = Flow()
+        origin = Proxy(flow, 0)
+        
+        origin.match('x').repeat_plus('y').build('z', 'X+YZ')
+        
+        finalize(flow)
+        
+        self.__testing(flow, [
+            {
+                "label": "Success (x1)",
+                "src": "xyz",
+                "tokens": ['0 3 X+YZ xyz']
+            },
+            {
+                "label": "Success (x2)",
+                "src": "xyyz",
+                "tokens": ['0 4 X+YZ xyyz']
+            },
+            {
+                "label": "Failure : missing required item (x0)",
+                "src": "xz",
+                "tokens": ['0 2 ~ERROR xz']
+            },
+            {
+                "label": "Failure (x0)",
+                "src": "xt",
+                "tokens": ['0 2 ~ERROR xt']
+            },
+            {
+                "label": "Failure (x1)",
+                "src": "xyt",
+                "tokens": ['0 3 ~ERROR xyt']
+            },
+            {
+                "label": "Failure (x2)",
+                "src": "xyyt",
+                "tokens": ['0 4 ~ERROR xyyt']
+            },
+        ])
+    
+    def test_combination(self):
         """Test combination."""
-        internal = flow_xy_or_xz()
-        external = make_tokenizer_function(internal.data)
+        flow = Flow()
+        origin = Proxy(flow, 0)
         
-        for function in (internal, external):
-            # Failure (missing second element)
-            self.assertEqual(first=list(function("x")), second=[
-                Token(type='~ERROR', content='x', at=0, to=1)
-            ], msg="")
-            
-            # Success (first pattern)
-            self.assertEqual(first=list(function("xy")), second=[
-                Token(type='XY', content='xy', at=0, to=2)
-            ], msg="")
-            
-            # Success (second pattern)
-            self.assertEqual(first=list(function("xz")), second=[
-                Token(type='XZ', content='xz', at=0, to=2)
-            ], msg="")
-            
-            # Failure (wrong second element)
-            self.assertEqual(first=list(function("xt")), second=[
-                Token(type='~ERROR', content='xt', at=0, to=2)
-            ], msg="")
+        origin.match('x').build('y', 'XY')
+        origin.match('x').build('z', 'XZ')
+        
+        finalize(flow)
+        
+        self.__testing(flow, [
+            {
+                "label": "Failure (missing second element)",
+                "src": "x",
+                "tokens": ['0 1 ~ERROR x']
+            },
+            {
+                "label": "Success (first pattern)",
+                "src": "xy",
+                "tokens": ['0 2 XY xy']
+            },
+            {
+                "label": "Success (second pattern)",
+                "src": "xz",
+                "tokens": ['0 2 XZ xz']
+            },
+            {
+                "label": "Failure (wrong second element)",
+                "src": "xt",
+                "tokens": ['0 2 ~ERROR xt']
+            },
+        ])
     
-    def test_201(self):
-        """Test the combinining of integer & decimal."""
-        internal = flow_integer_and_decimal()
-        external = make_tokenizer_function(internal.data)
+    def test_integer_and_decimal(self):
+        flow = Flow()
+        origin = Proxy(flow, 0)
         
-        for function in (internal, external):
-            self.assertEqual(first=list(function("0")), second=[
-                Token(type='Integer', content='0', at=0, to=1)
-            ], msg="")
-            self.assertEqual(first=list(function("1")), second=[
-                Token(type='Integer', content='1', at=0, to=1)
-            ], msg="")
-            self.assertEqual(first=list(function("12")), second=[
-                Token(type='Integer', content='12', at=0, to=2)
-            ], msg="")
-            self.assertEqual(first=list(function("0.1")), second=[
-                Token(type='Decimal', content='0.1', at=0, to=3)
-            ], msg="")
-            self.assertEqual(first=list(function("0.")), second=[
-                Token(type='Decimal', content='0.', at=0, to=2)
-            ], msg="")
-            self.assertEqual(first=list(function(".1")), second=[
-                Token(type='Decimal', content='.1', at=0, to=2)
-            ], msg="")
+        # integer
+        origin.repeat_plus(string.digits).default.build('Integer')
+        
+        # decimal
+        origin.repeat_plus(string.digits).match('.').repeat(string.digits).default.build('Decimal')
+        origin.match('.').repeat_plus(string.digits).default.build('Decimal')
+        
+        finalize(flow)
+        
+        self.__testing(flow, [
+            {
+                "label": "",
+                "src": "0",
+                "tokens": ['0 1 Integer 0']
+            },
+            {
+                "label": "",
+                "src": "1",
+                "tokens": ['0 1 Integer 1']
+            },
+            {
+                "label": "",
+                "src": "12",
+                "tokens": ['0 2 Integer 12']
+            },
+            {
+                "label": "",
+                "src": "0.1",
+                "tokens": ['0 3 Decimal 0.1']
+            },
+            {
+                "label": "",
+                "src": "0.",
+                "tokens": ['0 2 Decimal 0.']
+            },
+            {
+                "label": "",
+                "src": ".1",
+                "tokens": ['0 2 Decimal .1']
+            },
+        ])
+    
+    def test_skip_token(self):
+        flow = Flow()
+        origin = Proxy(flow, 0)
+        
+        origin.build('x', '')
+        origin.build('y', 'Y')
+        
+        finalize(flow)
+        
+        self.__testing(flow, [
+            {
+                "label": "Single item",
+                "src": "x",
+                "tokens": []
+            },
+            {
+                "label": "Wrapped item",
+                "src": "yxy",
+                "tokens": ['0 1 Y y', '2 3 Y y']
+            },
+        ])
 
 
 if __name__ == '__main__':

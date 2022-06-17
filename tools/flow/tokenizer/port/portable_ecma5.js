@@ -1,24 +1,30 @@
-export default function makeTokenizer(managers) {
+function makeTokenizer(managers) {
   return function tokenizer(text) {
     let state = 0;
     let content = '';
     let at = 0;
     let to = 0;
     let tokens = [];
-    for (let char of text + '\0') {
+    text += '\0';
+    for (let charIndex = 0; charIndex < text.length; charIndex++) {
+      let char = text[charIndex];
       while (char !== null) {
         const manager = managers[state];
+        const handlers = manager[0];
         let action = manager[1];
-        for (const handler of manager[0]) {
-          if (handler[0].includes(char)) {
+        for (let handlerIndex = 0; handlerIndex < handlers.length; handlerIndex++) {
+          const handler = handlers[handlerIndex];
+          if (handler[0].indexOf(char) !== -1) {
             action = handler[1];
             break;
           }
         }
         if (!action) {
-          throw new SyntaxError();
+          throw new SyntaxError('action not defined on ' + state + ' with "' + char + '"');
         }
-        const [options, build] = action[0];
+        const params = action[0];
+        const options = params[0];
+        const build = params[1];
         if (!!(1 & options)) // add
           content += char;
         if (!!(2 & options)) // inc
