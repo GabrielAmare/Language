@@ -93,16 +93,16 @@ class AbstractManagerProxy:
     def init(self):
         if self.state not in self.flow.managers:
             self.flow.managers[self.state] = Manager()
-
-    def _action(self, add: bool, use: bool, clr: bool, build: str, clear: bool, to: int | object) -> Action:
+    
+    def _action(self, params: ActionParams, to: int | object) -> Action:
         self.init()
-        return Action(add=add, use=use, clr=clr, build=build, clear=clear, to=self._state(to))
+        return Action(params=params, to=self._state(to))
 
 
 @dataclasses.dataclass
 class ManagerDefaultProxy(AbstractManagerProxy, ManagerDefaultProxyInterface):
-    def _on(self, /, *, add: bool, use: bool, clr: bool, build: str, clear: bool, to: int | object) -> ManagerProxy:
-        action = self._action(add, use, clr, build, clear, to)
+    def _on(self, params: ActionParams, to: int | object) -> ManagerProxy:
+        action = self._action(params, to)
         self.manager.default = action
         return ManagerProxy(flow=self.flow, state=action.to, entry=self.entry)
 
@@ -131,6 +131,27 @@ class ManagerProxy(AbstractManagerProxy, ManagerProxyInterface):
     def proxy(self, to=NEW, entry=ENTRY) -> ManagerProxy:
         return ManagerProxy(flow=self.flow, state=self._state(to), entry=self._state(entry))
 
+    def add_handler(self, new_handler: Handler) -> None:
+        # for handler in self.flow.managers[self.state].handlers:
+        #     if handler.shadows(new_handler):
+        #         match new_handler:
+        #             case Handler(
+        #                 condition=handler.condition,
+        #                 action=Action(
+        #                     params=handler.action.params,
+        #                     to=to
+        #                 )
+        #             ):
+        #                 if to == handler.action.to:
+        #                     continue
+        #
+        #                 else:
+        #                     print('may be okay with', handler, new_handler, to)
+        #             case _:
+        #                 raise ValueError(f"{handler} is shadowing {new_handler}")
+        
+        self.flow.managers[self.state].handlers.append(new_handler)
+    
     def new(self) -> int:
         return self.flow.new_state()
 
@@ -138,34 +159,36 @@ class ManagerProxy(AbstractManagerProxy, ManagerProxyInterface):
         if self.state not in self.flow.managers:
             self.flow.managers[self.state] = Manager()
 
-    def _action(self, add: bool, use: bool, clr: bool, build: str, clear: bool, to: int | object) -> Action:
+    def _action(self, params: ActionParams, to: int | object) -> Action:
         self.init()
         to = self._state(to)
-        return Action(add=add, use=use, clr=clr, build=build, clear=clear, to=to)
 
-    def _on(self, chars: str, /, *,
-            add: bool, use: bool, clr: bool,
-            build: str, clear: bool,
-            to: int | object) -> ManagerProxy:
-        action = self._action(add, use, clr, build, clear, to)
-        self.flow.managers[self.state].handlers.append(Handler(Condition(chars), action))
+        return Action(params=params, to=to)
+    def _on(self, chars: str, params: ActionParams, to: int | object) -> ManagerProxy:
+        action = self._action(params, to)
+        self.add_handler(Handler(Condition(chars), action))
         return ManagerProxy(flow=self.flow, state=action.to, entry=self.entry)
 
     def success(self, chars: str, /, *, add=False, use=False, clr=True, build='', clear=False) -> None:
-        self._on(chars, add=add, use=use, clr=clr, build=build, clear=clear, to=VALID)
 
+        params = ActionParams(add=add, use=use, clr=clr, build=build, clear=clear)
+        self._on(chars, params, to=VALID)
     def failure(self, chars: str, /, *, add=False, use=False, clr=True, build='', clear=False) -> None:
-        self._on(chars, add=add, use=use, clr=clr, build=build, clear=clear, to=ERROR)
 
+        params = ActionParams(add=add, use=use, clr=clr, build=build, clear=clear)
+        self._on(chars, params, to=ERROR)
     def build(self, chars: str, build: str, /, *, add=True, use=True, clr=True, to=ENTRY) -> ManagerProxy:
-        return self._on(chars, add=add, use=use, clr=clr, build=build, clear=bool(build), to=to)
 
+        params = ActionParams(add=add, use=use, clr=clr, build=build, clear=bool(build))
+        return self._on(chars, params, to=to)
     def match(self, chars: str, /, *, add=True, use=True, clr=True, to=NEW) -> ManagerProxy:
-        return self._on(chars, add=add, use=use, clr=clr, to=to, build='', clear=False)
 
+        params = ActionParams(add=add, use=use, clr=clr, build='', clear=False)
+        return self._on(chars, params, to=to)
     def repeat(self, chars: str, /, *, add=True, use=True, clr=True, build=None) -> ManagerProxy:
-        return self._on(chars, add=add, use=use, clr=clr, build=build, clear=bool(build), to=STAY)
 
+        params = ActionParams(add=add, use=use, clr=clr, build=build, clear=bool(build))
+        return self._on(chars, params, to=STAY)
     ####################################################################################################################
     # COMPOUNDS
     ####################################################################################################################
@@ -210,10 +233,10 @@ def finalize(flow: Flow) -> None:
 
     for manager in flow.managers.values():
         if manager.default is None:
-            manager.default = Action(add=True, use=True, clr=True, to=err_1.state, build='', clear=False)
 
+            manager.default = Action(ActionParams(add=True, use=True, clr=True, build='', clear=False), to=err_1.state)
         # if not manager.verify(self.eot()):
         #     condition = Condition(self.eot())
         #     action = Action(add=False, use=True, clr=True, _build=manager.default._build, to=VALID)
         #     handler = Handler(condition, action)
-        #     manager.handlers.append(handler)
+        #     manager.append(handler)

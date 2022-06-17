@@ -10,6 +10,7 @@ from tools import flow
 
 __all__ = [
     'Condition',
+    'ActionParams',
     'Action',
     'Handler',
     'Manager',
@@ -39,29 +40,34 @@ class Condition(flow.Condition):
 
 
 @dataclasses.dataclass
-class Action(flow.Action):
+class ActionParams:
     add: bool
     use: bool
     clr: bool
     build: str
     clear: bool
-    to: int
 
     def __str__(self) -> str:
         parts = []
+        
         if self.add:
             parts.append("add()")
 
         if self.use:
             parts.append("use()")
-
-        if self._build:
-            parts.append(f"build({self._build!r})")
-
-        parts.append(f"goto({self.to})")
-        return " -> ".join(parts)
-
-    def execute(self, context: Context, element: str) -> tuple[int, str | None]:
+        
+        if self.clr:
+            parts.append("clr()")
+        
+        if self.build:
+            parts.append(f"build({self.build!r})")
+        
+        if self.clear:
+            parts.append("clear()")
+        
+        return " & ".join(parts)
+    
+    def execute(self, context: Context, element: str) -> str | None:
         if self.add:
             context.content += element
 
@@ -78,12 +84,28 @@ class Action(flow.Action):
         if self.clear:
             context.content = ''
             context.at = context.to
+        
+        return element
+    
+    @property
+    def data(self) -> ActionParamsData:
+        return int(self.add), int(self.use), int(self.clr), self.build, self.clear
 
-        return self.to, element
 
+@dataclasses.dataclass
+class Action(flow.Action):
+    params: ActionParams
+    to: int
+    
+    def __str__(self) -> str:
+        return f"{self.params!s} -> goto({self.to})"
+    
+    def execute(self, context: Context, element: str) -> tuple[int, str | None]:
+        return self.to, self.params.execute(context, element)
+    
     @property
     def data(self) -> ActionData:
-        return int(self.add), int(self.use), int(self.clr), self.build, self.clear, self.to
+        return self.params.data, self.to
 
 
 @dataclasses.dataclass
@@ -112,14 +134,7 @@ class Manager(flow.Manager):
             return "\n".join(map(str, self.handlers))
         else:
             return "\n".join(map(str, self.handlers)) + "\ndefault: " + str(self.default)
-
-    def __iadd__(self, other: Handler) -> Manager:
-        # for handler in self.handlers:
-        #     if handler.shadows(other):
-        #         raise ValueError(f"{handler} is shadowing {other}")
-        self.handlers.append(other)
-        return self
-
+    
     @property
     def data(self) -> ManagerData:
         return [handler.data for handler in self.handlers], None if self.default is None else self.default.data
