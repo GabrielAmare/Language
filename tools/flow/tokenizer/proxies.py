@@ -113,7 +113,7 @@ class ManagerDefaultProxy(AbstractManagerProxy, ManagerDefaultProxyInterface):
         pass
     
     def build(self: _I, build: str, /, *, add=False, use=False, clr=False, to=ENTRY) -> ManagerProxy:
-        params = ActionParams(add=add, use=use, clr=clr, build=build, clear=bool(build))
+        params = ActionParams(add=add, use=use, clr=clr, build=build, clear=True)
         return self._on(params, to)
     
     def match(self: _I, /, *, add=True, use=True, clr=True, to=NEW) -> ManagerProxy:
@@ -188,7 +188,7 @@ class ManagerProxy(AbstractManagerProxy, ManagerProxyInterface):
         self._on(chars, params, to=ERROR)
     
     def build(self, chars: str, build: str, /, *, add=True, use=True, clr=True, to=ENTRY) -> ManagerProxy:
-        params = ActionParams(add=add, use=use, clr=clr, build=build, clear=bool(build))
+        params = ActionParams(add=add, use=use, clr=clr, build=build, clear=True)
         return self._on(chars, params, to=to)
     
     def match(self, chars: str, /, *, add=True, use=True, clr=True, to=NEW) -> ManagerProxy:
@@ -247,7 +247,7 @@ def finalize(flow: Flow) -> None:
         
         if not manager.verify(EOT):
             condition = Condition(EOT)
-            if manager.default and manager.default.params.build:
+            if manager.default and manager.default.params.clear:
                 params = ActionParams(add=False, use=False, clr=True, build=manager.default.params.build, clear=False)
                 action = Action(params, to=VALID)
             else:
