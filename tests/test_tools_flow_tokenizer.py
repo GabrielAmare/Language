@@ -2,6 +2,27 @@ import string
 import unittest
 
 from tools.flow.tokenizer import *
+from tools.flow.tokenizer.portable import make_tokenizer_function
+
+
+def flow_integer_and_decimal():
+    flow = Flow()
+    origin = ManagerProxy(flow, 0)
+    
+    # integer
+    origin.repeat_plus(string.digits).default.build('Integer')
+    
+    # decimal
+    origin.repeat_plus(string.digits).match('.').repeat(string.digits).default.build('Decimal')
+    origin.match('.').repeat_plus(string.digits).default.build('Decimal')
+    
+    finalize(flow)
+    
+    return flow
+
+
+class TestFlows:
+    INTEGER_OR_DECIMAL = flow_integer_and_decimal()
 
 
 class TestToolsFlowTokenizer(unittest.TestCase):
@@ -256,37 +277,28 @@ class TestToolsFlowTokenizer(unittest.TestCase):
     
     def test_201(self):
         """Test the combinining of integer & decimal."""
+        internal = TestFlows.INTEGER_OR_DECIMAL
+        external = make_tokenizer_function(internal.data)
         
-        flow = Flow()
-        origin = ManagerProxy(flow, 0)
-        
-        # integer
-        origin.repeat_plus(string.digits).default.build('Integer')
-        
-        # decimal
-        origin.repeat_plus(string.digits).match('.').repeat(string.digits).default.build('Decimal')
-        origin.match('.').repeat_plus(string.digits).default.build('Decimal')
-        
-        finalize(flow)
-        
-        self.assertEqual(first=list(flow("0")), second=[
-            Token(type='Integer', content='0', at=0, to=1)
-        ], msg="")
-        self.assertEqual(first=list(flow("1")), second=[
-            Token(type='Integer', content='1', at=0, to=1)
-        ], msg="")
-        self.assertEqual(first=list(flow("12")), second=[
-            Token(type='Integer', content='12', at=0, to=2)
-        ], msg="")
-        self.assertEqual(first=list(flow("0.1")), second=[
-            Token(type='Decimal', content='0.1', at=0, to=3)
-        ], msg="")
-        self.assertEqual(first=list(flow("0.")), second=[
-            Token(type='Decimal', content='0.', at=0, to=2)
-        ], msg="")
-        self.assertEqual(first=list(flow(".1")), second=[
-            Token(type='Decimal', content='.1', at=0, to=2)
-        ], msg="")
+        for function in (internal, external):
+            self.assertEqual(first=list(function("0")), second=[
+                Token(type='Integer', content='0', at=0, to=1)
+            ], msg="")
+            self.assertEqual(first=list(function("1")), second=[
+                Token(type='Integer', content='1', at=0, to=1)
+            ], msg="")
+            self.assertEqual(first=list(function("12")), second=[
+                Token(type='Integer', content='12', at=0, to=2)
+            ], msg="")
+            self.assertEqual(first=list(function("0.1")), second=[
+                Token(type='Decimal', content='0.1', at=0, to=3)
+            ], msg="")
+            self.assertEqual(first=list(function("0.")), second=[
+                Token(type='Decimal', content='0.', at=0, to=2)
+            ], msg="")
+            self.assertEqual(first=list(function(".1")), second=[
+                Token(type='Decimal', content='.1', at=0, to=2)
+            ], msg="")
 
 
 if __name__ == '__main__':
