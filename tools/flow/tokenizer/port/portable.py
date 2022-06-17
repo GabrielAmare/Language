@@ -1,7 +1,6 @@
 import typing
 
-from .base import Token, EOT
-from .data import FlowData
+from tools.flow.tokenizer.core import FlowData, Token, EOT
 
 __all__ = [
     'make_tokenizer_function'

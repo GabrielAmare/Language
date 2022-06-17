@@ -1,8 +1,7 @@
 import string
 
 from tools import files
-from tools.flow.tokenizer import *
-from tools.flow.tokenizer.portable import make_tokenizer_function
+from tools.flow.tokenizer.port.portable import make_tokenizer_function
 
 # create the tokenizer
 flow = Flow()

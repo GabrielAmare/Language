@@ -1,102 +1,16 @@
 from __future__ import annotations
 
-import abc
 import dataclasses
 import functools
-import typing
 
-from .base import *
+from .abstract import AbstractProxy
 from .core import *
-
-_I = typing.TypeVar('_I')
+from .interfaces import ProxyInterface, DefaultProxyInterface
 
 __all__ = [
-    'ProxyInterface',
-    'DefaultProxyInterface',
-    'AbstractProxy',
     'DefaultProxy',
     'Proxy',
-    'finalize',
 ]
-
-
-@dataclasses.dataclass
-class ProxyInterface(abc.ABC):
-    @abc.abstractmethod
-    def success(self, chars: str, /, *, add=False, inc=True, clr=True, build=None) -> None:
-        """"""
-    
-    @abc.abstractmethod
-    def failure(self, chars: str, /, *, add=False, inc=True, clr=True, build=None) -> None:
-        """"""
-    
-    @abc.abstractmethod
-    def build(self: _I, chars: str, build: str, /, *, add=True, inc=True, clr=True, to=ENTRY) -> _I:
-        """"""
-    
-    @abc.abstractmethod
-    def match(self: _I, chars: str, /, *, add=True, inc=True, clr=True, to=NEW) -> _I:
-        """"""
-    
-    @abc.abstractmethod
-    def repeat(self: _I, chars: str, /, *, add=True, inc=True, clr=True, build=None) -> _I:
-        """"""
-
-
-@dataclasses.dataclass
-class DefaultProxyInterface(abc.ABC):
-    @abc.abstractmethod
-    def success(self, /, *, add=False, inc=True, clr=True, build='', clear=False) -> None:
-        """"""
-    
-    @abc.abstractmethod
-    def failure(self, /, *, add=False, inc=True, clr=True, build='', clear=False) -> None:
-        """"""
-    
-    @abc.abstractmethod
-    def build(self: _I, build: str, /, *, add=False, inc=False, clr=False, to=ENTRY) -> _I:
-        """"""
-    
-    @abc.abstractmethod
-    def match(self: _I, /, *, add=True, inc=True, clr=True, to=NEW) -> _I:
-        """"""
-    
-    @abc.abstractmethod
-    def repeat(self: _I, /, *, add=True, inc=True, clr=True, build=None) -> _I:
-        """"""
-
-
-@dataclasses.dataclass
-class AbstractProxy:
-    flow: Flow
-    state: int
-    entry: int = 0
-    
-    @property
-    def manager(self) -> Manager:
-        return self.flow.managers[self.state]
-    
-    def _state(self, state: int | object) -> int:
-        if state is STAY:
-            return self.state
-        elif state is ENTRY:
-            return self.entry
-        elif state is NEW:
-            return self.flow.new_state()
-        elif isinstance(state, int):
-            return state
-        elif isinstance(state, AbstractProxy):
-            return state.state
-        else:
-            raise ValueError(f"unable to parse {state!r}.")
-    
-    def init(self):
-        if self.state not in self.flow.managers:
-            self.flow.managers[self.state] = Manager()
-    
-    def _action(self, params: ActionParams, to: int | object) -> Action:
-        self.init()
-        return Action(params=params, to=self._state(to))
 
 
 @dataclasses.dataclass
@@ -114,15 +28,15 @@ class DefaultProxy(AbstractProxy, DefaultProxyInterface):
         params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=clear)
         self._on(params, to=ERROR)
     
-    def build(self: _I, build: str, /, *, add=False, inc=False, clr=False, to=ENTRY) -> Proxy:
+    def build(self, build: str, /, *, add=False, inc=False, clr=False, to=ENTRY) -> Proxy:
         params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=True)
         return self._on(params, to)
     
-    def match(self: _I, /, *, add=True, inc=True, clr=True, to=NEW) -> Proxy:
+    def match(self, /, *, add=True, inc=True, clr=True, to=NEW) -> Proxy:
         params = ActionParams(add=add, inc=inc, clr=clr, build='', clear=False)
         return self._on(params, to=to)
     
-    def repeat(self: _I, /, *, add=True, inc=True, clr=True, build=None) -> Proxy:
+    def repeat(self, /, *, add=True, inc=True, clr=True, build=None) -> Proxy:
         params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=bool(build))
         return self._on(params, to=STAY)
 
@@ -233,28 +147,3 @@ class Proxy(AbstractProxy, ProxyInterface):
     
     def build_bloc(self, at_chars: str, to_chars: str, build: str, to=ENTRY) -> Proxy:
         return self.match(at_chars).default.repeat().build(to_chars, build, to=to)
-
-
-def finalize(flow: Flow) -> None:
-    # VALID
-    Proxy(flow, 0).success(EOT)
-    
-    # ERROR
-    err_1 = Proxy(flow, flow.new_state())
-    err_1.failure(EOT, build='~ERROR')
-    
-    for manager in flow.managers.values():
-        if manager.default is None:
-            manager.default = Action(ActionParams(add=True, inc=True, clr=True, build='', clear=False), to=err_1.state)
-        
-        if not manager.verify(EOT):
-            condition = Condition(EOT)
-            if manager.default and manager.default.params.clear:
-                params = ActionParams(add=False, inc=False, clr=True, build=manager.default.params.build, clear=False)
-                action = Action(params, to=VALID)
-            else:
-                params = ActionParams(add=False, inc=False, clr=True, build='~ERROR', clear=False)
-                action = Action(params, to=ERROR)
-            
-            handler = Handler(condition, action)
-            manager.handlers.append(handler)

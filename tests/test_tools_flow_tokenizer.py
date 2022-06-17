@@ -2,7 +2,7 @@ import string
 import unittest
 
 from tools.flow.tokenizer import *
-from tools.flow.tokenizer.portable import make_tokenizer_function
+from tools.flow.tokenizer.port.portable import make_tokenizer_function
 
 
 def flow_integer_and_decimal():

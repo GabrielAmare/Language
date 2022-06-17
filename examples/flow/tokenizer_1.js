@@ -1,4 +1,4 @@
-import makeTokenizer from "../../tools/flow/tokenizer/portable.js";
+import makeTokenizer from "../../tools/flow/tokenizer/port/portable.js";
 
 // Import the json tokenizer structure
 import struct from './tokenizer_1.json';
