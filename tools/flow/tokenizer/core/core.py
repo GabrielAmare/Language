@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import dataclasses
-import functools
 import typing
 
 from tools import flow
@@ -114,9 +113,6 @@ class Handler(flow.Handler):
     condition: Condition
     action: Action
     
-    def __str__(self):
-        return f"{self.condition!s}: {self.action!s}"
-    
     def shadows(self, other: Handler) -> bool:
         return self.condition.shadows(other.condition)
     
@@ -130,48 +126,20 @@ class Manager(flow.Manager):
     handlers: list[Handler] = dataclasses.field(default_factory=list)
     default: Action | None = None
     
-    def __str__(self) -> str:
-        if self.default is None:
-            return "\n".join(map(str, self.handlers))
-        else:
-            return "\n".join(map(str, self.handlers)) + "\ndefault: " + str(self.default)
-    
     @property
     def data(self) -> ManagerData:
         return [handler.data for handler in self.handlers], None if self.default is None else self.default.data
-
-
-def indent(s: str) -> str:
-    return '\n'.join('  ' + line for line in s.split('\n'))
 
 
 @dataclasses.dataclass
 class Flow(flow.Flow):
     managers: dict[int, Manager] = dataclasses.field(default_factory=dict)
     
-    @property
-    def states(self) -> list[int]:
-        return sorted(self.managers.keys())
-    
-    def __str__(self):
-        return "\n\n".join(f"{state} [\n{indent(str(self.managers[state]))}\n]" for state in self.states)
-    
     def eot(self) -> str:
         return EOT
     
     def new_state(self) -> int:
         return max(self.managers.keys(), default=0) + 1
-    
-    def __getitem__(self, state: int):
-        if state in self.managers:
-            manager = self.managers[state]
-        else:
-            manager = self.managers[state] = Manager()
-        
-        return manager
-    
-    def __setitem__(self, state: int, manager: Manager) -> None:
-        self.managers[state] = manager
     
     def __call__(self, src: str) -> typing.Iterator[Token]:
         context = Context()
@@ -182,29 +150,6 @@ class Flow(flow.Flow):
         
         # if state == ERROR:
         #     raise TokenizerError(Token(type='$ERROR', content=context.content, at=context.at, to=context.to))
-    
-    @functools.cached_property
-    def max_build_size(self) -> int:
-        sizes = set()
-        for manager in self.managers.values():
-            for handler in manager.handlers:
-                build = handler.action.build
-                if isinstance(build, str):
-                    sizes.add(len(build))
-            
-            build = manager.default.build
-            if isinstance(build, str):
-                sizes.add(len(build))
-        
-        return max(sizes, default=0)
-    
-    def format_token(self, token: Token) -> str:
-        """Return a displayable expression that represent the token."""
-        return f"{token.type.ljust(self.max_build_size)} | {token.content!r}"
-    
-    def display(self, src: str) -> None:
-        for token in self(src):
-            print(self.format_token(token))
     
     @property
     def data(self) -> FlowData:

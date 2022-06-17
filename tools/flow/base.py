@@ -40,12 +40,21 @@ class Action(typing.Generic[C, E], AbstractAction[C, E], abc.ABC):
 class Handler(typing.Generic[C, E]):
     condition: Condition[E]
     action: Action[C, E]
+    
+    def __str__(self):
+        return f"{self.condition!s}: {self.action!s}"
 
 
 @dataclasses.dataclass
 class Manager(typing.Generic[C, E]):
     handlers: list[Handler[C, E]] = dataclasses.field(default_factory=list)
     default: Action[C, E] | None = None
+    
+    def __str__(self) -> str:
+        if self.default is None:
+            return "\n".join(map(str, self.handlers))
+        else:
+            return "\n".join(map(str, self.handlers)) + "\ndefault: " + str(self.default)
     
     def verify(self, element: E) -> bool:
         return any(handler.condition.verify(element) for handler in self.handlers)
@@ -57,6 +66,10 @@ class Manager(typing.Generic[C, E]):
         return self.default
 
 
+def indent(s: str) -> str:
+    return '\n'.join('  ' + line for line in s.split('\n'))
+
+
 @dataclasses.dataclass
 class Flow(typing.Generic[C, E], abc.ABC):
     managers: dict[int, Manager[C, E]] = dataclasses.field(default_factory=dict)
@@ -64,6 +77,13 @@ class Flow(typing.Generic[C, E], abc.ABC):
     @abc.abstractmethod
     def eot(self) -> E:
         """"""
+    
+    @property
+    def states(self) -> list[int]:
+        return sorted(self.managers.keys())
+    
+    def __str__(self):
+        return "\n\n".join(f"{state} [\n{indent(str(self.managers[state]))}\n]" for state in self.states)
     
     def _on(self, state: int, context: C, element: E) -> int:
         while element:
