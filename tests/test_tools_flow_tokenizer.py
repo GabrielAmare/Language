@@ -1,3 +1,4 @@
+import string
 import unittest
 
 from tools.flow.tokenizer import *
@@ -8,11 +9,11 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         """Test the `build` method"""
         flow = Flow()
         origin = ManagerProxy(flow, 0)
-
+        
         origin.build('x', 'X')
-
+        
         finalize(flow)
-
+        
         # Success
         self.assertEqual(
             first=list(flow('x')),
@@ -21,7 +22,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+        
         # Success -> Success
         self.assertEqual(
             first=list(flow('xx')),
@@ -31,7 +32,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+        
         # Failure
         self.assertEqual(
             first=list(flow('y')),
@@ -40,7 +41,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+        
         # Success -> Failure
         self.assertEqual(
             first=list(flow('xy')),
@@ -50,16 +51,16 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+    
     def test_002(self):
         """Test the `match` method"""
         flow = Flow()
         origin = ManagerProxy(flow, 0)
-
+        
         origin.match('x').build('y', 'XY')
-
+        
         finalize(flow)
-
+        
         # Success
         self.assertEqual(
             first=list(flow('xy')),
@@ -68,7 +69,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+        
         # Success -> Success
         self.assertEqual(
             first=list(flow('xyxy')),
@@ -78,7 +79,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+        
         # Failure (1st item)
         self.assertEqual(
             first=list(flow('z')),
@@ -87,7 +88,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+        
         # Failure (2nd item)
         self.assertEqual(
             first=list(flow('xz')),
@@ -96,16 +97,16 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+    
     def test_003(self):
         """Test the `repeat` method"""
         flow = Flow()
         origin = ManagerProxy(flow, 0)
-
+        
         origin.match('x').repeat('y').build('z', 'X*YZ')
-
+        
         finalize(flow)
-
+        
         # Success (x0)
         self.assertEqual(
             first=list(flow('xz')),
@@ -114,7 +115,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+        
         # Success (x1)
         self.assertEqual(
             first=list(flow('xyz')),
@@ -123,7 +124,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+        
         # Success (x2)
         self.assertEqual(
             first=list(flow('xyyz')),
@@ -132,7 +133,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+        
         # Failure (x0)
         self.assertEqual(
             first=list(flow('xt')),
@@ -141,7 +142,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+        
         # Failure (x1)
         self.assertEqual(
             first=list(flow('xyt')),
@@ -150,7 +151,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+        
         # Failure (x2)
         self.assertEqual(
             first=list(flow('xyyt')),
@@ -159,16 +160,16 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+    
     def test_004(self):
         """Test the `repeat` method"""
         flow = Flow()
         origin = ManagerProxy(flow, 0)
-
+        
         origin.match('x').repeat_plus('y').build('z', 'X+YZ')
-
+        
         finalize(flow)
-
+        
         # Success (x1)
         self.assertEqual(
             first=list(flow('xyz')),
@@ -177,7 +178,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+        
         # Success (x2)
         self.assertEqual(
             first=list(flow('xyyz')),
@@ -186,7 +187,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+        
         # Failure : missing required item (x0)
         self.assertEqual(
             first=list(flow('xz')),
@@ -195,7 +196,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+        
         # Failure (x0)
         self.assertEqual(
             first=list(flow('xt')),
@@ -204,7 +205,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+        
         # Failure (x1)
         self.assertEqual(
             first=list(flow('xyt')),
@@ -213,7 +214,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             ],
             msg=""
         )
-
+        
         # Failure (x2)
         self.assertEqual(
             first=list(flow('xyyt')),

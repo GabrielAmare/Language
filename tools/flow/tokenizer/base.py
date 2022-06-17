@@ -2,14 +2,14 @@ import dataclasses
 
 __all__ = [
     'EOT',
-
+    
     'VALID',
     'ERROR',
-
+    
     'NEW',
     'STAY',
     'ENTRY',
-
+    
     'Token',
     'TokenizerError',
     'Context'
@@ -19,7 +19,7 @@ __all__ = [
 @dataclasses.dataclass
 class NamedConstant:
     name: str
-
+    
     def __str__(self):
         return self.name
 

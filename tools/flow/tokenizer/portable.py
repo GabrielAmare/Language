@@ -37,5 +37,5 @@ def make_tokenizer_function(managers: FlowData) -> typing.Callable[[str], typing
                     content = ''
                     at = to
                 state = action[5]
-
+    
     return tokenizer
