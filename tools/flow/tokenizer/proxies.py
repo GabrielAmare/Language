@@ -11,17 +11,17 @@ from .core import *
 _I = typing.TypeVar('_I')
 
 __all__ = [
-    'ManagerProxyInterface',
-    'ManagerDefaultProxyInterface',
-    'AbstractManagerProxy',
-    'ManagerDefaultProxy',
-    'ManagerProxy',
+    'ProxyInterface',
+    'DefaultProxyInterface',
+    'AbstractProxy',
+    'DefaultProxy',
+    'Proxy',
     'finalize',
 ]
 
 
 @dataclasses.dataclass
-class ManagerProxyInterface(abc.ABC):
+class ProxyInterface(abc.ABC):
     @abc.abstractmethod
     def success(self, chars: str, /, *, add=False, inc=True, clr=True, build=None) -> None:
         """"""
@@ -44,7 +44,7 @@ class ManagerProxyInterface(abc.ABC):
 
 
 @dataclasses.dataclass
-class ManagerDefaultProxyInterface(abc.ABC):
+class DefaultProxyInterface(abc.ABC):
     @abc.abstractmethod
     def success(self, /, *, add=False, inc=True, clr=True, build='', clear=False) -> None:
         """"""
@@ -67,7 +67,7 @@ class ManagerDefaultProxyInterface(abc.ABC):
 
 
 @dataclasses.dataclass
-class AbstractManagerProxy:
+class AbstractProxy:
     flow: Flow
     state: int
     entry: int = 0
@@ -85,7 +85,7 @@ class AbstractManagerProxy:
             return self.flow.new_state()
         elif isinstance(state, int):
             return state
-        elif isinstance(state, AbstractManagerProxy):
+        elif isinstance(state, AbstractProxy):
             return state.state
         else:
             raise ValueError(f"unable to parse {state!r}.")
@@ -100,11 +100,11 @@ class AbstractManagerProxy:
 
 
 @dataclasses.dataclass
-class ManagerDefaultProxy(AbstractManagerProxy, ManagerDefaultProxyInterface):
-    def _on(self, params: ActionParams, to: int | object) -> ManagerProxy:
+class DefaultProxy(AbstractProxy, DefaultProxyInterface):
+    def _on(self, params: ActionParams, to: int | object) -> Proxy:
         action = self._action(params, to)
         self.manager.default = action
-        return ManagerProxy(flow=self.flow, state=action.to, entry=self.entry)
+        return Proxy(flow=self.flow, state=action.to, entry=self.entry)
     
     def success(self, /, *, add=False, inc=False, clr=True, build=None, clear=False) -> None:
         params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=clear)
@@ -114,27 +114,27 @@ class ManagerDefaultProxy(AbstractManagerProxy, ManagerDefaultProxyInterface):
         params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=clear)
         self._on(params, to=ERROR)
     
-    def build(self: _I, build: str, /, *, add=False, inc=False, clr=False, to=ENTRY) -> ManagerProxy:
+    def build(self: _I, build: str, /, *, add=False, inc=False, clr=False, to=ENTRY) -> Proxy:
         params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=True)
         return self._on(params, to)
     
-    def match(self: _I, /, *, add=True, inc=True, clr=True, to=NEW) -> ManagerProxy:
+    def match(self: _I, /, *, add=True, inc=True, clr=True, to=NEW) -> Proxy:
         params = ActionParams(add=add, inc=inc, clr=clr, build='', clear=False)
         return self._on(params, to=to)
     
-    def repeat(self: _I, /, *, add=True, inc=True, clr=True, build=None) -> ManagerProxy:
+    def repeat(self: _I, /, *, add=True, inc=True, clr=True, build=None) -> Proxy:
         params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=bool(build))
         return self._on(params, to=STAY)
 
 
 @dataclasses.dataclass
-class ManagerProxy(AbstractManagerProxy, ManagerProxyInterface):
+class Proxy(AbstractProxy, ProxyInterface):
     @functools.cached_property
     def default(self):
-        return ManagerDefaultProxy(flow=self.flow, state=self.state, entry=self.entry)
+        return DefaultProxy(flow=self.flow, state=self.state, entry=self.entry)
     
-    def proxy(self, to=NEW, entry=ENTRY) -> ManagerProxy:
-        return ManagerProxy(flow=self.flow, state=self._state(to), entry=self._state(entry))
+    def proxy(self, to=NEW, entry=ENTRY) -> Proxy:
+        return Proxy(flow=self.flow, state=self._state(to), entry=self._state(entry))
     
     def add_handler(self, new_handler: Handler) -> None:
         add = True
@@ -176,10 +176,10 @@ class ManagerProxy(AbstractManagerProxy, ManagerProxyInterface):
         to = self._state(to)
         return Action(params=params, to=to)
     
-    def _on(self, chars: str, params: ActionParams, to: int | object) -> ManagerProxy:
+    def _on(self, chars: str, params: ActionParams, to: int | object) -> Proxy:
         action = self._action(params, to)
         self.add_handler(Handler(Condition(chars), action))
-        return ManagerProxy(flow=self.flow, state=action.to, entry=self.entry)
+        return Proxy(flow=self.flow, state=action.to, entry=self.entry)
     
     def success(self, chars: str, /, *, add=False, inc=False, clr=True, build='', clear=False) -> None:
         params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=clear)
@@ -189,15 +189,15 @@ class ManagerProxy(AbstractManagerProxy, ManagerProxyInterface):
         params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=clear)
         self._on(chars, params, to=ERROR)
     
-    def build(self, chars: str, build: str, /, *, add=True, inc=True, clr=True, to=ENTRY) -> ManagerProxy:
+    def build(self, chars: str, build: str, /, *, add=True, inc=True, clr=True, to=ENTRY) -> Proxy:
         params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=True)
         return self._on(chars, params, to=to)
     
-    def match(self, chars: str, /, *, add=True, inc=True, clr=True, to=NEW) -> ManagerProxy:
+    def match(self, chars: str, /, *, add=True, inc=True, clr=True, to=NEW) -> Proxy:
         params = ActionParams(add=add, inc=inc, clr=clr, build='', clear=False)
         return self._on(chars, params, to=to)
     
-    def repeat(self, chars: str, /, *, add=True, inc=True, clr=True, build=None) -> ManagerProxy:
+    def repeat(self, chars: str, /, *, add=True, inc=True, clr=True, build=None) -> Proxy:
         params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=bool(build))
         return self._on(chars, params, to=STAY)
     
@@ -228,19 +228,19 @@ class ManagerProxy(AbstractManagerProxy, ManagerProxyInterface):
                 to = ENTRY
             return cur.build(seq_chars[-1], build, add=add, inc=inc, clr=clr, to=to)
     
-    def repeat_plus(self, chars: str, /, *, add=True, inc=True, clr=True, build=None) -> ManagerProxy:
+    def repeat_plus(self, chars: str, /, *, add=True, inc=True, clr=True, build=None) -> Proxy:
         return self.match(chars).repeat(chars, add=add, inc=inc, clr=clr, build=build)
     
-    def build_bloc(self, at_chars: str, to_chars: str, build: str, to=ENTRY) -> ManagerProxy:
+    def build_bloc(self, at_chars: str, to_chars: str, build: str, to=ENTRY) -> Proxy:
         return self.match(at_chars).default.repeat().build(to_chars, build, to=to)
 
 
 def finalize(flow: Flow) -> None:
     # VALID
-    ManagerProxy(flow, 0).success(EOT)
+    Proxy(flow, 0).success(EOT)
     
     # ERROR
-    err_1 = ManagerProxy(flow, flow.new_state())
+    err_1 = Proxy(flow, flow.new_state())
     err_1.failure(EOT, build='~ERROR')
     
     for manager in flow.managers.values():

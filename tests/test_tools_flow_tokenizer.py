@@ -7,7 +7,7 @@ from tools.flow.tokenizer.portable import make_tokenizer_function
 
 def flow_integer_and_decimal():
     flow = Flow()
-    origin = ManagerProxy(flow, 0)
+    origin = Proxy(flow, 0)
     
     # integer
     origin.repeat_plus(string.digits).default.build('Integer')
@@ -29,7 +29,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
     def test_001(self):
         """Test the `build` method"""
         flow = Flow()
-        origin = ManagerProxy(flow, 0)
+        origin = Proxy(flow, 0)
         
         origin.build('x', 'X')
         
@@ -76,7 +76,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
     def test_002(self):
         """Test the `match` method"""
         flow = Flow()
-        origin = ManagerProxy(flow, 0)
+        origin = Proxy(flow, 0)
         
         origin.match('x').build('y', 'XY')
         
@@ -122,7 +122,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
     def test_003(self):
         """Test the `repeat` method"""
         flow = Flow()
-        origin = ManagerProxy(flow, 0)
+        origin = Proxy(flow, 0)
         
         origin.match('x').repeat('y').build('z', 'X*YZ')
         
@@ -185,7 +185,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
     def test_004(self):
         """Test the `repeat` method"""
         flow = Flow()
-        origin = ManagerProxy(flow, 0)
+        origin = Proxy(flow, 0)
         
         origin.match('x').repeat_plus('y').build('z', 'X+YZ')
         
@@ -248,7 +248,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
     def test_101(self):
         """Test combination."""
         flow = Flow()
-        origin = ManagerProxy(flow, 0)
+        origin = Proxy(flow, 0)
         
         origin.match('x').build('y', 'XY')
         origin.match('x').build('z', 'XZ')

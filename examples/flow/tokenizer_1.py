@@ -8,7 +8,7 @@ from tools.flow.tokenizer.portable import make_tokenizer_function
 flow = Flow()
 
 # make a proxy for the tokenizer entry
-start = ManagerProxy(flow, 0)
+start = Proxy(flow, 0)
 
 ########################################################################################################################
 # PATTERN DEFINITIONS
