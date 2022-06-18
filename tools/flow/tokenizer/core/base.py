@@ -53,8 +53,12 @@ ENTRY = NamedConstant('ENTRY')
 class Token:
     type: str
     content: str
-    at: int
-    to: int
+    at: int = dataclasses.field(repr=False)
+    to: int = dataclasses.field(repr=False)
+    at_row: int = dataclasses.field(repr=False)
+    at_col: int = dataclasses.field(repr=False)
+    to_row: int = dataclasses.field(repr=False)
+    to_col: int = dataclasses.field(repr=False)
 
 
 @dataclasses.dataclass
@@ -66,5 +70,9 @@ class TokenizerError(ValueError):
 class Context:
     at: int = 0
     to: int = 0
+    at_row: int = 0
+    at_col: int = 0
+    to_row: int = 0
+    to_col: int = 0
     content: str = ''
     tokens: list[Token] = dataclasses.field(default_factory=list)

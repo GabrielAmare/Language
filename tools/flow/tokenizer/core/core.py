@@ -69,17 +69,27 @@ class Params:
         
         if self.options & INC:
             context.to += 1
+            if element == '\n':
+                context.at_row += 1
+                context.at_col = 0
+            else:
+                context.at_col += 1
         
         if self.options & CLR:
             element = None
         
         if self.build:
-            token = Token(type=self.build, content=context.content, at=context.at, to=context.to)
+            token = Token(type=self.build, content=context.content,
+                          at=context.at, to=context.to,
+                          at_row=context.at_row, at_col=context.at_col,
+                          to_row=context.to_row, to_col=context.to_col)
             context.tokens.append(token)
         
         if self.options & CLEAR:
             context.content = ''
             context.at = context.to
+            context.at_row = context.to_row
+            context.at_col = context.to_col
         
         return element
     
