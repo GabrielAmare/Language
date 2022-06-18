@@ -20,11 +20,11 @@ class DefaultProxy(AbstractProxy, DefaultProxyInterface):
         self.manager.default = action
         return Proxy(flow=self.flow, state=action.to, entry=self.entry)
     
-    def success(self, /, *, options=CLR, build='') -> None:
+    def success(self, /, *, options=EXCLUDE, build='') -> None:
         params = Params(options=options, build=build)
         self._on(params, to=VALID)
     
-    def failure(self, /, *, options=CLR, build='') -> None:
+    def failure(self, /, *, options=EXCLUDE, build='') -> None:
         params = Params(options=options, build=build)
         self._on(params, to=ERROR)
     
@@ -33,12 +33,12 @@ class DefaultProxy(AbstractProxy, DefaultProxyInterface):
         params = Params(options=options, build=build)
         return self._on(params, to)
     
-    def match(self, /, *, options=ADD + INC + CLR, to=NEW) -> Proxy:
-        options &= (ADD + INC + CLR)  # we remove the CLEAR option.
+    def match(self, /, *, options=INCLUDE, to=NEW) -> Proxy:
+        options &= INCLUDE  # we remove the CLEAR option.
         params = Params(options=options, build='')
         return self._on(params, to=to)
     
-    def repeat(self, /, *, options=ADD + INC + CLR, build='') -> Proxy:
+    def repeat(self, /, *, options=INCLUDE, build='') -> Proxy:
         if build:
             options |= CLEAR
         params = Params(options=options, build=build)
@@ -100,25 +100,25 @@ class Proxy(AbstractProxy, ProxyInterface):
         self.add_handler(Handler(Condition(chars), action))
         return Proxy(flow=self.flow, state=action.to, entry=self.entry)
     
-    def success(self, chars: str, /, *, options=ADD + INC + CLR, build='') -> None:
+    def success(self, chars: str, /, *, options=INCLUDE, build='') -> None:
         if build:
             options |= CLEAR
         self._on(chars, options, build, to=VALID)
     
-    def failure(self, chars: str, /, *, options=ADD + INC + CLR, build='') -> None:
+    def failure(self, chars: str, /, *, options=INCLUDE, build='') -> None:
         if build:
             options |= CLEAR
         self._on(chars, options, build, to=ERROR)
     
-    def build(self, chars: str, build: str, /, *, options=ADD + INC + CLR, to=ENTRY) -> Proxy:
+    def build(self, chars: str, build: str, /, *, options=INCLUDE, to=ENTRY) -> Proxy:
         options |= CLEAR
         return self._on(chars=chars, options=options, build=build, to=to)
     
-    def match(self, chars: str, /, *, options=ADD + INC + CLR, to=NEW) -> Proxy:
-        options &= (ADD + INC + CLR)  # we remove the CLEAR option.
+    def match(self, chars: str, /, *, options=INCLUDE, to=NEW) -> Proxy:
+        options &= INCLUDE  # we remove the CLEAR option.
         return self._on(chars=chars, options=options, build='', to=to)
     
-    def repeat(self, chars: str, /, *, options=ADD + INC + CLR, build=None) -> Proxy:
+    def repeat(self, chars: str, /, *, options=INCLUDE, build=None) -> Proxy:
         if build:
             options |= CLEAR
         return self._on(chars=chars, options=options, build=build, to=STAY)
@@ -135,7 +135,7 @@ class Proxy(AbstractProxy, ProxyInterface):
             self.build(chars, build, to=to)
             return self.default.build(build, to=to)
     
-    def sequence(self, *seq_chars: str, options=ADD + INC + CLR, build=None, to=None):
+    def sequence(self, *seq_chars: str, options=INCLUDE, build=None, to=None):
         cur = self
         
         for chars in seq_chars[:-1]:
@@ -150,7 +150,7 @@ class Proxy(AbstractProxy, ProxyInterface):
                 to = ENTRY
             return cur.build(seq_chars[-1], build, options=options, to=to)
     
-    def repeat_plus(self, chars: str, /, *, options=ADD + INC + CLR, build=None) -> Proxy:
+    def repeat_plus(self, chars: str, /, *, options=INCLUDE, build=None) -> Proxy:
         return self.match(chars).repeat(chars, options=options, build=build)
     
     def build_bloc(self, at_chars: str, to_chars: str, build: str, to=ENTRY) -> Proxy:

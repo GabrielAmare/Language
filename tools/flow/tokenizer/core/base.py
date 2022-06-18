@@ -11,6 +11,9 @@ __all__ = [
     'CLR',
     'CLEAR',
     
+    'INCLUDE',
+    'EXCLUDE',
+    
     'NEW',
     'STAY',
     'ENTRY',
@@ -37,6 +40,9 @@ ADD = 1  # Add the char to the context content.
 INC = 2  # Increment the index.
 CLR = 4  # Get rid of the element (this will ask a new element).
 CLEAR = 8  # Clear the context content & move the at cursor to the current index.
+
+INCLUDE = ADD + INC + CLR
+EXCLUDE = CLR
 
 NEW = NamedConstant('NEW')
 STAY = NamedConstant('STAY')

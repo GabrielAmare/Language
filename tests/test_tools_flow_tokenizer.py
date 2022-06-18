@@ -173,7 +173,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         
         body = origin.match("'")
         body.default.repeat().build("'", "String")
-        body.match('\\').default.match(to=body.state)
+        body.match('\\').default.match(to=body)
         finalize(flow)
         
         self.__testing(flow, "flow_tokenizer/test_string.json")
