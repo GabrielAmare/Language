@@ -1,10 +1,12 @@
 import dataclasses
+import os
 import string
 import typing
 import unittest
 
 import js2py
 
+import tools.console
 from tools import files
 from tools.flow.tokenizer import *
 from tools.flow.tokenizer.port.portable import make_tokenizer_function
@@ -50,7 +52,7 @@ _TOKENIZER_MAKERS = {
     "portable_javascript_ecma5": _make_portable_javascript_ecma5_tokenizer
 }
 
-REGENERATE = False  # Set this to True will regenerate all the tests
+REGENERATE = os.environ.get('REGEN_TESTS')  # Set this to True will regenerate all the tests
 
 
 class TestToolsFlowTokenizer(unittest.TestCase):
@@ -70,6 +72,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
                 output.append(case)
             
             files.save_json_file(fp, output, indent=2)
+            tools.console.success(f"regenerated {fp!r}.")
         
         else:
             for label, function in _TOKENIZER_MAKERS.items():
