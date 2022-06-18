@@ -1,0 +1,44 @@
+[
+  {
+    "label": "Success (x0)",
+    "src": "xz",
+    "tokens": [
+      "0 2 X*YZ xz"
+    ]
+  },
+  {
+    "label": "Success (x1)",
+    "src": "xyz",
+    "tokens": [
+      "0 3 X*YZ xyz"
+    ]
+  },
+  {
+    "label": "Success (x2)",
+    "src": "xyyz",
+    "tokens": [
+      "0 4 X*YZ xyyz"
+    ]
+  },
+  {
+    "label": "Failure (x0)",
+    "src": "xt",
+    "tokens": [
+      "0 2 ~ERROR xt"
+    ]
+  },
+  {
+    "label": "Failure (x1)",
+    "src": "xyt",
+    "tokens": [
+      "0 3 ~ERROR xyt"
+    ]
+  },
+  {
+    "label": "Failure (x2)",
+    "src": "xyyt",
+    "tokens": [
+      "0 4 ~ERROR xyyt"
+    ]
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "label": "Success",
+    "src": "x",
+    "tokens": [
+      "0 1 X x"
+    ]
+  },
+  {
+    "label": "Success -> Success",
+    "src": "xx",
+    "tokens": [
+      "0 1 X x",
+      "1 2 X x"
+    ]
+  },
+  {
+    "label": "Failure",
+    "src": "y",
+    "tokens": [
+      "0 1 ~ERROR y"
+    ]
+  },
+  {
+    "label": "Success -> Failure",
+    "src": "xy",
+    "tokens": [
+      "0 1 X x",
+      "1 2 ~ERROR y"
+    ]
+  }
+]

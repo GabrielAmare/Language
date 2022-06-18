@@ -66,28 +66,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         origin.build('x', 'X')
         finalize(flow)
         
-        self.__testing(flow, [
-            {
-                "label": "Success",
-                "src": 'x',
-                "tokens": ['0 1 X x']
-            },
-            {
-                "label": "Success -> Success",
-                "src": "xx",
-                "tokens": ['0 1 X x', '1 2 X x']
-            },
-            {
-                "label": "Failure",
-                "src": "y",
-                "tokens": ['0 1 ~ERROR y']
-            },
-            {
-                "label": "Success -> Failure",
-                "src": "xy",
-                "tokens": ['0 1 X x', '1 2 ~ERROR y']
-            },
-        ])
+        self.__testing(flow, files.load_json_file("flow_tokenizer/test_method_build.json"))
     
     def test_method_match(self):
         flow = Flow()
@@ -97,28 +76,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         
         finalize(flow)
         
-        self.__testing(flow, [
-            {
-                "label": "Success",
-                "src": "xy",
-                "tokens": ['0 2 XY xy']
-            },
-            {
-                "label": "Success -> Success",
-                "src": "xyxy",
-                "tokens": ['0 2 XY xy', '2 4 XY xy']
-            },
-            {
-                "label": "Failure (1st item)",
-                "src": "z",
-                "tokens": ['0 1 ~ERROR z']
-            },
-            {
-                "label": "Failure (2nd item)",
-                "src": "xz",
-                "tokens": ['0 2 ~ERROR xz']
-            },
-        ])
+        self.__testing(flow, files.load_json_file("flow_tokenizer/test_method_match.json"))
     
     def test_method_repeat(self):
         flow = Flow()
@@ -128,38 +86,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         
         finalize(flow)
         
-        self.__testing(flow, [
-            {
-                "label": "Success (x0)",
-                "src": "xz",
-                "tokens": ['0 2 X*YZ xz']
-            },
-            {
-                "label": "Success (x1)",
-                "src": "xyz",
-                "tokens": ['0 3 X*YZ xyz']
-            },
-            {
-                "label": "Success (x2)",
-                "src": "xyyz",
-                "tokens": ['0 4 X*YZ xyyz']
-            },
-            {
-                "label": "Failure (x0)",
-                "src": "xt",
-                "tokens": ['0 2 ~ERROR xt']
-            },
-            {
-                "label": "Failure (x1)",
-                "src": "xyt",
-                "tokens": ['0 3 ~ERROR xyt']
-            },
-            {
-                "label": "Failure (x2)",
-                "src": "xyyt",
-                "tokens": ['0 4 ~ERROR xyyt']
-            },
-        ])
+        self.__testing(flow, files.load_json_file("flow_tokenizer/test_method_repeat.json"))
     
     def test_method_repeat_plus(self):
         flow = Flow()
@@ -169,38 +96,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         
         finalize(flow)
         
-        self.__testing(flow, [
-            {
-                "label": "Success (x1)",
-                "src": "xyz",
-                "tokens": ['0 3 X+YZ xyz']
-            },
-            {
-                "label": "Success (x2)",
-                "src": "xyyz",
-                "tokens": ['0 4 X+YZ xyyz']
-            },
-            {
-                "label": "Failure : missing required item (x0)",
-                "src": "xz",
-                "tokens": ['0 2 ~ERROR xz']
-            },
-            {
-                "label": "Failure (x0)",
-                "src": "xt",
-                "tokens": ['0 2 ~ERROR xt']
-            },
-            {
-                "label": "Failure (x1)",
-                "src": "xyt",
-                "tokens": ['0 3 ~ERROR xyt']
-            },
-            {
-                "label": "Failure (x2)",
-                "src": "xyyt",
-                "tokens": ['0 4 ~ERROR xyyt']
-            },
-        ])
+        self.__testing(flow, files.load_json_file("flow_tokenizer/test_method_repeat_plus.json"))
     
     def test_combination(self):
         """Test combination."""
@@ -212,28 +108,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         
         finalize(flow)
         
-        self.__testing(flow, [
-            {
-                "label": "Failure (missing second element)",
-                "src": "x",
-                "tokens": ['0 1 ~ERROR x']
-            },
-            {
-                "label": "Success (first pattern)",
-                "src": "xy",
-                "tokens": ['0 2 XY xy']
-            },
-            {
-                "label": "Success (second pattern)",
-                "src": "xz",
-                "tokens": ['0 2 XZ xz']
-            },
-            {
-                "label": "Failure (wrong second element)",
-                "src": "xt",
-                "tokens": ['0 2 ~ERROR xt']
-            },
-        ])
+        self.__testing(flow, files.load_json_file("flow_tokenizer/test_combination.json"))
     
     def test_integer_and_decimal(self):
         flow = Flow()
@@ -248,38 +123,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         
         finalize(flow)
         
-        self.__testing(flow, [
-            {
-                "label": "",
-                "src": "0",
-                "tokens": ['0 1 Integer 0']
-            },
-            {
-                "label": "",
-                "src": "1",
-                "tokens": ['0 1 Integer 1']
-            },
-            {
-                "label": "",
-                "src": "12",
-                "tokens": ['0 2 Integer 12']
-            },
-            {
-                "label": "",
-                "src": "0.1",
-                "tokens": ['0 3 Decimal 0.1']
-            },
-            {
-                "label": "",
-                "src": "0.",
-                "tokens": ['0 2 Decimal 0.']
-            },
-            {
-                "label": "",
-                "src": ".1",
-                "tokens": ['0 2 Decimal .1']
-            },
-        ])
+        self.__testing(flow, files.load_json_file("flow_tokenizer/test_integer_and_decimal.json"))
     
     def test_skip_token(self):
         flow = Flow()
@@ -290,18 +134,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         
         finalize(flow)
         
-        self.__testing(flow, [
-            {
-                "label": "Single item",
-                "src": "x",
-                "tokens": []
-            },
-            {
-                "label": "Wrapped item",
-                "src": "yxy",
-                "tokens": ['0 1 Y y', '2 3 Y y']
-            },
-        ])
+        self.__testing(flow, files.load_json_file("flow_tokenizer/test_skip_token.json"))
 
 
 if __name__ == '__main__':

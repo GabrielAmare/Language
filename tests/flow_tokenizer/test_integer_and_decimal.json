@@ -1,0 +1,44 @@
+[
+  {
+    "label": "",
+    "src": "0",
+    "tokens": [
+      "0 1 Integer 0"
+    ]
+  },
+  {
+    "label": "",
+    "src": "1",
+    "tokens": [
+      "0 1 Integer 1"
+    ]
+  },
+  {
+    "label": "",
+    "src": "12",
+    "tokens": [
+      "0 2 Integer 12"
+    ]
+  },
+  {
+    "label": "",
+    "src": "0.1",
+    "tokens": [
+      "0 3 Decimal 0.1"
+    ]
+  },
+  {
+    "label": "",
+    "src": "0.",
+    "tokens": [
+      "0 2 Decimal 0."
+    ]
+  },
+  {
+    "label": "",
+    "src": ".1",
+    "tokens": [
+      "0 2 Decimal .1"
+    ]
+  }
+]
