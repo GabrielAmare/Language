@@ -100,10 +100,14 @@ class Proxy(AbstractProxy, ProxyInterface):
         self.add_handler(Handler(Condition(chars), action))
         return Proxy(flow=self.flow, state=action.to, entry=self.entry)
     
-    def success(self, chars: str, /, *, options=CLR, build='') -> None:
+    def success(self, chars: str, /, *, options=ADD + INC + CLR, build='') -> None:
+        if build:
+            options |= CLEAR
         self._on(chars, options, build, to=VALID)
     
-    def failure(self, chars: str, /, *, options=CLR, build='') -> None:
+    def failure(self, chars: str, /, *, options=ADD + INC + CLR, build='') -> None:
+        if build:
+            options |= CLEAR
         self._on(chars, options, build, to=ERROR)
     
     def build(self, chars: str, build: str, /, *, options=ADD + INC + CLR, to=ENTRY) -> Proxy:
