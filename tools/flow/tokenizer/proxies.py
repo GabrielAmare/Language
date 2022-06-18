@@ -15,41 +15,41 @@ __all__ = [
 
 @dataclasses.dataclass
 class DefaultProxy(AbstractProxy, DefaultProxyInterface):
-    def _on(self, params: Params, to: int | object) -> Proxy:
+    def _on(self, options: int, build: str, to: int | object) -> Proxy:
+        params = Params(options, build)
         action = self._action(params, to)
         self.manager.default = action
         return Proxy(flow=self.flow, state=action.to, entry=self.entry)
     
     def success(self, /, *, options=EXCLUDE, build='') -> None:
-        params = Params(options=options, build=build)
-        self._on(params, to=VALID)
+        self._on(options=options, build=build, to=VALID)
     
     def failure(self, /, *, options=EXCLUDE, build='') -> None:
-        params = Params(options=options, build=build)
-        self._on(params, to=ERROR)
+        self._on(options=options, build=build, to=ERROR)
     
     def build(self, build: str, /, *, options=0, to=ENTRY) -> Proxy:
         options |= CLEAR
-        params = Params(options=options, build=build)
-        return self._on(params, to)
+        return self._on(options=options, build=build, to=to)
     
     def match(self, /, *, options=INCLUDE, to=NEW) -> Proxy:
         options &= INCLUDE  # we remove the CLEAR option.
-        params = Params(options=options, build='')
-        return self._on(params, to=to)
+        return self._on(options=options, build='', to=to)
     
     def repeat(self, /, *, options=INCLUDE, build='') -> Proxy:
         if build:
             options |= CLEAR
-        params = Params(options=options, build=build)
-        return self._on(params, to=STAY)
-
+        return self._on(options=options, build=build, to=STAY)
+    
     def goto(self, to: int | object) -> Proxy:
-        return self._on(params=Params(options=0, build=''), to=to)
+        return self._on(options=0, build='', to=to)
 
 
 @dataclasses.dataclass
 class Proxy(AbstractProxy, ProxyInterface):
+    @property
+    def handlers(self) -> list[Handler]:
+        return self.flow.managers[self.state].handlers
+    
     @functools.cached_property
     def default(self):
         return DefaultProxy(flow=self.flow, state=self.state, entry=self.entry)
@@ -57,33 +57,35 @@ class Proxy(AbstractProxy, ProxyInterface):
     def proxy(self, to=NEW, entry=ENTRY) -> Proxy:
         return Proxy(flow=self.flow, state=self._state(to), entry=self._state(entry))
     
-    def add_handler(self, new_handler: Handler) -> None:
+    def add_case(self, condition: Condition, params: Params, to: object) -> int:
+        self.init()
+        to = self._state(to)
+        
         add = True
-        for handler in self.flow.managers[self.state].handlers:
-            if handler.shadows(new_handler):
-                match new_handler:
-                    case Handler(
-                        condition=handler.condition,
-                        action=Action(
-                            params=handler.action.params,
-                            to=to
-                        )
-                    ):
-                        if to == handler.action.to:
-                            add = False
-                            continue
-                        
-                        if new_handler.action.to not in self.flow.managers:
-                            add = False
-                            new_handler.action.to = handler.action.to
-                            continue
-                        
-                        raise ValueError(f"[2] {handler} is shadowing {new_handler}")
-                    
-                    case _:
-                        raise ValueError(f"[1] {handler} is shadowing {new_handler}")
+        for handler in self.handlers:
+            if not handler.condition.shadows(condition):
+                continue
+            
+            if handler.condition == condition and handler.action.params == params:
+                if to == handler.action.to:
+                    add = False
+                    continue
+                
+                if to not in self.flow.managers:
+                    add = False
+                    to = handler.action.to
+                    continue
+                
+                raise ValueError(f"[2] {handler.condition} is shadowing {condition}")
+            
+            raise ValueError(f"[1] {handler.condition} is shadowing {condition}")
+        
         if add:
-            self.flow.managers[self.state].handlers.append(new_handler)
+            action = Action(params=params, to=to)
+            handler = Handler(condition=condition, action=action)
+            self.flow.managers[self.state].handlers.append(handler)
+        
+        return to
     
     def new(self) -> int:
         return self.flow.new_state()
@@ -92,16 +94,10 @@ class Proxy(AbstractProxy, ProxyInterface):
         if self.state not in self.flow.managers:
             self.flow.managers[self.state] = Manager()
     
-    def _action(self, params: Params, to: int | object) -> Action:
-        self.init()
-        to = self._state(to)
-        return Action(params=params, to=to)
-    
     def _on(self, chars: str, options: int, build: str, to: int | object) -> Proxy:
         params = Params(options=options, build=build)
-        action = self._action(params, to)
-        self.add_handler(Handler(Condition(chars), action))
-        return Proxy(flow=self.flow, state=action.to, entry=self.entry)
+        to = self.add_case(Condition(chars), params, to)
+        return Proxy(flow=self.flow, state=to, entry=self.entry)
     
     def success(self, chars: str, /, *, options=INCLUDE, build='') -> None:
         if build:
