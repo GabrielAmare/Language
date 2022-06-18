@@ -177,6 +177,72 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         finalize(flow)
         
         self.__testing(flow, "flow_tokenizer/test_string.json")
+    
+    def test_complex(self):
+        flow = Flow()
+        origin = Proxy(flow, 0)
+        
+        # symbols
+        origin.build('+', 'PLUS')
+        origin.build('*', 'STAR')
+        origin.build('-', 'MINUS')
+        origin.build('/', 'SLASH')
+        
+        # whitespace
+        origin.repeat_plus(' ').default.build('')
+        
+        # integer
+        origin.repeat_plus(string.digits).default.build('Integer')
+        
+        # decimal
+        origin.repeat_plus(string.digits).match('.').repeat(string.digits).default.build('Decimal')
+        origin.match('.').repeat_plus(string.digits).default.build('Decimal')
+        
+        # simple quote string
+        body = origin.match("'")
+        body.default.repeat().build("'", "String")
+        body.match('\\').default.match(to=body)
+        
+        # double quote string
+        body = origin.match('"')
+        body.default.repeat().build('"', "String")
+        body.match('\\').default.match(to=body)
+        
+        letters_no_keywords = set(string.ascii_letters)
+        
+        def add_keyword(expr: str, name: str):
+            letters_no_keywords.remove(expr[0])
+            states = []
+            state = origin
+            for char in expr:
+                state = state.match(char)
+                states.append(state)
+            state.default.build(name)
+            
+            def mount(ref: Proxy):
+                for s, c in zip(states[:-1], expr[1:]):
+                    s.match(string.ascii_letters.replace(c, ''), to=ref)
+                
+                states[-1].match(string.ascii_letters, to=ref)
+            
+            return mount
+        
+        # true & false
+        mount_true = add_keyword("true", "True")
+        mount_false = add_keyword("false", "False")
+        
+        # variable
+        var = (origin
+               .match(''.join(sorted(letters_no_keywords)))
+               .repeat(string.ascii_letters))
+        var.default.build("Variable")
+        
+        mount_true(var)
+        mount_false(var)
+        
+        finalize(flow)
+                
+        self.__testing(flow, "flow_tokenizer/test_complex.json")
 
 
 if __name__ == '__main__':

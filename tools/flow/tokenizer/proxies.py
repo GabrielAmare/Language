@@ -44,6 +44,9 @@ class DefaultProxy(AbstractProxy, DefaultProxyInterface):
         params = Params(options=options, build=build)
         return self._on(params, to=STAY)
 
+    def goto(self, to: int | object) -> Proxy:
+        return self._on(params=Params(options=0, build=''), to=to)
+
 
 @dataclasses.dataclass
 class Proxy(AbstractProxy, ProxyInterface):
