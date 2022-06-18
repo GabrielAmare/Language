@@ -3,21 +3,23 @@
     "label": "Success (without)",
     "src": "y",
     "tokens": [
-      "0 1 ?XY y"
+      "0 1 ?XY y",
+      "1 2 ~EOT \u0000"
     ]
   },
   {
     "label": "Success (with)",
     "src": "xy",
     "tokens": [
-      "0 2 ?XY xy"
+      "0 2 ?XY xy",
+      "2 3 ~EOT \u0000"
     ]
   },
   {
     "label": "Failure (without closure)",
     "src": "x",
     "tokens": [
-      "0 1 ~ERROR x"
+      "0 2 ~ERR x\u0000"
     ]
   }
 ]

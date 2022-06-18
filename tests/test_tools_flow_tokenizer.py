@@ -50,10 +50,12 @@ _TOKENIZER_MAKERS = {
     "portable_javascript_ecma5": _make_portable_javascript_ecma5_tokenizer
 }
 
+REGENERATE = False  # Set this to True will regenerate all the tests
+
 
 class TestToolsFlowTokenizer(unittest.TestCase):
     
-    def __testing(self, flow: Flow, fp: str, generate: bool = False):
+    def __testing(self, flow: Flow, fp: str, generate: bool = REGENERATE):
         cases = files.load_json_file(fp)
         
         if generate:
@@ -62,7 +64,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
             function = _TOKENIZER_MAKERS["builtin"]
             tokenize = function(flow)
             for case in cases:
-                if case['tokens'] is None:
+                if case['tokens'] is None or REGENERATE:
                     case['tokens'] = tokenize(case['src'])
                 
                 output.append(case)

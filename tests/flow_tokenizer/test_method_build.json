@@ -3,7 +3,8 @@
     "label": "Success",
     "src": "x",
     "tokens": [
-      "0 1 X x"
+      "0 1 X x",
+      "1 2 ~EOT \u0000"
     ]
   },
   {
@@ -11,14 +12,15 @@
     "src": "xx",
     "tokens": [
       "0 1 X x",
-      "1 2 X x"
+      "1 2 X x",
+      "2 3 ~EOT \u0000"
     ]
   },
   {
     "label": "Failure",
     "src": "y",
     "tokens": [
-      "0 1 ~ERROR y"
+      "0 2 ~ERR y\u0000"
     ]
   },
   {
@@ -26,7 +28,7 @@
     "src": "xy",
     "tokens": [
       "0 1 X x",
-      "1 2 ~ERROR y"
+      "1 3 ~ERR y\u0000"
     ]
   }
 ]

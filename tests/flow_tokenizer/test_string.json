@@ -3,35 +3,39 @@
     "label": "Success (simple string)",
     "src": "'valid'",
     "tokens": [
-      "0 7 String 'valid'"
+      "0 7 String 'valid'",
+      "7 8 ~EOT \u0000"
     ]
   },
   {
     "label": "Success (empty string)",
     "src": "''",
     "tokens": [
-      "0 2 String ''"
+      "0 2 String ''",
+      "2 3 ~EOT \u0000"
     ]
   },
   {
     "label": "Failure (missing closing quote)",
     "src": "'invalid",
     "tokens": [
-      "0 8 ~ERROR 'invalid"
+      "0 9 ~ERR 'invalid\u0000"
     ]
   },
   {
     "label": "Success (escaped quote)",
     "src": "'\\''",
     "tokens": [
-      "0 4 String '\\''"
+      "0 4 String '\\''",
+      "4 5 ~EOT \u0000"
     ]
   },
   {
     "label": "Success (escaped char)",
     "src": "'\\d'",
     "tokens": [
-      "0 4 String '\\d'"
+      "0 4 String '\\d'",
+      "4 5 ~EOT \u0000"
     ]
   }
 ]
