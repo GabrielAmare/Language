@@ -40,47 +40,44 @@ class Condition(flow.Condition):
 
 @dataclasses.dataclass
 class Params:
-    add: bool  # Add the char to the context content.
-    inc: bool  # Increment the index.
-    clr: bool  # Get rid of the element (this will ask a new element).
-    clear: bool  # Clear the context content & move the at cursor to the current index.
+    options: int
     build: str  # Build a token with the given type.
     
     def __str__(self) -> str:
         parts = []
         
-        if self.add:
+        if self.options & ADD:
             parts.append("add()")
         
-        if self.inc:
+        if self.options & INC:
             parts.append("inc()")
         
-        if self.clr:
+        if self.options & CLR:
             parts.append("clr()")
         
         if self.build:
             parts.append(f"build({self.build!r})")
         
-        if self.clear:
+        if self.options & CLEAR:
             parts.append("clear()")
         
         return " & ".join(parts)
     
     def execute(self, context: Context, element: str) -> str | None:
-        if self.add:
+        if self.options & ADD:
             context.content += element
         
-        if self.inc:
+        if self.options & INC:
             context.to += 1
         
-        if self.clr:
+        if self.options & CLR:
             element = None
         
         if self.build:
             token = Token(type=self.build, content=context.content, at=context.at, to=context.to)
             context.tokens.append(token)
         
-        if self.clear:
+        if self.options & CLEAR:
             context.content = ''
             context.at = context.to
         
@@ -88,8 +85,7 @@ class Params:
     
     @property
     def data(self) -> ActionParamsData:
-        options = 1 * int(self.add) + 2 * int(self.inc) + 4 * int(self.clr) + 8 * int(self.clear)
-        return options, self.build
+        return self.options, self.build
 
 
 @dataclasses.dataclass

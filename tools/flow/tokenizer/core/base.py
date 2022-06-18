@@ -6,6 +6,11 @@ __all__ = [
     'VALID',
     'ERROR',
     
+    'ADD',
+    'INC',
+    'CLR',
+    'CLEAR',
+    
     'NEW',
     'STAY',
     'ENTRY',
@@ -27,6 +32,11 @@ class NamedConstant:
 EOT = '\0'
 VALID = -1
 ERROR = -2
+
+ADD = 1  # Add the char to the context content.
+INC = 2  # Increment the index.
+CLR = 4  # Get rid of the element (this will ask a new element).
+CLEAR = 8  # Clear the context content & move the at cursor to the current index.
 
 NEW = NamedConstant('NEW')
 STAY = NamedConstant('STAY')

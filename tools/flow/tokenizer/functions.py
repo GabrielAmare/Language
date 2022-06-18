@@ -8,11 +8,11 @@ __all__ = [
 
 def finalize(flow: Flow) -> None:
     # VALID
-    Proxy(flow, 0).success(EOT, add=True, inc=True, clr=True, build='~EOT')
+    Proxy(flow, 0).success(EOT, options=ADD + INC + CLR, build='~EOT')
     
     # ERROR
     err_1 = Proxy(flow, flow.new_state())
-    err_1.failure(EOT, add=True, inc=True, clr=True, build='~ERR')
+    err_1.failure(EOT, options=ADD + INC + CLR + CLEAR, build='~ERR')
     
     for state, manager in flow.managers.items():
         proxy = Proxy(flow, state)
@@ -21,7 +21,7 @@ def finalize(flow: Flow) -> None:
             proxy.default.match(to=err_1.state)
         
         if not manager.verify(EOT):
-            if manager.default and manager.default.params.clear:
-                proxy.build(EOT, manager.default.params.build, add=False, inc=False, clr=False)
+            if manager.default and manager.default.params.options & CLEAR:
+                proxy.build(EOT, manager.default.params.build, options=0)
             else:
-                proxy.failure(EOT, add=True, inc=True, clr=True, build='~ERR', clear=True)
+                proxy.failure(EOT, options=ADD + INC + CLR + CLEAR, build='~ERR')
