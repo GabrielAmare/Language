@@ -161,6 +161,17 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         finalize(flow)
         
         self.__testing(flow, "flow_tokenizer/test_skip_token.json")
+    
+    def test_string(self):
+        flow = Flow()
+        origin = Proxy(flow, 0)
+        
+        body = origin.match("'")
+        body.default.repeat().build("'", "String")
+        body.match('\\').default.match(to=body.state)
+        finalize(flow)
+        
+        self.__testing(flow, "flow_tokenizer/test_string.json")
 
 
 if __name__ == '__main__':

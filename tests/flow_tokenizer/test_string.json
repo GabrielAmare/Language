@@ -1,0 +1,37 @@
+[
+  {
+    "label": "Success (simple string)",
+    "src": "'valid'",
+    "tokens": [
+      "0 7 String 'valid'"
+    ]
+  },
+  {
+    "label": "Success (empty string)",
+    "src": "''",
+    "tokens": [
+      "0 2 String ''"
+    ]
+  },
+  {
+    "label": "Failure (missing closing quote)",
+    "src": "'invalid",
+    "tokens": [
+      "0 8 ~ERROR 'invalid"
+    ]
+  },
+  {
+    "label": "Success (escaped quote)",
+    "src": "'\\''",
+    "tokens": [
+      "0 4 String '\\''"
+    ]
+  },
+  {
+    "label": "Success (escaped char)",
+    "src": "'\\d'",
+    "tokens": [
+      "0 4 String '\\d'"
+    ]
+  }
+]
