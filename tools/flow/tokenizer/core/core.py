@@ -43,8 +43,8 @@ class ActionParams:
     add: bool  # Add the char to the context content.
     inc: bool  # Increment the index.
     clr: bool  # Get rid of the element (this will ask a new element).
-    build: str  # Build a token with the given type.
     clear: bool  # Clear the context content & move the at cursor to the current index.
+    build: str  # Build a token with the given type.
     
     def __str__(self) -> str:
         parts = []
