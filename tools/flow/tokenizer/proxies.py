@@ -118,7 +118,7 @@ class Proxy(AbstractProxy, ProxyInterface):
         options &= INCLUDE  # we remove the CLEAR option.
         return self._on(chars=chars, options=options, build='', to=to)
     
-    def repeat(self, chars: str, /, *, options=INCLUDE, build=None) -> Proxy:
+    def repeat(self, chars: str, /, *, options=INCLUDE, build='') -> Proxy:
         if build:
             options |= CLEAR
         return self._on(chars=chars, options=options, build=build, to=STAY)
@@ -135,7 +135,7 @@ class Proxy(AbstractProxy, ProxyInterface):
             self.build(chars, build, to=to)
             return self.default.build(build, to=to)
     
-    def sequence(self, *seq_chars: str, options=INCLUDE, build=None, to=None):
+    def sequence(self, *seq_chars: str, options=INCLUDE, build='', to=None):
         cur = self
         
         for chars in seq_chars[:-1]:
@@ -150,7 +150,7 @@ class Proxy(AbstractProxy, ProxyInterface):
                 to = ENTRY
             return cur.build(seq_chars[-1], build, options=options, to=to)
     
-    def repeat_plus(self, chars: str, /, *, options=INCLUDE, build=None) -> Proxy:
+    def repeat_plus(self, chars: str, /, *, options=INCLUDE, build='') -> Proxy:
         return self.match(chars).repeat(chars, options=options, build=build)
     
     def build_bloc(self, at_chars: str, to_chars: str, build: str, to=ENTRY) -> Proxy:
