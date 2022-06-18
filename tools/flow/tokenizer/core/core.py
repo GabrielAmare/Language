@@ -9,7 +9,7 @@ from .data import *
 
 __all__ = [
     'Condition',
-    'ActionParams',
+    'Params',
     'Action',
     'Handler',
     'Manager',
@@ -39,7 +39,7 @@ class Condition(flow.Condition):
 
 
 @dataclasses.dataclass
-class ActionParams:
+class Params:
     add: bool  # Add the char to the context content.
     inc: bool  # Increment the index.
     clr: bool  # Get rid of the element (this will ask a new element).
@@ -94,7 +94,7 @@ class ActionParams:
 
 @dataclasses.dataclass
 class Action(flow.Action):
-    params: ActionParams
+    params: Params
     to: int
     
     def __str__(self) -> str:

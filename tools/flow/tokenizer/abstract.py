@@ -35,6 +35,6 @@ class AbstractProxy:
         if self.state not in self.flow.managers:
             self.flow.managers[self.state] = Manager()
     
-    def _action(self, params: ActionParams, to: int | object) -> Action:
+    def _action(self, params: Params, to: int | object) -> Action:
         self.init()
         return Action(params=params, to=self._state(to))

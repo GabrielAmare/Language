@@ -15,29 +15,29 @@ __all__ = [
 
 @dataclasses.dataclass
 class DefaultProxy(AbstractProxy, DefaultProxyInterface):
-    def _on(self, params: ActionParams, to: int | object) -> Proxy:
+    def _on(self, params: Params, to: int | object) -> Proxy:
         action = self._action(params, to)
         self.manager.default = action
         return Proxy(flow=self.flow, state=action.to, entry=self.entry)
     
     def success(self, /, *, add=False, inc=False, clr=True, build='', clear=False) -> None:
-        params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=clear)
+        params = Params(add=add, inc=inc, clr=clr, build=build, clear=clear)
         self._on(params, to=VALID)
     
     def failure(self, /, *, add=False, inc=False, clr=True, build='', clear=False) -> None:
-        params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=clear)
+        params = Params(add=add, inc=inc, clr=clr, build=build, clear=clear)
         self._on(params, to=ERROR)
     
     def build(self, build: str, /, *, add=False, inc=False, clr=False, to=ENTRY) -> Proxy:
-        params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=True)
+        params = Params(add=add, inc=inc, clr=clr, build=build, clear=True)
         return self._on(params, to)
     
     def match(self, /, *, add=True, inc=True, clr=True, to=NEW) -> Proxy:
-        params = ActionParams(add=add, inc=inc, clr=clr, build='', clear=False)
+        params = Params(add=add, inc=inc, clr=clr, build='', clear=False)
         return self._on(params, to=to)
     
     def repeat(self, /, *, add=True, inc=True, clr=True, build='') -> Proxy:
-        params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=bool(build))
+        params = Params(add=add, inc=inc, clr=clr, build=build, clear=bool(build))
         return self._on(params, to=STAY)
 
 
@@ -85,34 +85,34 @@ class Proxy(AbstractProxy, ProxyInterface):
         if self.state not in self.flow.managers:
             self.flow.managers[self.state] = Manager()
     
-    def _action(self, params: ActionParams, to: int | object) -> Action:
+    def _action(self, params: Params, to: int | object) -> Action:
         self.init()
         to = self._state(to)
         return Action(params=params, to=to)
     
-    def _on(self, chars: str, params: ActionParams, to: int | object) -> Proxy:
+    def _on(self, chars: str, params: Params, to: int | object) -> Proxy:
         action = self._action(params, to)
         self.add_handler(Handler(Condition(chars), action))
         return Proxy(flow=self.flow, state=action.to, entry=self.entry)
     
     def success(self, chars: str, /, *, add=False, inc=False, clr=True, build='', clear=False) -> None:
-        params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=clear)
+        params = Params(add=add, inc=inc, clr=clr, build=build, clear=clear)
         self._on(chars, params, to=VALID)
     
     def failure(self, chars: str, /, *, add=False, inc=False, clr=True, build='', clear=False) -> None:
-        params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=clear)
+        params = Params(add=add, inc=inc, clr=clr, build=build, clear=clear)
         self._on(chars, params, to=ERROR)
     
     def build(self, chars: str, build: str, /, *, add=True, inc=True, clr=True, to=ENTRY) -> Proxy:
-        params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=True)
+        params = Params(add=add, inc=inc, clr=clr, build=build, clear=True)
         return self._on(chars, params, to=to)
     
     def match(self, chars: str, /, *, add=True, inc=True, clr=True, to=NEW) -> Proxy:
-        params = ActionParams(add=add, inc=inc, clr=clr, build='', clear=False)
+        params = Params(add=add, inc=inc, clr=clr, build='', clear=False)
         return self._on(chars, params, to=to)
     
     def repeat(self, chars: str, /, *, add=True, inc=True, clr=True, build=None) -> Proxy:
-        params = ActionParams(add=add, inc=inc, clr=clr, build=build, clear=bool(build))
+        params = Params(add=add, inc=inc, clr=clr, build=build, clear=bool(build))
         return self._on(chars, params, to=STAY)
     
     ####################################################################################################################
