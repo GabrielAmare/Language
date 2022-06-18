@@ -1,0 +1,23 @@
+[
+  {
+    "label": "Success (without)",
+    "src": "y",
+    "tokens": [
+      "0 1 ?XY y"
+    ]
+  },
+  {
+    "label": "Success (with)",
+    "src": "xy",
+    "tokens": [
+      "0 2 ?XY xy"
+    ]
+  },
+  {
+    "label": "Failure (without closure)",
+    "src": "x",
+    "tokens": [
+      "0 1 ~ERROR x"
+    ]
+  }
+]

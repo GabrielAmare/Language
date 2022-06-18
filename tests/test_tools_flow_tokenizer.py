@@ -53,12 +53,29 @@ _TOKENIZER_MAKERS = {
 
 class TestToolsFlowTokenizer(unittest.TestCase):
     
-    def __testing(self, flow: Flow, cases: list[dict]):
-        for label, function in _TOKENIZER_MAKERS.items():
+    def __testing(self, flow: Flow, fp: str, generate: bool = False):
+        cases = files.load_json_file(fp)
+        
+        if generate:
+            output = []
+            
+            function = _TOKENIZER_MAKERS["builtin"]
             tokenize = function(flow)
             for case in cases:
-                with self.subTest(f"{label}", label=case['label'], src=case['src']):
-                    self.assertEqual(first=tokenize(case['src']), second=case['tokens'], msg="")
+                if case['tokens'] is None:
+                    case['tokens'] = tokenize(case['src'])
+                
+                output.append(case)
+            
+            files.save_json_file(fp, output, indent=2)
+        
+        else:
+            for label, function in _TOKENIZER_MAKERS.items():
+                tokenize = function(flow)
+                for case in cases:
+                    with self.subTest(f"{label}", label=case['label'], src=case['src']):
+                        self.assertEqual(first=tokenize(case['src']), second=case['tokens'], msg="")
+        
     
     def test_method_build(self):
         flow = Flow()
@@ -66,7 +83,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         origin.build('x', 'X')
         finalize(flow)
         
-        self.__testing(flow, files.load_json_file("flow_tokenizer/test_method_build.json"))
+        self.__testing(flow, "flow_tokenizer/test_method_build.json")
     
     def test_method_match(self):
         flow = Flow()
@@ -76,7 +93,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         
         finalize(flow)
         
-        self.__testing(flow, files.load_json_file("flow_tokenizer/test_method_match.json"))
+        self.__testing(flow, "flow_tokenizer/test_method_match.json")
     
     def test_method_repeat(self):
         flow = Flow()
@@ -86,7 +103,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         
         finalize(flow)
         
-        self.__testing(flow, files.load_json_file("flow_tokenizer/test_method_repeat.json"))
+        self.__testing(flow, "flow_tokenizer/test_method_repeat.json")
     
     def test_method_repeat_plus(self):
         flow = Flow()
@@ -96,7 +113,17 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         
         finalize(flow)
         
-        self.__testing(flow, files.load_json_file("flow_tokenizer/test_method_repeat_plus.json"))
+        self.__testing(flow, "flow_tokenizer/test_method_repeat_plus.json")
+    
+    def test_method_optional(self):
+        flow = Flow()
+        origin = Proxy(flow, 0)
+        
+        origin.optional('x').build('y', '?XY')
+        
+        finalize(flow)
+        
+        self.__testing(flow, "flow_tokenizer/test_method_optional.json")
     
     def test_combination(self):
         """Test combination."""
@@ -108,7 +135,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         
         finalize(flow)
         
-        self.__testing(flow, files.load_json_file("flow_tokenizer/test_combination.json"))
+        self.__testing(flow, "flow_tokenizer/test_combination.json")
     
     def test_integer_and_decimal(self):
         flow = Flow()
@@ -123,7 +150,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         
         finalize(flow)
         
-        self.__testing(flow, files.load_json_file("flow_tokenizer/test_integer_and_decimal.json"))
+        self.__testing(flow, "flow_tokenizer/test_integer_and_decimal.json")
     
     def test_skip_token(self):
         flow = Flow()
@@ -134,7 +161,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         
         finalize(flow)
         
-        self.__testing(flow, files.load_json_file("flow_tokenizer/test_skip_token.json"))
+        self.__testing(flow, "flow_tokenizer/test_skip_token.json")
 
 
 if __name__ == '__main__':

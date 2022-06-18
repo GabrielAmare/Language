@@ -121,11 +121,11 @@ class Proxy(AbstractProxy, ProxyInterface):
     
     def optional(self, chars: str, /, *, build=None, to=NEW):
         if build is None:
-            self.match(chars, add=True, inc=True, clr=True, to=to)
-            return self.default.match(add=False, inc=False, to=to)
+            self.match(chars, to=to)
+            return self.default.match(add=False, inc=False, clr=False, to=to)
         else:
-            self.build(chars, build, add=True, inc=True, clr=True, to=to)
-            return self.default.build(build, add=False, inc=False, to=to)
+            self.build(chars, build, to=to)
+            return self.default.build(build, to=to)
     
     def sequence(self, *seq_chars: str, add=True, inc=True, clr=True, build=None, to=None):
         cur = self
