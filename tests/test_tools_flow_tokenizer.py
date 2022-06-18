@@ -75,7 +75,6 @@ class TestToolsFlowTokenizer(unittest.TestCase):
                 for case in cases:
                     with self.subTest(f"{label}", label=case['label'], src=case['src']):
                         self.assertEqual(first=tokenize(case['src']), second=case['tokens'], msg="")
-        
     
     def test_method_build(self):
         flow = Flow()
