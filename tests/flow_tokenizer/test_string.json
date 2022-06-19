@@ -23,6 +23,13 @@
     ]
   },
   {
+    "label": "Failure (missing closing quote with ending counter-slash)",
+    "src": "'invalid\\",
+    "tokens": [
+      "0 10 ~ERR 'invalid\\\u0000"
+    ]
+  },
+  {
     "label": "Success (escaped quote)",
     "src": "'\\''",
     "tokens": [
