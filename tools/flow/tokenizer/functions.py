@@ -32,5 +32,5 @@ def finalize(flow: Flow) -> None:
         if default_action.params.options & CLEAR:
             proxy.build(EOT, default_action.params.build, options=0)
             continue
-
+        
         proxy.failure(EOT, build="~ERR")

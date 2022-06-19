@@ -252,7 +252,7 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         mount_false(var)
         
         finalize(flow)
-                
+        
         self.__testing(flow, "flow_tokenizer/test_complex.json")
 
 
