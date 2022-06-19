@@ -150,10 +150,11 @@ class Flow(flow.Flow[Context, str]):
     
     def __call__(self, src: str) -> typing.Iterator[Token]:
         context = Context()
-        state = self.run(context, src)
+        state = 0
         
-        for token in context.tokens:
-            yield token
+        for state in self.run(context, src):
+            while context.tokens:
+                yield context.tokens.pop(0)
         
         # if state == ERROR:
         #     raise TokenizerError(Token(type='$ERROR', content=context.content, at=context.at, to=context.to))

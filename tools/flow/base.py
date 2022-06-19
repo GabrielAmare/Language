@@ -94,12 +94,13 @@ class Flow(typing.Generic[C, E], abc.ABC):
             state, element = action.execute(context, element)
         return state
     
-    def run(self, context: C, elements: typing.Iterable[E]) -> int:
+    def run(self, context: C, elements: typing.Iterable[E]) -> typing.Iterator[int]:
         state = 0
         for element in elements:
             state = self._on(state, context, element)
+            yield state
         state = self._on(state, context, self.eot())
-        return state
+        yield state
     
     def add_action(self, action: Action[C, E]) -> int:
         """Add an action to the list and return its index. If the action already exists, only return its index."""
