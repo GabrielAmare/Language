@@ -21,10 +21,10 @@ class DefaultProxy(AbstractProxy, DefaultProxyInterface):
         self.manager.default = action
         return Proxy(flow=self.flow, state=action.to, entry=self.entry)
     
-    def success(self, /, *, options=EXCLUDE, build='') -> None:
+    def success(self, /, *, options=INCLUDE, build='') -> None:
         self._on(options=options, build=build, to=VALID)
     
-    def failure(self, /, *, options=EXCLUDE, build='') -> None:
+    def failure(self, /, *, options=INCLUDE, build='') -> None:
         self._on(options=options, build=build, to=ERROR)
     
     def build(self, build: str, /, *, options=0, to=ENTRY) -> Proxy:
