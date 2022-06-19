@@ -244,4 +244,5 @@ class TokenizerGraph(FlowGraph[t.Flow]):
         label = label[1:-1]
         label = label.replace("\\x00", "⚡")  # display EOT
         label = label.replace(' ', '␣')  # display space
+        label = label.replace('\\n', '\\\\n')
         return label
