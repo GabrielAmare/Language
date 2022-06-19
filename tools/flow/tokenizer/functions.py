@@ -12,19 +12,25 @@ def finalize(flow: Flow) -> None:
     
     # ERROR
     err_1 = Proxy(flow, flow.new_state())
-    err_1.failure(EOT, build='~ERR')
+    err_1.default.repeat().failure(EOT, build='~ERR')
     
     for state, manager in flow.managers.items():
         proxy = Proxy(flow, state)
         
         if manager.default is None:
-            proxy.default.match(to=err_1)
+            proxy.default.goto(to=err_1)
+            continue
         
-        if not manager.verify(EOT):
-            if manager.default is not None:
-                default_action = flow.actions[manager.default]
-                if default_action.params.options & CLEAR:
-                    proxy.build(EOT, default_action.params.build, options=0)
-                    continue
+        if manager.verify(EOT):
+            continue
+        
+        default_action = flow.actions[manager.default]
+        
+        if default_action.params.options == CLEAR:
+            continue
+        
+        if default_action.params.options & CLEAR:
+            proxy.build(EOT, default_action.params.build, options=0)
+            continue
 
-            proxy.failure(EOT, build='~ERR')
+        proxy.failure(EOT, build="~ERR")

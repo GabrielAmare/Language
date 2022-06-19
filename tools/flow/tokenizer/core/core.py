@@ -17,7 +17,7 @@ __all__ = [
 ]
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(unsafe_hash=True)
 class Condition(flow.Condition[str]):
     chars: str
     
@@ -38,7 +38,7 @@ class Condition(flow.Condition[str]):
         return ''.join(sorted(set(self.chars)))
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(unsafe_hash=True)
 class Params:
     options: int
     build: str  # Build a token with the given type.
@@ -98,7 +98,7 @@ class Params:
         return self.options, self.build
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(unsafe_hash=True)
 class Action(flow.Action[Context, str]):
     params: Params
     to: int
