@@ -37,18 +37,18 @@ class Action(typing.Generic[C, E], AbstractAction[C, E], abc.ABC):
 
 
 @dataclasses.dataclass
-class Handler(typing.Generic[C, E]):
+class Handler(typing.Generic[E]):
     condition: Condition[E]
-    action: Action[C, E]
+    action: int
     
     def __str__(self):
         return f"{self.condition!s}: {self.action!s}"
 
 
 @dataclasses.dataclass
-class Manager(typing.Generic[C, E]):
-    handlers: list[Handler[C, E]] = dataclasses.field(default_factory=list)
-    default: Action[C, E] | None = None
+class Manager(typing.Generic[E]):
+    handlers: list[Handler[E]] = dataclasses.field(default_factory=list)
+    default: int | None = None
     
     def __str__(self) -> str:
         if self.default is None:
@@ -59,7 +59,7 @@ class Manager(typing.Generic[C, E]):
     def verify(self, element: E) -> bool:
         return any(handler.condition.verify(element) for handler in self.handlers)
     
-    def get_action(self, element: E) -> Action[C, E]:
+    def get_action(self, element: E) -> int | None:
         for handler in self.handlers:
             if handler.condition.verify(element):
                 return handler.action
@@ -72,7 +72,8 @@ def indent(s: str) -> str:
 
 @dataclasses.dataclass
 class Flow(typing.Generic[C, E], abc.ABC):
-    managers: dict[int, Manager[C, E]] = dataclasses.field(default_factory=dict)
+    managers: dict[int, Manager[E]] = dataclasses.field(default_factory=dict)
+    actions: list[Action[C, E]] = dataclasses.field(default_factory=list)
     
     @abc.abstractmethod
     def eot(self) -> E:
@@ -88,9 +89,8 @@ class Flow(typing.Generic[C, E], abc.ABC):
     def _on(self, state: int, context: C, element: E) -> int:
         while element:
             manager: Manager = self.managers[state]
-            action: Action = manager.get_action(element)
-            if action is None:
-                raise NotImplementedError
+            action_index: int = manager.get_action(element)
+            action: Action = self.actions[action_index]
             state, element = action.execute(context, element)
         return state
     
@@ -100,3 +100,19 @@ class Flow(typing.Generic[C, E], abc.ABC):
             state = self._on(state, context, element)
         state = self._on(state, context, self.eot())
         return state
+    
+    def add_action(self, action: Action[C, E]) -> int:
+        """Add an action to the list and return its index. If the action already exists, only return its index."""
+        try:
+            return self.actions.index(action)
+        except ValueError:
+            index = len(self.actions)
+            self.actions.append(action)
+            return index
+    
+    def set_default(self, state: int, action: Action[C, E]) -> None:
+        action_index: int = self.add_action(action)
+        self.managers[state].default = action_index
+    
+    def add_handler(self, state: int, handler: Handler[E]) -> None:
+        self.managers[state].handlers.append(handler)

@@ -1,4 +1,4 @@
-function makeTokenizer(managers) {
+function makeTokenizer(flow) {
   return function tokenizer(text) {
     let state = 0;
     let content = '';
@@ -6,22 +6,25 @@ function makeTokenizer(managers) {
     let to = 0;
     let tokens = [];
     text += '\0';
+    const managers = flow[0];
+    const actions = flow[1];
     for (let charIndex = 0; charIndex < text.length; charIndex++) {
       let char = text[charIndex];
       while (char !== null) {
         const manager = managers[state];
         const handlers = manager[0];
-        let action = manager[1];
+        let action_index = manager[1];
         for (let handlerIndex = 0; handlerIndex < handlers.length; handlerIndex++) {
           const handler = handlers[handlerIndex];
           if (handler[0].indexOf(char) !== -1) {
-            action = handler[1];
+            action_index = handler[1];
             break;
           }
         }
-        if (!action) {
+        if (action_index === null) {
           throw new SyntaxError('action not defined on ' + state + ' with "' + char + '"');
         }
+        let action = actions[action_index];
         const params = action[0];
         const options = params[0];
         const build = params[1];

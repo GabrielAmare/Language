@@ -18,13 +18,13 @@ __all__ = [
 
 
 @dataclasses.dataclass
-class Condition(flow.Condition):
+class Condition(flow.Condition[str]):
     chars: str
     
     def __str__(self) -> str:
         return repr(''.join(sorted(set(self.chars))))
     
-    def verify(self, char) -> bool:
+    def verify(self, char: str) -> bool:
         return char in self.chars
     
     def then(self, action: Action) -> Handler:
@@ -99,7 +99,7 @@ class Params:
 
 
 @dataclasses.dataclass
-class Action(flow.Action):
+class Action(flow.Action[Context, str]):
     params: Params
     to: int
     
@@ -115,31 +115,32 @@ class Action(flow.Action):
 
 
 @dataclasses.dataclass
-class Handler(flow.Handler):
+class Handler(flow.Handler[str]):
     condition: Condition
-    action: Action
+    action: int
     
     def shadows(self, other: Handler) -> bool:
         return self.condition.shadows(other.condition)
     
     @property
     def data(self) -> HandlerData:
-        return self.condition.data, self.action.data
+        return self.condition.data, self.action
 
 
 @dataclasses.dataclass
-class Manager(flow.Manager):
+class Manager(flow.Manager[str]):
     handlers: list[Handler] = dataclasses.field(default_factory=list)
-    default: Action | None = None
+    default: int | None = None
     
     @property
     def data(self) -> ManagerData:
-        return [handler.data for handler in self.handlers], None if self.default is None else self.default.data
+        return [handler.data for handler in self.handlers], self.default
 
 
 @dataclasses.dataclass
-class Flow(flow.Flow):
+class Flow(flow.Flow[Context, str]):
     managers: dict[int, Manager] = dataclasses.field(default_factory=dict)
+    actions: list[Action] = dataclasses.field(default_factory=list)
     
     def eot(self) -> str:
         return EOT
@@ -166,4 +167,4 @@ class Flow(flow.Flow):
             state += 1
         data.append([[], 0])  # FOR VALID STATE (-1)
         data.append([[], 0])  # FOR ERROR STATE (-2)
-        return data
+        return data, [action.data for action in self.actions]

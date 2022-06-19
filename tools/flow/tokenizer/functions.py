@@ -21,7 +21,10 @@ def finalize(flow: Flow) -> None:
             proxy.default.match(to=err_1)
         
         if not manager.verify(EOT):
-            if manager.default and manager.default.params.options & CLEAR:
-                proxy.build(EOT, manager.default.params.build, options=0)
-            else:
-                proxy.failure(EOT, build='~ERR')
+            if manager.default is not None:
+                default_action = flow.actions[manager.default]
+                if default_action.params.options & CLEAR:
+                    proxy.build(EOT, default_action.params.build, options=0)
+                    continue
+
+            proxy.failure(EOT, build='~ERR')

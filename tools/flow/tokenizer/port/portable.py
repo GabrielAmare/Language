@@ -7,10 +7,10 @@ __all__ = [
 ]
 
 
-def make_tokenizer_function(managers: FlowData) -> typing.Callable[[str], typing.Iterator[Token]]:
+def make_tokenizer_function(flow: FlowData) -> typing.Callable[[str], typing.Iterator[Token]]:
     def tokenizer(text: str) -> typing.Iterator[Token]:
         handler: HandlerData
-        action: ActionData
+        action_index: ActionData
         default: ActionData | None
         chars: ConditionData
         options: int
@@ -24,16 +24,20 @@ def make_tokenizer_function(managers: FlowData) -> typing.Callable[[str], typing
         at_col: int = 0
         to_row: int = 0
         to_col: int = 0
+        managers: list[ManagerData] = flow[0]
+        actions: list[ActionData] = flow[1]
+        
         for char in text + EOT:
             while char:
                 handlers, default = managers[state]
-                for chars, action in handlers:
+                for chars, action_index in handlers:
                     if char in chars:
                         break
                 else:
-                    action = default
-                if not action:
+                    action_index = default
+                if action_index is None:
                     raise NotImplementedError
+                action = actions[action_index]
                 options, build = action[0]
                 if options & 1:  # add
                     content += char

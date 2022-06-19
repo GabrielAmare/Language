@@ -17,8 +17,8 @@ __all__ = [
 class DefaultProxy(AbstractProxy, DefaultProxyInterface):
     def _on(self, options: int, build: str, to: int | object) -> Proxy:
         params = Params(options, build)
-        action = self._action(params, to)
-        self.manager.default = action
+        action: Action = self._action(params, to)
+        self.flow.set_default(self.state, action)
         return Proxy(flow=self.flow, state=action.to, entry=self.entry)
     
     def success(self, /, *, options=INCLUDE, build='') -> None:
@@ -66,14 +66,16 @@ class Proxy(AbstractProxy, ProxyInterface):
             if not handler.condition.shadows(condition):
                 continue
             
-            if handler.condition == condition and handler.action.params == params:
-                if to == handler.action.to:
+            handler_action = self.flow.actions[handler.action]
+            
+            if handler.condition == condition and handler_action.params == params:
+                if to == handler_action.to:
                     add = False
                     continue
                 
                 if to not in self.flow.managers:
                     add = False
-                    to = handler.action.to
+                    to = handler_action.to
                     continue
                 
                 raise ValueError(f"[2] {handler.condition} is shadowing {condition}")
@@ -81,9 +83,10 @@ class Proxy(AbstractProxy, ProxyInterface):
             raise ValueError(f"[1] {handler.condition} is shadowing {condition}")
         
         if add:
-            action = Action(params=params, to=to)
-            handler = Handler(condition=condition, action=action)
-            self.flow.managers[self.state].handlers.append(handler)
+            action: Action = Action(params=params, to=to)
+            action_index: int = self.flow.add_action(action)
+            handler = Handler(condition=condition, action=action_index)
+            self.flow.add_handler(self.state, handler)
         
         return to
     
