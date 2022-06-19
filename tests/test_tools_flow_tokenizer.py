@@ -167,6 +167,17 @@ class TestToolsFlowTokenizer(unittest.TestCase):
         
         self.__testing(flow, "flow_tokenizer/test_skip_token.json")
     
+    def test_method_build_excluded(self):
+        flow = Flow()
+        origin = Proxy(flow, 0)
+        
+        origin.match("#").default.repeat().build('\n' + EOT, 'Comment', options=0)
+        origin.build('\n', 'NEWLINE')
+        
+        finalize(flow)
+        
+        self.__testing(flow, "flow_tokenizer/test_method_build_excluded.json")
+    
     def test_string(self):
         flow = Flow()
         origin = Proxy(flow, 0)
