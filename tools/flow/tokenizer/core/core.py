@@ -165,6 +165,4 @@ class Flow(flow.Flow[Context, str]):
         while state in self.managers:
             data.append(self.managers[state].data)
             state += 1
-        data.append([[], 0])  # FOR VALID STATE (-1)
-        data.append([[], 0])  # FOR ERROR STATE (-2)
         return data, [action.data for action in self.actions]
