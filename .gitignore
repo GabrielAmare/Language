@@ -12,3 +12,6 @@ todo.txt
 
 *.xml
 examples/flow/*.json
+
+flows/*/*.gv
+flows/*/*.svg
