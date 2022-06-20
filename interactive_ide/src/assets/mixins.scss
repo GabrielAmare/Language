@@ -1,0 +1,21 @@
+@mixin row($content: null, $items: null) {
+  display: flex;
+  flex-direction: row;
+  @if $content != null {
+    justify-content: $content;
+  }
+  @if $items != null {
+    align-items: $items;
+  }
+}
+
+@mixin col($content: null, $items: null) {
+  display: flex;
+  flex-direction: column;
+  @if $content != null {
+    justify-content: $content;
+  }
+  @if $items != null {
+    align-items: $items;
+  }
+}
