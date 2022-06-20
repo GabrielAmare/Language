@@ -1,7 +1,7 @@
 <template>
   <div class="ide">
     <div class="ide-header">
-      <select v-model="context.lang"
+      <select :value="context.lang"
               @change="reload">
         <option v-for="(lang, index) in langs"
                 :key="index">
@@ -36,15 +36,13 @@ export default {
   props: [],
   data() {
     return {
-      langs: ['database_1_0_0', 'database_1_1_0', 'database_1_2_0'],
+      langs: [],
       showTokens: false,
       reloadLang: false,
       context: {
-        settings: {
-          lang: 'database_1_0_0',
-          tokenizer: null,
-          styles: {}
-        },
+        lang: null,
+        tokenizer: null,
+        styles: {},
         code: "// Showcase the syntax highlighter.\n" +
           "\n" +
           "table Example {\n" +
@@ -68,6 +66,10 @@ export default {
     }
   },
   async mounted() {
+    this.langs = (await import('../assets/langs/langs.json')).default
+    if (this.context.lang === null) {
+      this.context.lang = this.$route.query?.lang ?? this.langs[0]
+    }
     await this.reload()
   },
   methods: {
