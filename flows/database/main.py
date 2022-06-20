@@ -4,19 +4,15 @@ import string
 import tools.files
 from tools.flow.tokenizer import *
 
-__all__ = [
-    'flow_database'
-]
 
-
-def _create(version: tuple[int, int, int]) -> Flow:
+def _create(v: tuple[int, int, int]) -> Flow:
     flow = Flow()
     entry = Proxy(flow, 0)
     
     entry.build('\n', 'NEWLINE')
     entry.match('/').match('/').default.repeat().build('\n' + EOT, 'Comment', options=0)
     
-    if (1, 1, 0) <= version:
+    if (1, 1, 0) <= v:
         mlc1 = entry.match('/').match('*').default.repeat()
         mlc2 = mlc1.match('*')
         mlc2.build('/', 'Comment')
@@ -53,7 +49,7 @@ def _create(version: tuple[int, int, int]) -> Flow:
     field.build('*', 'ListField', to=field1)
     field.build('?', 'UnitOptionalField', to=field1)
     
-    if version >= (1, 2, 0):
+    if v >= (1, 2, 0):
         field2 = (
             field1
             .repeat_plus(string.ascii_letters).default.build('FieldName', to=NEW)
@@ -82,14 +78,6 @@ def _create(version: tuple[int, int, int]) -> Flow:
     finalize(flow)
     
     return flow
-
-
-def _style():
-    return {
-        'Name': {
-            'color': 'orange'
-        }
-    }
 
 
 if __name__ == '__main__':
