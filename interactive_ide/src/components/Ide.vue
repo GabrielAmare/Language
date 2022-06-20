@@ -1,7 +1,7 @@
 <template>
   <div class="ide">
     <div class="ide-header">
-      <select :value="context.lang"
+      <select v-model="context.lang"
               @change="reload">
         <option v-for="(lang, index) in langs"
                 :key="index">
@@ -63,6 +63,16 @@ export default {
           "}\n",
         tokens: []
       }
+    }
+  },
+  computed: {
+    lang() {
+      return this.context.lang
+    }
+  },
+  watch: {
+    lang() {
+      this.$route.query.lang = this.lang
     }
   },
   async mounted() {
