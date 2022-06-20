@@ -1,0 +1,7 @@
+# charset aliases
+(digit) = '0123456789'
+
+# rules
+integer = +digit
+decimal = +digit '.' *digit  | '.' +digit
+string  = "'" *any "'" | '"' *any '"'
