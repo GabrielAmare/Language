@@ -222,6 +222,10 @@ class FlowGraph(typing.Generic[F], abc.ABC):
         self.dot.render(filename=self.name + ".gv", outfile=self.name + ".svg", view=True)
         for handler in self.handlers:
             print('--', handler)
+    
+    def save(self, fp: str) -> None:
+        self.build()
+        self.dot.render(outfile=fp, view=False)
 
 
 @dataclasses.dataclass
