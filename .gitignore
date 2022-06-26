@@ -2,3 +2,6 @@
 !setup.bat
 !test.bat
 *.pyc
+/interactive_ide/node_modules/
+*.xml
+§*.*

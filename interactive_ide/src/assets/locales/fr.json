@@ -1,0 +1,19 @@
+{
+ "action": {
+   "file": {
+     "save": "Sauvegarder le fichier"
+   },
+   "tokens": {
+     "show": "Afficher les tokens",
+     "hide": "Cacher les tokens"
+   }
+ },
+  "folder": "Dossier",
+  "file": "Fichier",
+  "lang": "Langage",
+  "pages": {
+    "home": "Accueil",
+    "ide": "IDE",
+    "langs": "Langages"
+  }
+}

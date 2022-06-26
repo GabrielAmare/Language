@@ -1,0 +1,24 @@
+{
+  "types": {
+    "Integer": {
+      "color": "cyan"
+    },
+    "String": {
+      "color": "green"
+    },
+    "TRUE": {
+      "color": "orange"
+    },
+    "FALSE": {
+      "color": "orange"
+    },
+    "~ERR": {
+      "color": "red",
+      "font-weight": "bold !important",
+      "text-decoration": "red wavy underline 1px !important"
+    }
+  },
+  "default": {
+    "color": "white"
+  }
+}

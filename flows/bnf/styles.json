@@ -1,0 +1,24 @@
+{
+  "types": {
+    "KW_STRING": {
+      "color": "#b97800"
+    },
+    "KW_REGEX": {
+      "color": "#b97800"
+    },
+    "String": {
+      "color": "green"
+    },
+    "Variable": {
+      "color": "purple"
+    },
+    "~ERR": {
+      "color": "red",
+      "font-weight": "bold !important",
+      "text-decoration": "red wavy underline 1px !important"
+    }
+  },
+  "default": {
+    "color": "white"
+  }
+}

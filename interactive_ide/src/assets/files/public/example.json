@@ -1,0 +1,11 @@
+{
+  "key": "value",
+  "key2": "value2",
+  "listkey": [
+    "value1",
+    "value2",
+    15,
+    true,
+    false
+  ]
+}

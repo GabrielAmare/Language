@@ -1,0 +1,18 @@
+// Showcase the syntax highlighter.
+
+table Example {
+  !required[int]
+  *multiple[str]
+}
+
+/*
+  have some troubles with the syntax ??
+*/
+
+table User {
+  !id[int]=auto
+  !username[str]
+  !password[str]
+  *friends[User]
+  *role[str]="MEMBER"
+}

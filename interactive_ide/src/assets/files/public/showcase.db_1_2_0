@@ -1,0 +1,37 @@
+/*
+  Users of the application
+  by default we register users as members (role with default permissions)
+*/
+table User {
+  !id[int]=auto
+  !username[str]
+  !password[str]
+  *friends[User]
+  *role[str]="MEMBER"
+}
+
+// articles created on the server
+table Article {
+  !id[int]=auto
+  !author[User]
+  !title[str]
+  *contents[str]
+  !published[bool]
+  *categories[Category]
+}
+
+
+table Category {
+  !id[int]=auto
+  !title[str]
+  !description[str]
+  *articles[Article]
+}
+
+// linking article to category (many-to-many)
+table ArticleCategory {
+  !articleId[int]
+  !categoryId[int]
+  !article[Article]
+  !category[Category]
+}

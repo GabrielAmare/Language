@@ -1,0 +1,2 @@
+string KW_STRING = 'string'
+string KW_REGEX = 'regex'

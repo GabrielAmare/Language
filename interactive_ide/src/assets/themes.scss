@@ -1,0 +1,47 @@
+@mixin theme-dark($opacity: 1) {
+  background-color: rgba(16, 16, 16, $opacity);
+  color: #dddddd;
+  .hov-highlight:hover {
+    background-color: rgba(32, 32, 32, $opacity);
+  }
+  .hov-highlight:active {
+    background-color: rgba(64, 64, 64, $opacity);
+  }
+
+  select, label, button {
+    background-color: #262020;
+    color: white;
+    border: 1px solid #626262;
+    border-radius: 10px;
+    padding: 0.250em 0.750em;
+  }
+
+  button {
+    &:disabled {
+      background-color: #979797;
+      color: #5e5e5e;
+    }
+  }
+
+  .button-group {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: stretch;
+    column-gap: 0;
+
+    :not(:first-child) {
+      margin-left: 0 !important;
+      border-top-left-radius: 0 !important;
+      border-bottom-left-radius: 0 !important;
+      border-left: none;
+    }
+
+    :not(:last-child) {
+      margin-right: 0 !important;
+      border-top-right-radius: 0 !important;
+      border-bottom-right-radius: 0 !important;
+    }
+  }
+
+}
