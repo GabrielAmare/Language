@@ -56,7 +56,6 @@ REGENERATE = os.environ.get('REGEN_TESTS')  # Set this to True will regenerate a
 
 
 class TestToolsFlowTokenizer(unittest.TestCase):
-    
     def __testing(self, flow: Flow, fp: str, generate: bool = REGENERATE):
         cases = files.load_json_file(fp)
         
