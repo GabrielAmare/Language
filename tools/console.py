@@ -107,6 +107,7 @@ state = State()
 FAILURE = object()
 SUCCESS = object()
 WARNING = object()
+MESSAGE = object()
 INFO = object()
 DEBUG = object()
 SCOPE = object()
@@ -117,11 +118,13 @@ def _get_prefix(mode) -> str:
     if mode is None:
         return ' '
     if mode is FAILURE:
-        return Style(bg=(0, 0, 0), fg=(255, 0, 0))('✗')
+        return Style(bg=(0, 0, 0), fg="red")('✗')
     elif mode is SUCCESS:
-        return Style(bg=(0, 0, 0), fg=(0, 255, 0))('✓')
+        return Style(bg=(0, 0, 0), fg="green")('✓')
     elif mode is WARNING:
-        return Style(bg=(0, 0, 0), fg=(255, 255, 0))('!')
+        return Style(bg=(0, 0, 0), fg="yellow")('!')
+    elif mode is MESSAGE:
+        return Style(bg=(0, 0, 0), fg="white")('-')
     elif mode is INFO:
         return '+'
     elif mode is DEBUG:
@@ -141,6 +144,8 @@ def _get_style(mode) -> Style:
         return Style(fg="green")
     elif mode is WARNING:
         return Style(fg="yellow")
+    elif mode is MESSAGE:
+        return Style(fg="white")
     elif mode is INFO:
         return Style(fg=(0, 0, 255))
     elif mode is DEBUG:
@@ -181,6 +186,10 @@ def failure(*args):
 
 def success(*args):
     _print(*args, mode=SUCCESS)
+
+
+def message(*args):
+    _print(*args, mode=MESSAGE)
 
 
 def warning(*args):
