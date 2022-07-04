@@ -15,3 +15,4 @@ examples/flow/*.json
 
 flows/*/*.gv
 flows/*/*.svg
+*/node_modules
