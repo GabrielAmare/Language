@@ -1,9 +1,0 @@
-alias  S         := $' '
-alias  N         := $'\n'
-alias  SC        := $';'
-alias  CS        := ',' <S>
-alias  Scope     := '{' <Block as block> <N> '}'
-alias  SScope    := <S> <Scope>
-alias  Condition := '(' <Expression as condition> ')'
-alias  LExpr     := <Expression as left> <S>
-alias  RExpr     := <S> <Expression as right>

@@ -1,5 +1,0 @@
-regex WHITESPACE '[ \t\r]+' ignore
-regex NEWLINE '\n' ignore
-regex Integer '\d+'
-regex String '\"[^\"]*\"|\'[^\']*\''
-regex Variable '[a-zA-Z]\w*'
