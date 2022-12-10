@@ -57,10 +57,17 @@ class DirectedGraph(typing.Generic[T]):
         dot = graphviz.Digraph()
         
         for node in self.nodes:
-            dot.node(name=str(id(node)), **node_config(node))
+            dot.node(
+                name=str(self.nodes.index(node)),
+                **node_config(node)
+            )
         
         for origin, targets in self.links_by_origin.items():
             for target in targets:
-                dot.edge(tail_name=str(id(origin)), head_name=str(id(target)), **link_config(origin, target))
+                dot.edge(
+                    tail_name=str(self.nodes.index(origin)),
+                    head_name=str(self.nodes.index(target)),
+                    **link_config(origin, target)
+                )
         
         return dot
