@@ -6,6 +6,7 @@ import language.base.abstract
 
 __all__ = [
     'AbstractGR',
+    'Expression',
     'Statement',
     'Module',
 ]
@@ -13,6 +14,11 @@ __all__ = [
 
 @dataclasses.dataclass
 class AbstractGR(language.base.abstract.Writable, abc.ABC):
+    pass
+
+
+@dataclasses.dataclass
+class Expression(AbstractGR, abc.ABC):
     pass
 
 
