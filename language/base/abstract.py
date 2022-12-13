@@ -3,6 +3,8 @@ import typing
 
 __all__ = [
     'Writable',
+    'tok',
+    'indented',
 ]
 
 
@@ -19,3 +21,22 @@ class Writable(abc.ABC):
     def __str__(self):
         """Returns a string representation of the object in its class specific language."""
         return ''.join(self.__tokens__())
+
+
+def tok(obj: Writable | str) -> typing.Iterator[str]:
+    if isinstance(obj, Writable):
+        yield from obj.__tokens__()
+    elif isinstance(obj, str):
+        yield from obj
+    else:
+        raise TypeError(f"Unable to extract tokens from {type(obj)!r} object.")
+
+
+def indented(method: typing.Callable[[Writable], typing.Iterator[str]]):
+    def wrapped(self) -> typing.Iterator[str]:
+        for token in method(self):
+            yield token
+            if token == '\n':
+                yield '    '
+    
+    return wrapped
