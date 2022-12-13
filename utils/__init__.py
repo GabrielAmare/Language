@@ -1,2 +1,1 @@
-from .DirectedGraph import *
-from .MroGraph import *
+from .graphs import *

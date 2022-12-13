@@ -1,6 +1,6 @@
 import dataclasses
 
-from utils import DirectedGraph
+from .DirectedGraph import DirectedGraph
 
 __all__ = [
     'MroGraph'
