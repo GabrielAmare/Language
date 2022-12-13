@@ -24,49 +24,88 @@ def _op1(operator: str, right_type: str):
     ])
 
 
-python_3_10_0_definition = (
-    EngineBuilder('Module')
-    
-    # ATOM
-    .group('Atom', ['Variable', '_True', '_False', '_None', 'String', 'Integer', 'Decimal'])
-    .token('Variable', sequence(*[
-        match_char(string.ascii_letters + '_'),
-        repeat0(match_char(string.ascii_letters + string.digits + '_')),
-    ]))
-    .token('_True', literal('True'))
-    .token('_False', literal('False'))
-    .token('_None', literal('None'))
-    .token('String', parallel(*[
-        sequence(*[
-            match_char('"'),
-            match_char('"', True),
-            match_char('"'),
-        ]),
-        sequence(*[
-            match_char("'"),
-            match_char("'", True),
-            match_char("'"),
-        ]),
-    ]))
-    .token('Integer', repeat1(match_char('0123456789')))
-    .token('Decimal', parallel(*[
-        sequence(*[
-            repeat1(match_char(string.digits)),
-            match_char('.'),
-            repeat0(match_char(string.digits)),
-        ]),
-        sequence(*[
-            match_char('.'),
-            repeat1(match_char(string.digits)),
-        ]),
-    ]))
-    
+ABSTRACT_GR = (
+    GroupContext(root=None, name='AbstractGR')
     .lemma('Module', sequence(*[
         enum1(
             separator=literal('\n'),
             item=match_in('Statement', 'statements')
         )
     ]))
+    .lemma('Block', repeat1(sequence(*[
+        literal('\n'),
+        match_in('Statement', 'statements'),
+    ])), indented=True)
+)
+
+STATEMENT = (
+    ABSTRACT_GR.group('Statement')
+    .token('_Pass', literal('pass'))
+    .token('_Continue', literal('continue'))
+    .token('_Break', literal('break'))
+    .lemma('If', sequence(*[
+        literal('if'),
+        canonical(' '),
+        match_as('Expression', 'test'),
+        literal(':'),
+        match_as('Block', 'block'),
+        optional(match_as('AltGR', 'alt')),
+    ]))
+    .lemma('For', sequence(*[
+        literal('for'),
+        canonical(' '),
+        enum0(
+            separator=sequence(literal(','), canonical(' ')),
+            item=match_in('Variable', 'args')
+        ),
+        canonical(' '),
+        literal('in'),
+        canonical(' '),
+        match_as('Expression', 'iter'),
+        literal(':'),
+        match_as('Block', 'block'),
+    ]))
+    .token('_EmptyLine', literal(''))
+    .lemma('Assign', sequence(*[
+        match_as('Primary', 'target'),
+        optional(sequence(*[
+            literal(':'),
+            canonical(' '),
+            match_as('Expression', 'type')
+        ])),
+        optional(sequence(*[
+            canonical(' '),
+            literal('='),
+            canonical(' '),
+            match_as('Expression', 'value'),
+        ])),
+    ]))
+    .lemma('StatementExpression', sequence(*[
+        match_as('Expression', 'expr'),
+    ]))
+)
+
+ALT_GR = (
+    ABSTRACT_GR.group('AltGR')
+    .lemma('Elif', sequence(*[
+        literal('\n'),
+        literal('elif'),
+        canonical(' '),
+        match_as('Expression', 'test'),
+        literal(':'),
+        match_as('Block', 'block'),
+        optional(match_as('AltGR', 'alt')),
+    ]))
+    .lemma('Else', sequence(*[
+        literal('\n'),
+        literal('else'),
+        literal(':'),
+        match_as('Block', 'block'),
+    ]))
+)
+
+RETURNING_STATEMENT = (
+    STATEMENT.group('ReturningStatement')
     .lemma('Raise', sequence(*[
         literal('raise'),
         optional(sequence(*[
@@ -113,20 +152,122 @@ python_3_10_0_definition = (
         canonical(' '),
         match_as('Expression', 'expr'),
     ]))
-    
-    .group('Expression', ['Disjunction'])
-    
-    # Expressions
-    .group('Disjunction', ['Or', 'Conjunction'])
-    .lemma('Or', _op2('Disjunction', literal('or'), 'Conjunction'))
-    
-    .group('Conjunction', ['And', 'Inversion'])
-    .lemma('And', _op2('Conjunction', literal('and'), 'Inversion'))
-    
-    .group('Inversion', ['Not', 'Comparison'])
-    .lemma('Not', _op1('not', 'Inversion'))
-    
-    .group('Comparison', ['Eq', 'Ne', 'Le', 'Lt', 'Ge', 'Gt', 'In', 'NotIn', 'Is', 'IsNot', 'BitwiseOrGR'])
+)
+
+PARAM_GR = (
+    ABSTRACT_GR.group('ParamGR')
+    # Python has a strict order in how params (with or without type or default) are ordered, we ignore this constraint
+    # here.
+    .lemma('Param', sequence(*[
+        match_as('Variable', 'name'),
+        optional(sequence(*[
+            literal(':'),
+            canonical(' '),
+            match_as('Expression', 'type'),
+        ])),
+        optional(sequence(*[
+            canonical(' '),
+            literal('='),
+            canonical(' '),
+            match_as('Expression', 'default'),
+        ])),
+    ]))
+    .lemma('ArgsParam', sequence(*[
+        literal('*'),
+        match_as('Variable', 'name'),
+        optional(sequence(*[
+            literal(':'),
+            canonical(' '),
+            match_as('Expression', 'type'),
+        ])),
+    ]))
+    .lemma('KwargsParam', sequence(*[
+        literal('**'),
+        match_as('Variable', 'name'),
+        optional(sequence(*[
+            literal(':'),
+            canonical(' '),
+            match_as('Expression', 'type'),
+        ])),
+    ]))
+)
+
+DECORATOR_GR = (
+    STATEMENT.group('DecoratorGR')
+    .lemma('Decorator', sequence(*[
+        literal('@'),
+        match_as('Expression', 'expr'),
+        literal('\n'),
+        match_as('DecoratorGR', 'target'),
+    ]))
+    .lemma('Class', sequence(*[
+        literal('class'),
+        canonical(' '),
+        match_as('Variable', 'name'),
+        optional(sequence(*[
+            literal('('),
+            enum0(
+                separator=sequence(*[literal(','), canonical(' ')]),
+                item=match_in('Expression', 'mro')
+            ),
+            literal(')')
+        ])),
+        literal(':'),
+        match_as('Block', 'block'),
+    ]))
+    .lemma('Function', sequence(*[
+        literal('def'),
+        canonical(' '),
+        match_as('Variable', 'name'),
+        literal('('),
+        enum0(
+            separator=sequence(*[literal(','), canonical(' ')]),
+            item=match_in('ParamGR', 'args')
+        ),
+        literal(')'),
+        optional(sequence(*[
+            canonical(' '),
+            literal('->'),
+            canonical(' '),
+            match_as('Expression', 'returns')
+        ])),
+        literal(':'),
+        match_as('Block', 'block'),
+    ]))
+)
+
+SLICE_GR = (
+    ABSTRACT_GR.group('SliceGR')
+    .lemma('Slice', sequence(*[
+        optional(match_as('Expression', 'first')),
+        literal(':'),
+        optional(match_as('Expression', 'second')),
+        optional(sequence(*[
+            literal(':'),
+            match_as('Expression', 'third')
+        ])),
+    ]))
+)
+
+EXPRESSION = (
+    SLICE_GR.group('Expression')
+)
+
+DISJUNCTION = EXPRESSION.group('Disjunction').lemma('Or', sequence(*[
+    enum1(
+        separator=sequence(canonical(' '), literal('or'), canonical(' ')),
+        item=match_in('Conjunction', 'items')
+    )
+]))
+CONJUNCTION = DISJUNCTION.group('Conjunction').lemma('And', sequence(*[
+    enum1(
+        separator=sequence(canonical(' '), literal('and'), canonical(' ')),
+        item=match_in('Inversion', 'items')
+    )
+]))
+INVERSION = CONJUNCTION.group('Inversion').lemma('Not', _op1('not', 'Inversion'))
+COMPARISON = (
+    INVERSION.group('Comparison')
     .lemma('Eq', _op2('Comparison', literal('=='), 'BitwiseOrGR'))
     .lemma('Ne', _op2('Comparison', literal('!='), 'BitwiseOrGR'))
     .lemma('Le', _op2('Comparison', literal('<='), 'BitwiseOrGR'))
@@ -137,57 +278,42 @@ python_3_10_0_definition = (
     .lemma('NotIn', _op2('Comparison', sequence(literal('not'), canonical(' '), literal('in')), 'BitwiseOrGR'))
     .lemma('Is', _op2('Comparison', literal('is'), 'BitwiseOrGR'))
     .lemma('IsNot', _op2('Comparison', sequence(literal('is'), canonical(' '), literal('not')), 'BitwiseOrGR'))
-    
-    # BITWISE OR
-    .group('BitwiseOrGR', ['BitwiseOr', 'BitwiseXorGR'])
-    .lemma('BitwiseOr', _op2('BitwiseOrGR', literal('|'), 'BitwiseXorGR'))
-    
-    # BITWISE XOR
-    .group('BitwiseXorGR', ['BitwiseXor', 'BitwiseAndGR'])
-    .lemma('BitwiseXor', _op2('BitwiseXorGR', literal('^'), 'BitwiseAndGR'))
-    
-    # BITWISE AND
-    .group('BitwiseAndGR', ['BitwiseAnd', 'ShiftGR'])
-    .lemma('BitwiseAnd', _op2('BitwiseAndGR', literal('&'), 'ShiftGR'))
-    
-    # SHIFT
-    .group('ShiftGR', ['LShift', 'RShift', 'Sum'])
+)
+BW_OR_GR = COMPARISON.group('BitwiseOrGR').lemma('BitwiseOr', _op2('BitwiseOrGR', literal('|'), 'BitwiseXorGR'))
+BW_XOR_GR = BW_OR_GR.group('BitwiseXorGR').lemma('BitwiseXor', _op2('BitwiseXorGR', literal('^'), 'BitwiseAndGR'))
+BW_AND_GR = BW_XOR_GR.group('BitwiseAndGR').lemma('BitwiseAnd', _op2('BitwiseAndGR', literal('&'), 'ShiftGR'))
+SHIFT_GR = (
+    BW_AND_GR.group('ShiftGR')
     .lemma('LShift', _op2('ShiftGR', literal('<<'), 'Sum'))
     .lemma('RShift', _op2('ShiftGR', literal('>>'), 'Sum'))
-    
-    # SUM
-    .group('Sum', ['Add', 'Sub', 'Term'])
+)
+SUM = (
+    SHIFT_GR.group('Sum')
     .lemma('Add', _op2('Sum', literal('+'), 'Term'))
     .lemma('Sub', _op2('Sum', literal('-'), 'Term'))
-    
-    # TERM
-    .group('Term', ['Mul', 'TrueDiv', 'FloorDiv', 'Mod', 'MatMul', 'Factor'])
+)
+TERM = (
+    SUM.group('Term')
     .lemma('Mul', _op2('Term', literal('*'), 'Factor'))
     .lemma('TrueDiv', _op2('Term', literal('/'), 'Factor'))
     .lemma('FloorDiv', _op2('Term', literal('//'), 'Factor'))
     .lemma('Mod', _op2('Term', literal('%'), 'Factor'))
     .lemma('MatMul', _op2('Term', literal('@'), 'Factor'))
-    
-    # FACTOR
-    .group('Factor', ['Pos', 'Neg', 'Inv', 'Power'])
+)
+FACTOR = (
+    TERM.group('Factor')
     .lemma('Pos', _op1('+', 'Factor'))
     .lemma('Neg', _op1('-', 'Factor'))
     .lemma('Inv', _op1('~', 'Factor'))
-    
-    # POWER
-    .group('Power', ['Pow', 'AwaitPrimary'])
-    .lemma('Pow', _op2('AwaitPrimary', literal('**'), 'Factor'))
-    
-    # AWAITED
-    .group('AwaitPrimary', ['Awaited', 'Primary'])
-    .lemma('Awaited', sequence(*[
-        literal('await'),
-        canonical(' '),
-        match_as('Primary', 'right'),
-    ]))
-    
-    # PRIMARY
-    .group('Primary', ['GetAttr', 'GetItem', 'Call', 'Atom'])
+)
+POWER = FACTOR.group('Power').lemma('Pow', _op2('AwaitPrimary', literal('**'), 'Factor'))
+AWAITED_PRIMARY = POWER.group('AwaitPrimary').lemma('Awaited', sequence(*[
+    literal('await'),
+    canonical(' '),
+    match_as('Primary', 'right'),
+]))
+PRIMARY = (
+    AWAITED_PRIMARY.group('Primary')
     .lemma('GetAttr', sequence(*[
         match_as('Primary', 'left'),
         literal('.'),
@@ -217,16 +343,76 @@ python_3_10_0_definition = (
         ),
         literal(')'),
     ]))
-    
-    .lemma('Slice', sequence(*[
-        optional(match_as('Expression', 'first')),
-        literal(':'),
-        optional(match_as('Expression', 'second')),
-        optional(sequence(*[
-            literal(':'),
-            match_as('Expression', 'third')
-        ])),
+)
+
+ABSTRACT_GR.lemma('IndentedListBody', sequence(*[
+    repeat1(sequence(*[
+        literal('\n'),
+        match_in('Expression', 'items'),
+        literal(','),
+    ])),
+]), indented=True)
+
+ATOM = (
+    PRIMARY.group('Atom')
+    .token('Variable', sequence(*[
+        match_char(string.ascii_letters + '_'),
+        repeat0(match_char(string.ascii_letters + string.digits + '_')),
     ]))
+    .token('_True', literal('True'))
+    .token('_False', literal('False'))
+    .token('_None', literal('None'))
+    .token('String', parallel(*[
+        sequence(*[
+            match_char('"'),
+            match_char('"', True),
+            match_char('"'),
+        ]),
+        sequence(*[
+            match_char("'"),
+            match_char("'", True),
+            match_char("'"),
+        ]),
+    ]))
+    .token('Integer', repeat1(match_char('0123456789')))
+    .token('Decimal', parallel(*[
+        sequence(*[
+            repeat1(match_char(string.digits)),
+            match_char('.'),
+            repeat0(match_char(string.digits)),
+        ]),
+        sequence(*[
+            match_char('.'),
+            repeat1(match_char(string.digits)),
+        ]),
+    ]))
+    .token('_Ellipsis', literal('...'))
+    .lemma('List', sequence(*[
+        literal('['),
+        optional(enum0(
+            separator=sequence(literal(','), canonical(' ')),
+            item=match_in('Expression', 'items')
+        )),
+        literal(']'),
+    ]))
+    .lemma('Tuple', sequence(*[
+        literal('('),
+        enum1(
+            separator=sequence(literal(','), canonical(' ')),
+            item=match_in('Expression', 'items'),
+        ),
+        # TODO : include the case where the tuple has only a single item `(item,)`.
+        literal(')'),
+    ]))
+    .lemma('IndentedList', sequence(*[
+        literal('['),
+        match_as('IndentedListBody', 'body'),
+        literal('\n'),
+        literal(']')
+    ]))
+)
+ARGUMENT_GR = (
+    ABSTRACT_GR.group('ArgumentGR')
     .lemma('Kwarg', sequence(*[
         match_as('Variable', 'name'),
         literal('='),
@@ -240,61 +426,40 @@ python_3_10_0_definition = (
         literal('**'),
         match_as('Expression', 'value')
     ]))
-    
-    .group('AbstractGR', ['Module', 'Statement', 'SliceGR', 'ArgumentGR', 'Block'])
-    .group('Statement', ['ReturningStatement', 'DecoratorGR'])
-    .group('ReturningStatement', ['Return', 'Raise', 'Yield', 'YieldFrom'])
-    .group('SliceGR', ['Slice', 'Expression'])
-    .group('ArgumentGR', ['Kwarg', 'StarredExpression', 'DoubleStarred', 'Expression'])
-    
-    .group('DecoratorGR', ['Decorator', 'Class', 'Function'])
-    .lemma('Decorator', sequence(*[
-        literal('@'),
-        match_as('Expression', 'expr'),
-        literal('\n'),
-        match_as('DecoratorGR', 'target'),
-    ]))
-    .lemma('Class', sequence(*[
-        literal('class'),
-        canonical(' '),
-        match_as('Variable', 'name'),
-        optional(sequence(*[
-            literal('('),
-            enum0(
-                separator=sequence(*[literal(','), canonical(' ')]),
-                item=match_in('Expression', 'mro')
-            ),
-            literal(')')
-        ])),
-        literal(':'),
-        match_as('Block', 'block'),
-    ]))
-    .lemma('Function', sequence(*[
-        literal('def'),
-        canonical(' '),
-        match_as('Variable', 'name'),
-        literal('('),
-        enum0(
-            separator=sequence(*[literal(','), canonical(' ')]),
-            item=match_in('Expression', 'args')
-        ),
-        literal(')'),
-        optional(sequence(*[
-            canonical(' '),
-            literal('->'),
-            canonical(' '),
-            match_as('Expression', 'returns')
-        ])),
-        literal(':'),
-        match_as('Block', 'block'),
-    ]))
-    .lemma('Block', repeat1(sequence(*[
-        literal('\n'),
-        match_in('Statement', 'statements'),
-    ])))
-    
-    .build()
 )
+ARGUMENT_GR.group(EXPRESSION)  # This make `Expression` inherits from `ArgumentGR` (introducing multiple inheritance).
+
+ABSTRACT_GR.lemma('ImportPath', sequence(*[
+    enum0(
+        separator=literal('.'),
+        item=match_in('Variable', 'parts'),
+    ),
+]))
+IMPORT_STATEMENT = (
+    STATEMENT.group('ImportStatement')
+    .lemma('Import', sequence(*[
+        literal('import'),
+        canonical(' '),
+        enum0(
+            separator=sequence(literal(','), canonical(' ')),
+            item=match_in('ImportPath', 'targets'),
+        ),
+    ]))
+    .lemma('ImportFrom', sequence(*[
+        literal('from'),
+        canonical(' '),
+        match_as('ImportPath', 'origin'),
+        canonical(' '),
+        literal('import'),
+        canonical(' '),
+        enum0(
+            separator=sequence(literal(','), canonical(' ')),
+            item=match_in('ImportPath', 'targets'),
+        ),
+    ]))
+)
+
+python_3_10_0_definition = ABSTRACT_GR.engine()
 
 if __name__ == '__main__':
     from language.lang_package_builder import LangPackageBuilder

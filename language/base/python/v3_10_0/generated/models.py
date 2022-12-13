@@ -4,16 +4,20 @@ from abc import ABC
 from dataclasses import dataclass, field
 from typing import Iterator
 
-from language.base.abstract import Writable, tok
+from language.base.abstract import Writable, indented, tok
 
 __all__ = [
     'AbstractGR',
     'Add',
+    'AltGR',
     'And',
+    'ArgsParam',
     'ArgumentGR',
+    'Assign',
     'Atom',
     'AwaitPrimary',
     'Awaited',
+    'BREAK',
     'BitwiseAnd',
     'BitwiseAndGR',
     'BitwiseOr',
@@ -21,6 +25,7 @@ __all__ = [
     'BitwiseXor',
     'BitwiseXorGR',
     'Block',
+    'CONTINUE',
     'Call',
     'Class',
     'Comparison',
@@ -30,25 +35,39 @@ __all__ = [
     'DecoratorGR',
     'Disjunction',
     'DoubleStarred',
+    'ELLIPSIS',
+    'EMPTY_LINE',
+    'Elif',
+    'Else',
     'Eq',
     'Expression',
     'FALSE',
     'Factor',
     'FloorDiv',
+    'For',
     'Function',
     'Ge',
     'GetAttr',
     'GetItem',
     'Gt',
+    'If',
+    'Import',
+    'ImportFrom',
+    'ImportPath',
+    'ImportStatement',
     'In',
+    'IndentedList',
+    'IndentedListBody',
     'Integer',
     'Inv',
     'Inversion',
     'Is',
     'IsNot',
     'Kwarg',
+    'KwargsParam',
     'LShift',
     'Le',
+    'List',
     'Lt',
     'MatMul',
     'Mod',
@@ -60,6 +79,9 @@ __all__ = [
     'Not',
     'NotIn',
     'Or',
+    'PASS',
+    'Param',
+    'ParamGR',
     'Pos',
     'Pow',
     'Power',
@@ -73,12 +95,14 @@ __all__ = [
     'SliceGR',
     'StarredExpression',
     'Statement',
+    'StatementExpression',
     'String',
     'Sub',
     'Sum',
     'TRUE',
     'Term',
     'TrueDiv',
+    'Tuple',
     'Variable',
     'Yield',
     'YieldFrom',
@@ -91,7 +115,17 @@ class AbstractGR(Writable, ABC):
 
 
 @dataclass
+class AltGR(AbstractGR, ABC):
+    pass
+
+
+@dataclass
 class ArgumentGR(AbstractGR, ABC):
+    pass
+
+
+@dataclass
+class ParamGR(AbstractGR, ABC):
     pass
 
 
@@ -109,6 +143,7 @@ class Statement(AbstractGR, ABC):
 class Block(AbstractGR):
     statements: list[Statement]
     
+    @indented
     def __tokens__(self) -> Iterator[str]:
         for e in self.statements:
             yield '\n'
@@ -116,15 +151,37 @@ class Block(AbstractGR):
 
 
 @dataclass
+class IndentedListBody(AbstractGR):
+    items: list[Expression]
+    
+    @indented
+    def __tokens__(self) -> Iterator[str]:
+        for e in self.items:
+            yield '\n'
+            yield from tok(e)
+            yield ','
+
+
+@dataclass
 class Module(AbstractGR):
     statements: list[Statement]
     
     def __tokens__(self) -> Iterator[str]:
-        if self.statements:
-            for i, e in enumerate(self.statements):
-                if i:
-                    yield '\n'
-                yield from tok(e)
+        for i, e in enumerate(self.statements):
+            if i:
+                yield '\n'
+            yield from tok(e)
+
+
+@dataclass
+class ImportPath(AbstractGR):
+    parts: list[Variable]
+    
+    def __tokens__(self) -> Iterator[str]:
+        for i, e in enumerate(self.parts):
+            if i:
+                yield '.'
+            yield from tok(e)
 
 
 @dataclass
@@ -138,8 +195,68 @@ class Expression(SliceGR, ArgumentGR, ABC):
 
 
 @dataclass
+class ImportStatement(Statement, ABC):
+    pass
+
+
+@dataclass
 class ReturningStatement(Statement, ABC):
     pass
+
+
+@dataclass
+class _Break(Statement):
+    def __tokens__(self) -> Iterator[str]:
+        yield 'break'
+
+
+BREAK: _Break = _Break()
+
+
+@dataclass
+class _Continue(Statement):
+    def __tokens__(self) -> Iterator[str]:
+        yield 'continue'
+
+
+CONTINUE: _Continue = _Continue()
+
+
+@dataclass
+class _EmptyLine(Statement):
+    def __tokens__(self) -> Iterator[str]:
+        yield ''
+
+
+EMPTY_LINE: _EmptyLine = _EmptyLine()
+
+
+@dataclass
+class _Pass(Statement):
+    def __tokens__(self) -> Iterator[str]:
+        yield 'pass'
+
+
+PASS: _Pass = _Pass()
+
+
+@dataclass
+class Assign(Statement):
+    target: Primary
+    type: Expression | None = None
+    value: Expression | None = None
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield from tok(self.target)
+        if self.type:
+            yield ':'
+            yield ' '
+            yield from tok(self.type)
+        if self.value:
+            yield ' '
+            yield '='
+            yield ' '
+            yield from tok(self.value)
 
 
 @dataclass
@@ -178,6 +295,94 @@ class StarredExpression(ArgumentGR):
 
 
 @dataclass
+class StatementExpression(Statement):
+    expr: Expression
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield from tok(self.expr)
+
+
+@dataclass
+class ArgsParam(ParamGR):
+    name: Variable
+    type: Expression | None = None
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield '*'
+        yield from tok(self.name)
+        if self.type:
+            yield ':'
+            yield ' '
+            yield from tok(self.type)
+
+
+@dataclass
+class Elif(AltGR):
+    test: Expression
+    block: Block
+    alt: AltGR | None = None
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield '\n'
+        yield 'elif'
+        yield ' '
+        yield from tok(self.test)
+        yield ':'
+        yield from tok(self.block)
+        if self.alt:
+            yield from tok(self.alt)
+
+
+@dataclass
+class Else(AltGR):
+    block: Block
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield '\n'
+        yield 'else'
+        yield ':'
+        yield from tok(self.block)
+
+
+@dataclass
+class For(Statement):
+    iter: Expression
+    block: Block
+    args: list[Variable]
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield 'for'
+        yield ' '
+        for i, e in enumerate(self.args):
+            if i:
+                yield ','
+                yield ' '
+            yield from tok(e)
+        yield ' '
+        yield 'in'
+        yield ' '
+        yield from tok(self.iter)
+        yield ':'
+        yield from tok(self.block)
+
+
+@dataclass
+class If(Statement):
+    test: Expression
+    block: Block
+    alt: AltGR | None = None
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield 'if'
+        yield ' '
+        yield from tok(self.test)
+        yield ':'
+        yield from tok(self.block)
+        if self.alt:
+            yield from tok(self.alt)
+
+
+@dataclass
 class Kwarg(ArgumentGR):
     name: Variable
     value: Expression
@@ -186,6 +391,39 @@ class Kwarg(ArgumentGR):
         yield from tok(self.name)
         yield '='
         yield from tok(self.value)
+
+
+@dataclass
+class KwargsParam(ParamGR):
+    name: Variable
+    type: Expression | None = None
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield '**'
+        yield from tok(self.name)
+        if self.type:
+            yield ':'
+            yield ' '
+            yield from tok(self.type)
+
+
+@dataclass
+class Param(ParamGR):
+    name: Variable
+    type: Expression | None = None
+    default: Expression | None = None
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield from tok(self.name)
+        if self.type:
+            yield ':'
+            yield ' '
+            yield from tok(self.type)
+        if self.default:
+            yield ' '
+            yield '='
+            yield ' '
+            yield from tok(self.default)
 
 
 @dataclass
@@ -290,7 +528,7 @@ class Class(DecoratorGR):
 class Function(DecoratorGR):
     name: Variable
     block: Block
-    args: list[Expression]
+    args: list[ParamGR]
     returns: Expression | None = None
     
     def __tokens__(self) -> Iterator[str]:
@@ -314,21 +552,54 @@ class Function(DecoratorGR):
 
 
 @dataclass
+class Import(ImportStatement):
+    targets: list[ImportPath]
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield 'import'
+        yield ' '
+        for i, e in enumerate(self.targets):
+            if i:
+                yield ','
+                yield ' '
+            yield from tok(e)
+
+
+@dataclass
+class ImportFrom(ImportStatement):
+    origin: ImportPath
+    targets: list[ImportPath]
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield 'from'
+        yield ' '
+        yield from tok(self.origin)
+        yield ' '
+        yield 'import'
+        yield ' '
+        for i, e in enumerate(self.targets):
+            if i:
+                yield ','
+                yield ' '
+            yield from tok(e)
+
+
+@dataclass
 class Conjunction(Disjunction, ABC):
     pass
 
 
 @dataclass
 class Or(Disjunction):
-    left: Disjunction
-    right: Conjunction
+    items: list[Conjunction]
     
     def __tokens__(self) -> Iterator[str]:
-        yield from tok(self.left)
-        yield ' '
-        yield 'or'
-        yield ' '
-        yield from tok(self.right)
+        for i, e in enumerate(self.items):
+            if i:
+                yield ' '
+                yield 'or'
+                yield ' '
+            yield from tok(e)
 
 
 @dataclass
@@ -338,15 +609,15 @@ class Inversion(Conjunction, ABC):
 
 @dataclass
 class And(Conjunction):
-    left: Conjunction
-    right: Inversion
+    items: list[Inversion]
     
     def __tokens__(self) -> Iterator[str]:
-        yield from tok(self.left)
-        yield ' '
-        yield 'and'
-        yield ' '
-        yield from tok(self.right)
+        for i, e in enumerate(self.items):
+            if i:
+                yield ' '
+                yield 'and'
+                yield ' '
+            yield from tok(e)
 
 
 @dataclass
@@ -802,6 +1073,15 @@ class GetAttr(Primary):
 
 
 @dataclass
+class _Ellipsis(Atom):
+    def __tokens__(self) -> Iterator[str]:
+        yield '...'
+
+
+ELLIPSIS: _Ellipsis = _Ellipsis()
+
+
+@dataclass
 class _False(Atom):
     def __tokens__(self) -> Iterator[str]:
         yield 'False'
@@ -845,6 +1125,21 @@ class Integer(Atom):
 
 
 @dataclass
+class List(Atom):
+    items: list[Expression] | None = field(default_factory=list)
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield '['
+        if self.items:
+            for i, e in enumerate(self.items):
+                if i:
+                    yield ','
+                    yield ' '
+                yield from tok(e)
+        yield ']'
+
+
+@dataclass
 class String(Atom):
     content: str
     
@@ -853,8 +1148,33 @@ class String(Atom):
 
 
 @dataclass
+class Tuple(Atom):
+    items: list[Expression]
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield '('
+        for i, e in enumerate(self.items):
+            if i:
+                yield ','
+                yield ' '
+            yield from tok(e)
+        yield ')'
+
+
+@dataclass
 class Variable(Atom):
     content: str
     
     def __tokens__(self) -> Iterator[str]:
         yield str(self.content)
+
+
+@dataclass
+class IndentedList(Atom):
+    body: IndentedListBody
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield '['
+        yield from tok(self.body)
+        yield '\n'
+        yield ']'
