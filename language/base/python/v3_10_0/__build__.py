@@ -464,15 +464,8 @@ python_3_10_0_definition = ABSTRACT_GR.engine()
 if __name__ == '__main__':
     from language.lang_package_builder import LangPackageBuilder
     
-    DEBUG = False
+    builder = LangPackageBuilder('core')
     
-    (
-        LangPackageBuilder(
-            # build_visitors=[]
-            prefix='__ag__' if DEBUG else '',
-            dataclass_frozen=False,
-        )
-        .build(
-            python_3_10_0_definition
-        )
+    builder.build(
+        python_3_10_0_definition
     )

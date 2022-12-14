@@ -1,7 +1,11 @@
-from .generated import *
+import typing
+
+from .models import *
 
 __all__ = [
     'atom',
+    'indented_list',
+    'block',
 ]
 
 
@@ -33,3 +37,15 @@ def atom(obj: None | bool | str | int | float):
         return Decimal(repr(obj))
     else:
         raise ValueError(f"Unable to create the corresponding python atom for {obj!r}.")
+
+
+def indented_list(*items: Expression) -> IndentedList:
+    return IndentedList(
+        body=IndentedListBody(
+            items=list(items)
+        )
+    )
+
+
+def block(statements: typing.Iterator[Statement]) -> Block:
+    return Block(statements=list(statements) or [PASS])
