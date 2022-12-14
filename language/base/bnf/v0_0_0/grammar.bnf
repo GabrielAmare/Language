@@ -1,0 +1,28 @@
+token Variable = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz' *'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz'
+token String = '"' *['\\' '"' | !'"'] '"' | "'" *['\\' "'" | !"'"] "'"
+token Inverted = '!'
+lemma MatchChar = ?<Inverted as inverted> <String as charset>
+lemma MatchAs = '<' <Variable as type> $' ' 'as' $' ' <Variable as key> '>'
+lemma MatchIn = '<' <Variable as type> $' ' 'in' $' ' <Variable as key> '>'
+lemma Literal = <String as expr>
+lemma Canonical = '$' <String as expr>
+lemma Grouping = '[' <ParallelGR as rule> ']'
+lemma Repeat0 = '*' <GroupingGR as rule>
+lemma Repeat1 = '+' <GroupingGR as rule>
+lemma Optional = '?' <GroupingGR as rule>
+lemma Enum0 = <GroupingGR as separator> '.' <GroupingGR as item>
+lemma Enum1 = <GroupingGR as separator> '..' <GroupingGR as item>
+lemma Sequence = $' '..<RepeatGR in rules>
+lemma Parallel = [$' ' '|' $' ']..<SequenceGR in rules>
+lemma BuildToken = 'token' $' ' <Variable as type> $' ' '=' $' ' <ParallelGR as rule>
+lemma BuildLemma = 'lemma' $' ' <Variable as type> $' ' '=' $' ' <ParallelGR as rule>
+lemma BuildGroup = 'group' $' ' <Variable as type> $' ' '=' $' ' [$' ' '|' $' ']..<Variable in refs>
+lemma Engine = '\n'..<BuildGR in rules> '\n' 'entry' $' ' <Variable as entry>
+group BuildGR = BuildToken | BuildLemma | BuildGroup
+group MatchGR = MatchChar | MatchAs | MatchIn | Literal | Canonical
+group GroupingGR = Grouping | MatchGR
+group RepeatGR = Enum0 | Enum1 | Optional | Repeat0 | Repeat1 | GroupingGR
+group SequenceGR = Sequence | RepeatGR
+group ParallelGR = Parallel | SequenceGR
+group AbstractGR = Engine | ParallelGR
+entry Engine
