@@ -66,12 +66,12 @@ class GroupContext(AbstractContext):
     def definition(self) -> BuildGroup:
         return BuildGroup(
             type=Variable(self.name),
-            refs=[
+            refs=tuple([
                 *(group.name for group in self._groups),
                 *(lemma.name for lemma in self._lemmas),
                 *(token.name for token in self._tokens),
                 *(ref.name for ref in self._references),
-            ],
+            ]),
         )
     
     def definitions(self) -> typing.Iterator[BuildGR]:
@@ -86,7 +86,7 @@ class GroupContext(AbstractContext):
     def engine(self) -> Engine:
         return Engine(
             entry=Variable(self.name),
-            rules=list(self.definitions()),
+            rules=tuple(self.definitions()),
         )
 
 

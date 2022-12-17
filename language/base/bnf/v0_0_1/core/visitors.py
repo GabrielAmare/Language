@@ -1,5 +1,5 @@
-import abc
-import typing
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
 
 from .models import *
 
@@ -7,10 +7,10 @@ __all__ = [
     'BuildGRVisitor',
     'ParallelGRVisitor',
 ]
-_E = typing.TypeVar('_E')
+_E = TypeVar('_E')
 
 
-class ParallelGRVisitor(typing.Generic[_E], abc.ABC):
+class ParallelGRVisitor(Generic[_E], ABC):
     def __call__(self, obj: ParallelGR) -> _E:
         if isinstance(obj, Parallel):
             return self._parallel(obj)
@@ -41,60 +41,60 @@ class ParallelGRVisitor(typing.Generic[_E], abc.ABC):
         else:
             raise NotImplementedError
     
-    @abc.abstractmethod
+    @abstractmethod
     def _parallel(self, obj: Parallel) -> _E:
         pass
     
-    @abc.abstractmethod
+    @abstractmethod
     def _sequence(self, obj: Sequence) -> _E:
         pass
     
-    @abc.abstractmethod
+    @abstractmethod
     def _enum0(self, obj: Enum0) -> _E:
         pass
     
-    @abc.abstractmethod
+    @abstractmethod
     def _enum1(self, obj: Enum1) -> _E:
         pass
     
-    @abc.abstractmethod
+    @abstractmethod
     def _optional(self, obj: Optional) -> _E:
         pass
     
-    @abc.abstractmethod
+    @abstractmethod
     def _repeat0(self, obj: Repeat0) -> _E:
         pass
     
-    @abc.abstractmethod
+    @abstractmethod
     def _repeat1(self, obj: Repeat1) -> _E:
         pass
     
-    @abc.abstractmethod
+    @abstractmethod
     def _grouping(self, obj: Grouping) -> _E:
         pass
     
-    @abc.abstractmethod
+    @abstractmethod
     def _canonical(self, obj: Canonical) -> _E:
         pass
     
-    @abc.abstractmethod
+    @abstractmethod
     def _literal(self, obj: Literal) -> _E:
         pass
     
-    @abc.abstractmethod
+    @abstractmethod
     def _match_as(self, obj: MatchAs) -> _E:
         pass
     
-    @abc.abstractmethod
+    @abstractmethod
     def _match_char(self, obj: MatchChar) -> _E:
         pass
     
-    @abc.abstractmethod
+    @abstractmethod
     def _match_in(self, obj: MatchIn) -> _E:
         pass
 
 
-class BuildGRVisitor(typing.Generic[_E], abc.ABC):
+class BuildGRVisitor(Generic[_E], ABC):
     def __call__(self, obj: BuildGR) -> _E:
         if isinstance(obj, BuildGroup):
             return self._build_group(obj)
@@ -105,14 +105,14 @@ class BuildGRVisitor(typing.Generic[_E], abc.ABC):
         else:
             raise NotImplementedError
     
-    @abc.abstractmethod
+    @abstractmethod
     def _build_group(self, obj: BuildGroup) -> _E:
         pass
     
-    @abc.abstractmethod
+    @abstractmethod
     def _build_lemma(self, obj: BuildLemma) -> _E:
         pass
     
-    @abc.abstractmethod
+    @abstractmethod
     def _build_token(self, obj: BuildToken) -> _E:
         pass

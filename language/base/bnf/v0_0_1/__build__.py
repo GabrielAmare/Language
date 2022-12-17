@@ -192,8 +192,8 @@ if __name__ == '__main__':
             version=(3, 10, 0),
             builtins=['dataclasses', 'abc', 'typing'],
             style={
-                LintRule.MODULE_NO_IMPORT_FROM: True,
-                LintRule.DATACLASS_FROZEN: False,
+                LintRule.MODULE_NO_IMPORT_FROM: False,
+                LintRule.DATACLASS_FROZEN: True,
             }
         ),
         build_visitors=['ParallelGR', 'BuildGR']

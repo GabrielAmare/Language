@@ -31,7 +31,7 @@ def engine(
         entry: str,
 ) -> Engine:
     return Engine(
-        rules=list(
+        rules=tuple(
             *itertools.starmap(build_token, tokens.items()),
             *itertools.starmap(build_lemma, lemmas.items()),
             *itertools.starmap(build_group, groups.items()),
@@ -43,7 +43,7 @@ def engine(
 def build_group(__type: str, names: list[str]) -> BuildGroup:
     return BuildGroup(
         type=Variable(__type),
-        refs=list(map(Variable, names)),
+        refs=tuple(map(Variable, names)),
     )
 
 
@@ -78,7 +78,7 @@ def parallel(*__rules: ParallelGR) -> ParallelGR:
     if len(rules) == 1:
         return rules[0]
     
-    return Parallel(rules=list(rules))
+    return Parallel(rules=tuple(rules))
 
 
 def _split_sequence(rule: ParallelGR) -> typing.Iterator[RepeatGR]:
@@ -99,7 +99,7 @@ def sequence(*__rules: ParallelGR) -> SequenceGR:
     if len(rules) == 1:
         return rules[0]
     
-    return Sequence(rules=list(rules))
+    return Sequence(rules=tuple(rules))
 
 
 def enum0(separator: ParallelGR, item: ParallelGR) -> Enum0:
