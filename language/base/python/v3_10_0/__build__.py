@@ -1,10 +1,7 @@
 import string
 
 from language.base.bnf.v0_0_1 import *
-
-__all__ = [
-    'python_3_10_0_definition',
-]
+from language.lang_package_builder import LangPackageBuilder
 
 
 def _op2(left_type: str, operator: ParallelGR, right_type: str):
@@ -459,13 +456,10 @@ IMPORT_STATEMENT = (
     ]))
 )
 
-python_3_10_0_definition = ABSTRACT_GR.engine()
+definition = ABSTRACT_GR.engine()
 
-if __name__ == '__main__':
-    from language.lang_package_builder import LangPackageBuilder
-    
-    builder = LangPackageBuilder('core')
-    
-    builder.build(
-        python_3_10_0_definition
-    )
+builder = LangPackageBuilder('core')
+
+builder.build(
+    definition
+)
