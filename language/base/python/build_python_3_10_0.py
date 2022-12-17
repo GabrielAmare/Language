@@ -458,7 +458,7 @@ IMPORT_STATEMENT = (
 
 definition = ABSTRACT_GR.engine()
 
-builder = LangPackageBuilder('core')
+builder = LangPackageBuilder('v3_10_0')
 
 builder.build(
     definition
