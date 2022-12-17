@@ -1,6 +1,6 @@
 import string
 
-from language.base.bnf.v0_0_0 import *
+from language.base.bnf.v0_0_1 import *
 
 __all__ = [
     'python_3_10_0_definition',

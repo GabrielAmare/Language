@@ -94,7 +94,7 @@ lemma Kwarg = <Variable as name> '=' <Expression as value>
 lemma StarredExpression = '*' <Expression as value>
 lemma DoubleStarred = '**' <Expression as value>
 lemma Module = '\n'..<Statement in statements>
-lemma Block = +['\n' <Statement in statements>]
-lemma IndentedListBody = +['\n' <Expression in items> ',']
+lemma:i Block = +['\n' <Statement in statements>]
+lemma:i IndentedListBody = +['\n' <Expression in items> ',']
 lemma ImportPath = '.'.<Variable in parts>
 entry AbstractGR
