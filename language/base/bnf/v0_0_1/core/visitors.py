@@ -32,10 +32,10 @@ class ParallelGRVisitor(Generic[_E], ABC):
             return self._canonical(obj)
         elif isinstance(obj, Literal):
             return self._literal(obj)
-        elif isinstance(obj, MatchAs):
-            return self._match_as(obj)
         elif isinstance(obj, MatchChar):
             return self._match_char(obj)
+        elif isinstance(obj, MatchAs):
+            return self._match_as(obj)
         elif isinstance(obj, MatchIn):
             return self._match_in(obj)
         else:
@@ -82,11 +82,11 @@ class ParallelGRVisitor(Generic[_E], ABC):
         pass
     
     @abstractmethod
-    def _match_as(self, obj: MatchAs) -> _E:
+    def _match_char(self, obj: MatchChar) -> _E:
         pass
     
     @abstractmethod
-    def _match_char(self, obj: MatchChar) -> _E:
+    def _match_as(self, obj: MatchAs) -> _E:
         pass
     
     @abstractmethod

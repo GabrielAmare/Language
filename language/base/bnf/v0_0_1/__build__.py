@@ -150,12 +150,23 @@ GROUPING_GR = (
         literal(']'),
     ]))
 )
+
 MATCH_GR = (
     GROUPING_GR.group('MatchGR')
     .lemma('MatchChar', sequence(*[
         optional(match_as('_Inverted', 'inverted')),
         match_as('String', 'charset'),
     ]))
+    .lemma('Literal', sequence(*[
+        match_as('String', 'expr')
+    ]))
+    .lemma('Canonical', sequence(*[
+        literal('$'),
+        match_as('String', 'expr')
+    ]))
+)
+LEMMA_MATCH_GR = (
+    MATCH_GR.group('LemmaMatchGR')
     .lemma('MatchAs', sequence(*[
         literal('<'),
         match_as('Variable', 'type'),
@@ -173,13 +184,6 @@ MATCH_GR = (
         canonical(' '),
         match_as('Variable', 'key'),
         literal('>'),
-    ]))
-    .lemma('Literal', sequence(*[
-        match_as('String', 'expr')
-    ]))
-    .lemma('Canonical', sequence(*[
-        literal('$'),
-        match_as('String', 'expr')
     ]))
 )
 

@@ -20,6 +20,7 @@ __all__ = [
     'GroupingGR',
     'INDENTED',
     'INVERTED',
+    'LemmaMatchGR',
     'Literal',
     'MatchAs',
     'MatchChar',
@@ -266,26 +267,17 @@ class Canonical(MatchGR):
 
 
 @dataclass(frozen=True)
+class LemmaMatchGR(MatchGR, ABC):
+    type: Variable
+    key: Variable
+
+
+@dataclass(frozen=True)
 class Literal(MatchGR):
     expr: String
     
     def __tokens__(self) -> Iterator[str]:
         yield from tok(self.expr)
-
-
-@dataclass(frozen=True)
-class MatchAs(MatchGR):
-    type: Variable
-    key: Variable
-    
-    def __tokens__(self) -> Iterator[str]:
-        yield '<'
-        yield from tok(self.type)
-        yield ' '
-        yield 'as'
-        yield ' '
-        yield from tok(self.key)
-        yield '>'
 
 
 @dataclass(frozen=True)
@@ -300,10 +292,19 @@ class MatchChar(MatchGR):
 
 
 @dataclass(frozen=True)
-class MatchIn(MatchGR):
-    type: Variable
-    key: Variable
-    
+class MatchAs(LemmaMatchGR):
+    def __tokens__(self) -> Iterator[str]:
+        yield '<'
+        yield from tok(self.type)
+        yield ' '
+        yield 'as'
+        yield ' '
+        yield from tok(self.key)
+        yield '>'
+
+
+@dataclass(frozen=True)
+class MatchIn(LemmaMatchGR):
     def __tokens__(self) -> Iterator[str]:
         yield '<'
         yield from tok(self.type)
