@@ -258,7 +258,13 @@ def _build_class_method__tokens__(module: DynamicModule, cls: DynamicClass, obj:
 
 def build_class(module: DynamicModule, class_manager: ClassManager, class_name: str, definition: BaseClass):
     cls = module.new_class(class_name)
-    cls.add_decorator(module.imports.get('dataclass', from_='dataclasses'))
+    
+    decorator = module.imports.get('dataclass', from_='dataclasses')
+    
+    if module.env.lint(LintRule.DATACLASS_FROZEN):
+        decorator = Call(decorator, [Kwarg(Variable('frozen'), TRUE)])
+    
+    cls.add_decorator(decorator)
     
     mro: list[str] = class_manager.mro_graph.get_origins(class_name)
     cls.add_supers(map(Variable, mro))
