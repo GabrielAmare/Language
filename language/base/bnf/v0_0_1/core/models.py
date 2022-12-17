@@ -38,22 +38,22 @@ __all__ = [
 ]
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class AbstractGR(language.base.abstract.Writable, abc.ABC):
     pass
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class BuildGR(AbstractGR, abc.ABC):
-    type: str
+    pass
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class ParallelGR(AbstractGR, abc.ABC):
     pass
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class _Indented(AbstractGR):
     def __tokens__(self) -> typing.Iterator[str]:
         yield ':i'
@@ -62,7 +62,7 @@ class _Indented(AbstractGR):
 INDENTED: _Indented = _Indented()
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class _Inverted(AbstractGR):
     def __tokens__(self) -> typing.Iterator[str]:
         yield '!'
@@ -71,7 +71,7 @@ class _Inverted(AbstractGR):
 INVERTED: _Inverted = _Inverted()
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class String(AbstractGR):
     content: str
     
@@ -79,7 +79,7 @@ class String(AbstractGR):
         yield str(self.content)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class Variable(AbstractGR):
     content: str
     
@@ -87,50 +87,49 @@ class Variable(AbstractGR):
         yield str(self.content)
 
 
-@dataclasses.dataclass(frozen=True)
-class SequenceGR(ParallelGR, abc.ABC):
-    pass
-
-
-@dataclasses.dataclass(frozen=True)
-class RepeatGR(SequenceGR, abc.ABC):
-    pass
-
-
-@dataclasses.dataclass(frozen=True)
-class GroupingGR(RepeatGR, abc.ABC):
-    pass
-
-
-@dataclasses.dataclass(frozen=True)
-class MatchGR(GroupingGR, abc.ABC):
-    pass
-
-
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class Engine(AbstractGR):
-    entry: str
-    rules: tuple[BuildGR, ...]
+    entry: Variable
+    rules: list[BuildGR]
     
     def __tokens__(self) -> typing.Iterator[str]:
         for i, e in enumerate(self.rules):
             if i:
                 yield '\n'
-            yield from e.__tokens__()
+            yield from language.base.abstract.tok(e)
         yield '\n'
         yield 'entry'
         yield ' '
-        yield self.entry
+        yield from language.base.abstract.tok(self.entry)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
+class SequenceGR(ParallelGR, abc.ABC):
+    pass
+
+
+@dataclasses.dataclass
+class Parallel(ParallelGR):
+    rules: list[SequenceGR]
+    
+    def __tokens__(self) -> typing.Iterator[str]:
+        for i, e in enumerate(self.rules):
+            if i:
+                yield ' '
+                yield '|'
+                yield ' '
+            yield from language.base.abstract.tok(e)
+
+
+@dataclasses.dataclass
 class BuildGroup(BuildGR):
-    refs: tuple[str, ...]
+    type: Variable
+    refs: list[Variable]
     
     def __tokens__(self) -> typing.Iterator[str]:
         yield 'group'
         yield ' '
-        yield self.type
+        yield from language.base.abstract.tok(self.type)
         yield ' '
         yield '='
         yield ' '
@@ -139,183 +138,180 @@ class BuildGroup(BuildGR):
                 yield ' '
                 yield '|'
                 yield ' '
-            yield e
+            yield from language.base.abstract.tok(e)
 
 
-@dataclasses.dataclass(frozen=True)
-class _Indented(AbstractGR):
-    def __tokens__(self) -> typing.Iterator[str]:
-        yield '@I'
-
-
-INDENTED: _Indented = _Indented()
-
-
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class BuildLemma(BuildGR):
+    type: Variable
     rule: ParallelGR
     indented: _Indented | None = None
     
     def __tokens__(self) -> typing.Iterator[str]:
         yield 'lemma'
+        if self.indented:
+            yield from language.base.abstract.tok(self.indented)
         yield ' '
-        yield self.type
+        yield from language.base.abstract.tok(self.type)
         yield ' '
         yield '='
         yield ' '
-        yield from self.rule.__tokens__()
+        yield from language.base.abstract.tok(self.rule)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class BuildToken(BuildGR):
+    type: Variable
     rule: ParallelGR
     
     def __tokens__(self) -> typing.Iterator[str]:
         yield 'token'
         yield ' '
-        yield self.type
+        yield from language.base.abstract.tok(self.type)
         yield ' '
         yield '='
         yield ' '
-        yield from self.rule.__tokens__()
+        yield from language.base.abstract.tok(self.rule)
 
 
-@dataclasses.dataclass(frozen=True)
-class Parallel(ParallelGR):
-    rules: tuple[SequenceGR, ...]
-    
-    def __tokens__(self) -> typing.Iterator[str]:
-        for i, e in enumerate(self.rules):
-            if i:
-                yield ' '
-                yield '|'
-                yield ' '
-            yield from e.__tokens__()
+@dataclasses.dataclass
+class RepeatGR(SequenceGR, abc.ABC):
+    pass
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class Sequence(SequenceGR):
-    rules: tuple[RepeatGR, ...]
+    rules: list[RepeatGR]
     
     def __tokens__(self) -> typing.Iterator[str]:
         for i, e in enumerate(self.rules):
             if i:
                 yield ' '
-            yield from e.__tokens__()
+            yield from language.base.abstract.tok(e)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
+class GroupingGR(RepeatGR, abc.ABC):
+    pass
+
+
+@dataclasses.dataclass
 class Enum0(RepeatGR):
-    item: GroupingGR
     separator: GroupingGR
+    item: GroupingGR
     
     def __tokens__(self) -> typing.Iterator[str]:
-        yield from self.separator.__tokens__()
+        yield from language.base.abstract.tok(self.separator)
         yield '.'
-        yield from self.item.__tokens__()
+        yield from language.base.abstract.tok(self.item)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class Enum1(RepeatGR):
-    item: GroupingGR
     separator: GroupingGR
+    item: GroupingGR
     
     def __tokens__(self) -> typing.Iterator[str]:
-        yield from self.separator.__tokens__()
+        yield from language.base.abstract.tok(self.separator)
         yield '..'
-        yield from self.item.__tokens__()
+        yield from language.base.abstract.tok(self.item)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class Optional(RepeatGR):
     rule: GroupingGR
     
     def __tokens__(self) -> typing.Iterator[str]:
         yield '?'
-        yield from self.rule.__tokens__()
+        yield from language.base.abstract.tok(self.rule)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class Repeat0(RepeatGR):
     rule: GroupingGR
     
     def __tokens__(self) -> typing.Iterator[str]:
         yield '*'
-        yield from self.rule.__tokens__()
+        yield from language.base.abstract.tok(self.rule)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class Repeat1(RepeatGR):
     rule: GroupingGR
     
     def __tokens__(self) -> typing.Iterator[str]:
         yield '+'
-        yield from self.rule.__tokens__()
+        yield from language.base.abstract.tok(self.rule)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
+class MatchGR(GroupingGR, abc.ABC):
+    pass
+
+
+@dataclasses.dataclass
 class Grouping(GroupingGR):
     rule: ParallelGR
     
     def __tokens__(self) -> typing.Iterator[str]:
         yield '['
-        yield from self.rule.__tokens__()
+        yield from language.base.abstract.tok(self.rule)
         yield ']'
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class Canonical(MatchGR):
-    expr: str
+    expr: String
     
     def __tokens__(self) -> typing.Iterator[str]:
         yield '$'
-        yield repr(self.expr)
+        yield from language.base.abstract.tok(self.expr)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class Literal(MatchGR):
-    expr: str
+    expr: String
     
     def __tokens__(self) -> typing.Iterator[str]:
-        yield repr(self.expr)
+        yield from language.base.abstract.tok(self.expr)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class MatchAs(MatchGR):
-    key: str
-    type: str
+    type: Variable
+    key: Variable
     
     def __tokens__(self) -> typing.Iterator[str]:
         yield '<'
-        yield self.type
+        yield from language.base.abstract.tok(self.type)
         yield ' '
         yield 'as'
         yield ' '
-        yield self.key
+        yield from language.base.abstract.tok(self.key)
         yield '>'
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class MatchChar(MatchGR):
-    charset: str
-    inverted: bool | None = None
+    charset: String
+    inverted: Inverted | None = None
     
     def __tokens__(self) -> typing.Iterator[str]:
         if self.inverted:
-            yield '!'
-        yield repr(self.charset)
+            yield from language.base.abstract.tok(self.inverted)
+        yield from language.base.abstract.tok(self.charset)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class MatchIn(MatchGR):
-    key: str
-    type: str
+    type: Variable
+    key: Variable
     
     def __tokens__(self) -> typing.Iterator[str]:
         yield '<'
-        yield self.type
+        yield from language.base.abstract.tok(self.type)
         yield ' '
         yield 'in'
         yield ' '
-        yield self.key
+        yield from language.base.abstract.tok(self.key)
         yield '>'
