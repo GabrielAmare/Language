@@ -5,7 +5,7 @@ from language.base.python import Environment, LintRule
 from language.lang_package_builder import LangPackageBuilder
 
 __all__ = [
-    'bnf_engine_0_0_1',
+    'definition',
 ]
 
 ABSTRACT_GR = (
@@ -187,20 +187,19 @@ LEMMA_MATCH_GR = (
     ]))
 )
 
-bnf_engine_0_0_1 = ABSTRACT_GR.engine()
+definition = ABSTRACT_GR.engine()
 
-if __name__ == '__main__':
-    builder = LangPackageBuilder(
-        name='core',
-        python_env=Environment(
-            version=(3, 10, 0),
-            builtins=['dataclasses', 'abc', 'typing'],
-            style={
-                LintRule.MODULE_NO_IMPORT_FROM: False,
-                LintRule.DATACLASS_FROZEN: True,
-            }
-        ),
-        build_visitors=['ParallelGR', 'BuildGR']
-    )
-    
-    builder.build(bnf_engine_0_0_1)
+builder = LangPackageBuilder(
+    name='v0_0_1',
+    python_env=Environment(
+        version=(3, 10, 0),
+        builtins=['dataclasses', 'abc', 'typing'],
+        style={
+            LintRule.MODULE_NO_IMPORT_FROM: False,
+            LintRule.DATACLASS_FROZEN: True,
+        }
+    ),
+    build_visitors=['ParallelGR', 'BuildGR']
+)
+
+builder.build(definition)
