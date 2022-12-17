@@ -5,13 +5,13 @@ import typing
 from language.base.python import *
 from .classes import ClassManager, BaseClass, TokenClass, GroupClass, get_static_token_expr
 from .namespaces import Namespace, Attribute
+from language.base.bnf import v0_0_1 as bnf
 
 __all__ = [
     'build_models',
     'build_visitors',
 ]
 
-from ..base import bnf
 
 
 def _pascal_case_to_snake_case(class_name: str) -> str:
@@ -201,29 +201,23 @@ class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]])
         yield from self(obj.rule)
     
     def _canonical(self, obj: bnf.Canonical) -> typing.Iterator[Statement]:
-        yield Yield([String(repr(obj.expr))])
+        yield Yield([String(obj.expr.content)])
     
     def _literal(self, obj: bnf.Literal) -> typing.Iterator[Statement]:
-        yield Yield([String(repr(obj.expr))])
+        yield Yield([String(obj.expr.content)])
     
     def _match_as(self, obj: bnf.MatchAs) -> typing.Iterator[Statement]:
-        ref = GetAttr(Variable('self'), Variable(obj.key))
-        # TODO : include the case where the attribute is not `Writable`.
+        ref = GetAttr(Variable('self'), Variable(obj.key.content))
         yield YieldFrom(expr=Call(left=self.module.imports.get('tok', from_='language.base.abstract'), args=[ref]))
-        # stmt = self.get_yield_str_from(ref, obj.type)
-        # yield stmt
     
     def _match_char(self, obj: bnf.MatchChar) -> typing.Iterator[Statement]:
         assert not obj.inverted
-        assert len(obj.charset) == 1
-        yield Yield([String(repr(obj.charset))])
+        assert len(obj.charset.content[1:-1]) == 1
+        yield Yield([String(obj.charset.content)])
     
     def _match_in(self, obj: bnf.MatchIn) -> typing.Iterator[Statement]:
         ref = Variable('e')
-        # TODO : include the case where the attribute is not `Writable`.
         yield YieldFrom(expr=Call(left=self.module.imports.get('tok', from_='language.base.abstract'), args=[ref]))
-        # stmt = self.get_yield_str_from(ref, obj.type)
-        # yield stmt
 
 
 def _build_class_method__tokens__(module: DynamicModule, cls: DynamicClass, obj: bnf.BuildGR) -> None:
@@ -243,10 +237,12 @@ def _build_class_method__tokens__(module: DynamicModule, cls: DynamicClass, obj:
             #  writing function accordingly.
             statement = Yield([Call(Variable('str'), [GetAttr(left=Variable('self'), right=Variable('content'))])])
         else:
-            statement = Yield([String(repr(obj.rule.expr))])
+            statement = Yield([atom(static_expr)])
         
         function.add_statement(statement)
         return
+    
+    assert isinstance(obj, bnf.BuildLemma)
     
     tokens_body_method_factory: TokensBodyMethodFactory = TokensBodyMethodFactory(module=module)
     

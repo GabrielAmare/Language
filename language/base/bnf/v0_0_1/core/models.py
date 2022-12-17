@@ -294,7 +294,7 @@ class MatchAs(MatchGR):
 @dataclass(frozen=True)
 class MatchChar(MatchGR):
     charset: String
-    inverted: Inverted | None = None
+    inverted: _Inverted | None = None
     
     def __tokens__(self) -> Iterator[str]:
         if self.inverted:

@@ -1,32 +1,32 @@
 digraph {
 	0 [label=AbstractGR fillcolor=orange shape=rect style=filled]
-	1 [label=_Indented fillcolor=lime shape=rect style=filled]
-	2 [label=ParallelGR fillcolor=orange shape=rect style=filled]
-	3 [label=Variable fillcolor=lime shape=rect style=filled]
-	4 [label=BuildGR fillcolor=orange shape=rect style=filled]
+	1 [label=Variable fillcolor=lime shape=rect style=filled]
+	2 [label=String fillcolor=lime shape=rect style=filled]
+	3 [label=_Inverted fillcolor=lime shape=rect style=filled]
+	4 [label=_Indented fillcolor=lime shape=rect style=filled]
 	5 [label=Engine fillcolor=lightblue shape=rect style=filled]
-	6 [label=String fillcolor=lime shape=rect style=filled]
-	7 [label=_Inverted fillcolor=lime shape=rect style=filled]
-	8 [label=BuildToken fillcolor=lightblue shape=rect style=filled]
-	9 [label=BuildLemma fillcolor=lightblue shape=rect style=filled]
+	6 [label=ParallelGR fillcolor=orange shape=rect style=filled]
+	7 [label=BuildGR fillcolor=orange shape=rect style=filled]
+	8 [label=BuildLemma fillcolor=lightblue shape=rect style=filled]
+	9 [label=BuildToken fillcolor=lightblue shape=rect style=filled]
 	10 [label=BuildGroup fillcolor=lightblue shape=rect style=filled]
-	11 [label=Parallel fillcolor=lightblue shape=rect style=filled]
-	12 [label=SequenceGR fillcolor=orange shape=rect style=filled]
-	13 [label=Sequence fillcolor=lightblue shape=rect style=filled]
-	14 [label=RepeatGR fillcolor=orange shape=rect style=filled]
-	15 [label=Optional fillcolor=lightblue shape=rect style=filled]
-	16 [label=Repeat0 fillcolor=lightblue shape=rect style=filled]
-	17 [label=Repeat1 fillcolor=lightblue shape=rect style=filled]
-	18 [label=Enum1 fillcolor=lightblue shape=rect style=filled]
-	19 [label=Enum0 fillcolor=lightblue shape=rect style=filled]
-	20 [label=GroupingGR fillcolor=orange shape=rect style=filled]
+	11 [label=SequenceGR fillcolor=orange shape=rect style=filled]
+	12 [label=Parallel fillcolor=lightblue shape=rect style=filled]
+	13 [label=RepeatGR fillcolor=orange shape=rect style=filled]
+	14 [label=Sequence fillcolor=lightblue shape=rect style=filled]
+	15 [label=Enum0 fillcolor=lightblue shape=rect style=filled]
+	16 [label=GroupingGR fillcolor=orange shape=rect style=filled]
+	17 [label=Enum1 fillcolor=lightblue shape=rect style=filled]
+	18 [label=Repeat0 fillcolor=lightblue shape=rect style=filled]
+	19 [label=Optional fillcolor=lightblue shape=rect style=filled]
+	20 [label=Repeat1 fillcolor=lightblue shape=rect style=filled]
 	21 [label=MatchGR fillcolor=orange shape=rect style=filled]
 	22 [label=Grouping fillcolor=lightblue shape=rect style=filled]
-	23 [label=Canonical fillcolor=lightblue shape=rect style=filled]
+	23 [label=MatchAs fillcolor=lightblue shape=rect style=filled]
 	24 [label=MatchChar fillcolor=lightblue shape=rect style=filled]
-	25 [label=Literal fillcolor=lightblue shape=rect style=filled]
-	26 [label=MatchIn fillcolor=lightblue shape=rect style=filled]
-	27 [label=MatchAs fillcolor=lightblue shape=rect style=filled]
+	25 [label=MatchIn fillcolor=lightblue shape=rect style=filled]
+	26 [label=Canonical fillcolor=lightblue shape=rect style=filled]
+	27 [label=Literal fillcolor=lightblue shape=rect style=filled]
 	0 -> 1
 	0 -> 2
 	0 -> 3
@@ -34,21 +34,21 @@ digraph {
 	0 -> 5
 	0 -> 6
 	0 -> 7
-	4 -> 8
-	4 -> 9
-	4 -> 10
-	2 -> 11
-	2 -> 12
-	12 -> 13
-	12 -> 14
-	14 -> 15
-	14 -> 16
-	14 -> 17
-	14 -> 18
-	14 -> 19
-	14 -> 20
-	20 -> 21
-	20 -> 22
+	7 -> 8
+	7 -> 9
+	7 -> 10
+	6 -> 11
+	6 -> 12
+	11 -> 13
+	11 -> 14
+	13 -> 15
+	13 -> 16
+	13 -> 17
+	13 -> 18
+	13 -> 19
+	13 -> 20
+	16 -> 21
+	16 -> 22
 	21 -> 23
 	21 -> 24
 	21 -> 25

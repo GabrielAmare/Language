@@ -4,7 +4,7 @@ import dataclasses
 import functools
 
 import utils
-from language.base.bnf.v0_0_0 import *
+from language.base.bnf.v0_0_1 import *
 from .namespaces import Namespace, Attribute
 
 __all__ = [
@@ -19,7 +19,7 @@ __all__ = [
 
 def get_static_token_expr(obj: BuildToken) -> str | None:
     if isinstance(obj.rule, Literal):
-        return obj.rule.expr
+        return obj.rule.expr.content[1:-1]
     else:
         return None
 
@@ -28,21 +28,21 @@ def get_static_token_expr(obj: BuildToken) -> str | None:
 class BaseClass:
     name: str
     namespace: Namespace
-    rule: ParallelGR | None
+    rule: BuildGR
     subclasses: set[str]
     
     class _BaseClassConstructor(BuildGRVisitor['BaseClass']):
         def _build_group(self, obj: BuildGroup) -> GroupClass:
             return GroupClass(
-                name=obj.type,
+                name=str(obj.type),
                 namespace=Namespace(),
                 rule=obj,
-                subclasses=set(obj.refs),
+                subclasses=set(map(str, obj.refs)),
             )
         
         def _build_lemma(self, obj: BuildLemma) -> LemmaClass:
             return LemmaClass(
-                name=obj.type,
+                name=str(obj.type),
                 namespace=Namespace.from_bnf_rule(obj.rule),
                 rule=obj,
                 subclasses=set(),
@@ -53,7 +53,7 @@ class BaseClass:
             
             if static_expr is None:
                 return TokenClass(
-                    name=obj.type,
+                    name=str(obj.type),
                     namespace=Namespace(
                         names=['content'],
                         attrs=[Attribute(types={'str'}, optional=False, multiple=False)]
@@ -63,7 +63,7 @@ class BaseClass:
                 )
             else:
                 return TokenClass(
-                    name=obj.type,
+                    name=str(obj.type),
                     namespace=Namespace(),
                     rule=obj,
                     subclasses=set(),
@@ -79,17 +79,17 @@ class KeywordClass(BaseClass):
 
 @dataclasses.dataclass
 class TokenClass(BaseClass):
-    pass
+    rule: BuildToken
 
 
 @dataclasses.dataclass
 class LemmaClass(BaseClass):
-    pass
+    rule: BuildLemma
 
 
 @dataclasses.dataclass
 class GroupClass(BaseClass):
-    pass
+    rule: BuildGroup
 
 
 @dataclasses.dataclass
@@ -141,6 +141,7 @@ class ClassManager:
     @classmethod
     def from_grammar(cls, grammar: Engine) -> ClassManager:
         return cls({
-            obj.type: BaseClass.from_rule(obj)
+            str(obj.type): BaseClass.from_rule(obj)
             for obj in grammar.rules
+            if isinstance(obj, (BuildGroup, BuildLemma, BuildToken))
         })

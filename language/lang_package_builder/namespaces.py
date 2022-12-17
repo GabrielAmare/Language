@@ -3,7 +3,7 @@ from __future__ import annotations
 import dataclasses
 import typing
 
-from language.base.bnf.v0_0_0 import *
+from language.base.bnf.v0_0_1 import *
 
 __all__ = [
     'Attribute',
@@ -71,10 +71,10 @@ class Namespace:
             return Namespace()
         
         def _match_as(self, obj: MatchAs) -> Namespace:
-            return Namespace(names=[obj.key], attrs=[Attribute(types={obj.type}, optional=False, multiple=False)])
+            return Namespace(names=[str(obj.key)], attrs=[Attribute(types={str(obj.type)}, optional=False, multiple=False)])
         
         def _match_in(self, obj: MatchIn) -> Namespace:
-            return Namespace(names=[obj.key], attrs=[Attribute(types={obj.type}, optional=False, multiple=True)])
+            return Namespace(names=[str(obj.key)], attrs=[Attribute(types={str(obj.type)}, optional=False, multiple=True)])
         
         def _literal(self, obj: Literal) -> Namespace:
             return Namespace()

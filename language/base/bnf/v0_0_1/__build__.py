@@ -1,6 +1,6 @@
 import string
 
-from language.base.bnf.v0_0_0 import *
+from language.base.bnf.v0_0_1 import *
 from language.base.python import Environment, LintRule
 from language.lang_package_builder import LangPackageBuilder
 
@@ -153,7 +153,7 @@ GROUPING_GR = (
 MATCH_GR = (
     GROUPING_GR.group('MatchGR')
     .lemma('MatchChar', sequence(*[
-        optional(match_as('Inverted', 'inverted')),
+        optional(match_as('_Inverted', 'inverted')),
         match_as('String', 'charset'),
     ]))
     .lemma('MatchAs', sequence(*[
