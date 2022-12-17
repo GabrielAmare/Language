@@ -44,11 +44,6 @@ class AbstractGR(Writable, ABC):
 
 
 @dataclass(frozen=True)
-class BuildGR(AbstractGR, ABC):
-    pass
-
-
-@dataclass(frozen=True)
 class ParallelGR(AbstractGR, ABC):
     pass
 
@@ -88,6 +83,11 @@ class Variable(AbstractGR):
 
 
 @dataclass(frozen=True)
+class BuildGR(AbstractGR, ABC):
+    type: Variable
+
+
+@dataclass(frozen=True)
 class Engine(AbstractGR):
     entry: Variable
     rules: tuple[BuildGR, ...]
@@ -109,41 +109,7 @@ class SequenceGR(ParallelGR, ABC):
 
 
 @dataclass(frozen=True)
-class Parallel(ParallelGR):
-    rules: tuple[SequenceGR, ...]
-    
-    def __tokens__(self) -> Iterator[str]:
-        for i, e in enumerate(self.rules):
-            if i:
-                yield ' '
-                yield '|'
-                yield ' '
-            yield from tok(e)
-
-
-@dataclass(frozen=True)
-class BuildGroup(BuildGR):
-    type: Variable
-    refs: tuple[Variable, ...]
-    
-    def __tokens__(self) -> Iterator[str]:
-        yield 'group'
-        yield ' '
-        yield from tok(self.type)
-        yield ' '
-        yield '='
-        yield ' '
-        for i, e in enumerate(self.refs):
-            if i:
-                yield ' '
-                yield '|'
-                yield ' '
-            yield from tok(e)
-
-
-@dataclass(frozen=True)
 class BuildLemma(BuildGR):
-    type: Variable
     rule: ParallelGR
     indented: _Indented | None = None
     
@@ -161,7 +127,6 @@ class BuildLemma(BuildGR):
 
 @dataclass(frozen=True)
 class BuildToken(BuildGR):
-    type: Variable
     rule: ParallelGR
     
     def __tokens__(self) -> Iterator[str]:
@@ -172,6 +137,38 @@ class BuildToken(BuildGR):
         yield '='
         yield ' '
         yield from tok(self.rule)
+
+
+@dataclass(frozen=True)
+class Parallel(ParallelGR):
+    rules: tuple[SequenceGR, ...]
+    
+    def __tokens__(self) -> Iterator[str]:
+        for i, e in enumerate(self.rules):
+            if i:
+                yield ' '
+                yield '|'
+                yield ' '
+            yield from tok(e)
+
+
+@dataclass(frozen=True)
+class BuildGroup(BuildGR):
+    refs: tuple[Variable, ...]
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield 'group'
+        yield ' '
+        yield from tok(self.type)
+        yield ' '
+        yield '='
+        yield ' '
+        for i, e in enumerate(self.refs):
+            if i:
+                yield ' '
+                yield '|'
+                yield ' '
+            yield from tok(e)
 
 
 @dataclass(frozen=True)

@@ -30,8 +30,6 @@ class CustomGraphvizDotBuilder(GraphvizDotBuilder):
         )
 
 
-
-
 @dataclasses.dataclass
 class LangPackageBuilder:
     name: str
@@ -50,6 +48,8 @@ class LangPackageBuilder:
             os.mkdir(self.name)
         
         class_manager = ClassManager.from_grammar(grammar)
+        
+        class_manager.simplify_common_signatures()
         
         if self.build_grammar_file:
             src = str(grammar)

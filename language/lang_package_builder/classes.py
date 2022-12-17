@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import functools
+import typing
 
 import utils
 from language.base.bnf.v0_0_1 import *
@@ -93,6 +94,24 @@ class GroupClass(BaseClass):
 
 
 @dataclasses.dataclass
+class MroGraph(utils.AcyclicDirectedGraph[str]):
+    def all_subclasses(self, name: str) -> list[str]:
+        return self.get_all_targets(name)
+    
+    def direct_subclasses(self, name: str) -> list[str]:
+        return self.get_targets(name)
+    
+    def all_superclasses(self, name: str) -> list[str]:
+        return self.get_all_origins(name)
+    
+    def direct_superclasses(self, name: str) -> list[str]:
+        return self.get_origins(name)
+    
+    def bottom_up_hierarchy(self) -> list[str]:
+        return sorted(self.nodes, key=self.get_target_order)
+
+
+@dataclasses.dataclass
 class ClassManager:
     classes: dict[str, BaseClass] = dataclasses.field(default_factory=dict)
     
@@ -112,13 +131,13 @@ class ClassManager:
     """
     
     @functools.cached_property
-    def mro_graph(self) -> utils.AcyclicDirectedGraph:
+    def mro_graph(self) -> MroGraph:
         """
         Returns an acyclic directed graph that represents the inheritance relations
         between the classes in the `classes` dictionary.
         """
         
-        mro_graph: utils.AcyclicDirectedGraph[str] = utils.AcyclicDirectedGraph()
+        mro_graph: MroGraph = MroGraph()
         for class_name, class_definition in self.classes.items():
             for subclass_name in class_definition.subclasses:
                 mro_graph.add_link(class_name, subclass_name)
@@ -145,3 +164,26 @@ class ClassManager:
             for obj in grammar.rules
             if isinstance(obj, (BuildGroup, BuildLemma, BuildToken))
         })
+    
+    def simplify_common_signatures(self) -> None:
+        """
+            If all direct subclasses of A, A_0 -> A_n share the same attributes, move them to the signature of A.
+            - we want to move all the attributes without a default value (that could break the behaviour of dataclasses)
+        """
+        all_classes: list[BaseClass] = [self.classes[name] for name in self.mro_graph.bottom_up_hierarchy()]
+        
+        for superclass in all_classes:
+            subclasses = [self.classes[name] for name in self.mro_graph.direct_subclasses(superclass.name)]
+            
+            if not subclasses:
+                continue
+            
+            namespaces: list[Namespace] = [cls.namespace for cls in subclasses]
+            
+            common_namespace: Namespace = functools.reduce(Namespace.intersection, namespaces)
+            
+            if common_namespace:
+                superclass.namespace = superclass.namespace.union(common_namespace)
+                
+                for subclass in subclasses:
+                    subclass.namespace = subclass.namespace.difference(common_namespace)

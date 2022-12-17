@@ -71,10 +71,12 @@ class Namespace:
             return Namespace()
         
         def _match_as(self, obj: MatchAs) -> Namespace:
-            return Namespace(names=[str(obj.key)], attrs=[Attribute(types={str(obj.type)}, optional=False, multiple=False)])
+            return Namespace(names=[str(obj.key)],
+                             attrs=[Attribute(types={str(obj.type)}, optional=False, multiple=False)])
         
         def _match_in(self, obj: MatchIn) -> Namespace:
-            return Namespace(names=[str(obj.key)], attrs=[Attribute(types={str(obj.type)}, optional=False, multiple=True)])
+            return Namespace(names=[str(obj.key)],
+                             attrs=[Attribute(types={str(obj.type)}, optional=False, multiple=True)])
         
         def _literal(self, obj: Literal) -> Namespace:
             return Namespace()
@@ -124,3 +126,66 @@ class Namespace:
             return namespace
     
     from_bnf_rule = staticmethod(NamespaceBuilderVisitor())
+    
+    def __contains__(self, name: str) -> bool:
+        return name in self.names
+    
+    def __setitem__(self, name: str, attr: Attribute) -> None:
+        if name in self.names:
+            raise KeyError(f"{name!r} is already defined in the Namespace.")
+        
+        self.names.append(name)
+        self.attrs.append(attr)
+    
+    def __getitem__(self, name: str) -> Attribute:
+        try:
+            index = self.names.index(name)
+        except IndexError:
+            raise KeyError(f"{name!r} is not defined in the Namespace.")
+        
+        return self.attrs[index]
+    
+    def intersection(self, other: Namespace) -> Namespace:
+        """Return a Namespace with only the common attributes."""
+        result: Namespace = Namespace()
+        
+        for name in self.names:
+            if name not in other:
+                continue
+            
+            self_attr = self[name]
+            other_attr = other[name]
+            
+            if self_attr != other_attr:
+                continue
+            
+            result[name] = self_attr
+        
+        return result
+    
+    def union(self, other: Namespace) -> Namespace:
+        """Return a merged `Namespace` of `self` and `other`."""
+        result: Namespace = Namespace()
+        
+        for name, attr in self.items():
+            result[name] = attr
+        
+        for name, attr in other.items():
+            if name in result and result[name] != attr:
+                raise ValueError
+            
+            result[name] = attr
+        
+        return result
+    
+    def difference(self, other: Namespace) -> Namespace:
+        """Return a copy of `self` without the attributes of `other`."""
+        result: Namespace = Namespace()
+        
+        for name, attr in self.items():
+            if name in other:
+                continue
+            
+            result[name] = attr
+        
+        return result

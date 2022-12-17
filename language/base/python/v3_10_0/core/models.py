@@ -115,17 +115,7 @@ class AbstractGR(Writable, ABC):
 
 
 @dataclass
-class AltGR(AbstractGR, ABC):
-    pass
-
-
-@dataclass
 class ArgumentGR(AbstractGR, ABC):
-    pass
-
-
-@dataclass
-class ParamGR(AbstractGR, ABC):
     pass
 
 
@@ -174,6 +164,11 @@ class Module(AbstractGR):
 
 
 @dataclass
+class AltGR(AbstractGR, ABC):
+    block: Block
+
+
+@dataclass
 class ImportPath(AbstractGR):
     parts: list[Variable]
     
@@ -185,8 +180,34 @@ class ImportPath(AbstractGR):
 
 
 @dataclass
+class ParamGR(AbstractGR, ABC):
+    name: Variable
+    type: Expression | None = None
+
+
+@dataclass
+class ArgsParam(ParamGR):
+    def __tokens__(self) -> Iterator[str]:
+        yield '*'
+        yield from tok(self.name)
+        if self.type:
+            yield ':'
+            yield ' '
+            yield from tok(self.type)
+
+
+@dataclass
 class DecoratorGR(Statement, ABC):
     pass
+
+
+@dataclass
+class Else(AltGR):
+    def __tokens__(self) -> Iterator[str]:
+        yield '\n'
+        yield 'else'
+        yield ':'
+        yield from tok(self.block)
 
 
 @dataclass
@@ -195,8 +216,14 @@ class Expression(SliceGR, ArgumentGR, ABC):
 
 
 @dataclass
-class ImportStatement(Statement, ABC):
-    pass
+class KwargsParam(ParamGR):
+    def __tokens__(self) -> Iterator[str]:
+        yield '**'
+        yield from tok(self.name)
+        if self.type:
+            yield ':'
+            yield ' '
+            yield from tok(self.type)
 
 
 @dataclass
@@ -269,6 +296,23 @@ class DoubleStarred(ArgumentGR):
 
 
 @dataclass
+class Param(ParamGR):
+    default: Expression | None = None
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield from tok(self.name)
+        if self.type:
+            yield ':'
+            yield ' '
+            yield from tok(self.type)
+        if self.default:
+            yield ' '
+            yield '='
+            yield ' '
+            yield from tok(self.default)
+
+
+@dataclass
 class Slice(SliceGR):
     first: Expression | None = None
     second: Expression | None = None
@@ -303,48 +347,6 @@ class StatementExpression(Statement):
 
 
 @dataclass
-class ArgsParam(ParamGR):
-    name: Variable
-    type: Expression | None = None
-    
-    def __tokens__(self) -> Iterator[str]:
-        yield '*'
-        yield from tok(self.name)
-        if self.type:
-            yield ':'
-            yield ' '
-            yield from tok(self.type)
-
-
-@dataclass
-class Elif(AltGR):
-    test: Expression
-    block: Block
-    alt: AltGR | None = None
-    
-    def __tokens__(self) -> Iterator[str]:
-        yield '\n'
-        yield 'elif'
-        yield ' '
-        yield from tok(self.test)
-        yield ':'
-        yield from tok(self.block)
-        if self.alt:
-            yield from tok(self.alt)
-
-
-@dataclass
-class Else(AltGR):
-    block: Block
-    
-    def __tokens__(self) -> Iterator[str]:
-        yield '\n'
-        yield 'else'
-        yield ':'
-        yield from tok(self.block)
-
-
-@dataclass
 class For(Statement):
     iter: Expression
     block: Block
@@ -367,6 +369,33 @@ class For(Statement):
 
 
 @dataclass
+class Kwarg(ArgumentGR):
+    name: Variable
+    value: Expression
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield from tok(self.name)
+        yield '='
+        yield from tok(self.value)
+
+
+@dataclass
+class Elif(AltGR):
+    test: Expression
+    alt: AltGR | None = None
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield '\n'
+        yield 'elif'
+        yield ' '
+        yield from tok(self.test)
+        yield ':'
+        yield from tok(self.block)
+        if self.alt:
+            yield from tok(self.alt)
+
+
+@dataclass
 class If(Statement):
     test: Expression
     block: Block
@@ -383,52 +412,25 @@ class If(Statement):
 
 
 @dataclass
-class Kwarg(ArgumentGR):
-    name: Variable
-    value: Expression
-    
-    def __tokens__(self) -> Iterator[str]:
-        yield from tok(self.name)
-        yield '='
-        yield from tok(self.value)
-
-
-@dataclass
-class KwargsParam(ParamGR):
-    name: Variable
-    type: Expression | None = None
-    
-    def __tokens__(self) -> Iterator[str]:
-        yield '**'
-        yield from tok(self.name)
-        if self.type:
-            yield ':'
-            yield ' '
-            yield from tok(self.type)
-
-
-@dataclass
-class Param(ParamGR):
-    name: Variable
-    type: Expression | None = None
-    default: Expression | None = None
-    
-    def __tokens__(self) -> Iterator[str]:
-        yield from tok(self.name)
-        if self.type:
-            yield ':'
-            yield ' '
-            yield from tok(self.type)
-        if self.default:
-            yield ' '
-            yield '='
-            yield ' '
-            yield from tok(self.default)
+class ImportStatement(Statement, ABC):
+    targets: list[ImportPath]
 
 
 @dataclass
 class Disjunction(Expression, ABC):
     pass
+
+
+@dataclass
+class Import(ImportStatement):
+    def __tokens__(self) -> Iterator[str]:
+        yield 'import'
+        yield ' '
+        for i, e in enumerate(self.targets):
+            if i:
+                yield ','
+                yield ' '
+            yield from tok(e)
 
 
 @dataclass
@@ -552,23 +554,8 @@ class Function(DecoratorGR):
 
 
 @dataclass
-class Import(ImportStatement):
-    targets: list[ImportPath]
-    
-    def __tokens__(self) -> Iterator[str]:
-        yield 'import'
-        yield ' '
-        for i, e in enumerate(self.targets):
-            if i:
-                yield ','
-                yield ' '
-            yield from tok(e)
-
-
-@dataclass
 class ImportFrom(ImportStatement):
     origin: ImportPath
-    targets: list[ImportPath]
     
     def __tokens__(self) -> Iterator[str]:
         yield 'from'
