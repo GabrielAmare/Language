@@ -78,6 +78,16 @@ class Container(abc.ABC):
         self._parts.append(proxy)
         return proxy
     
+    def IF(self, test: Expression) -> BlockProxy:  # NOQA
+        proxy = IfProxy(root=self, test=test, block_proxy=BlockProxy(root=self, _parts=[]))
+        self._parts.append(proxy)
+        return proxy.block_proxy
+    
+    def FOR(self, args: list[Variable], iter: Expression) -> BlockProxy:  # NOQA
+        proxy = ForProxy(root=self, args=args, iter=iter, block_proxy=BlockProxy(root=self, _parts=[]))
+        self._parts.append(proxy)
+        return proxy.block_proxy
+    
     def METHOD(self, name: str) -> FunctionProxy:  # NOQA
         sub_ctx = self.FUNCTION(name)
         sub_ctx.param('self')
@@ -94,6 +104,9 @@ class Container(abc.ABC):
     
     def RAISE(self, exc: Expression, cause: Expression | None = None) -> None:  # NOQA
         self._parts.append(Raise(exc=render(exc), cause=render(cause)))
+
+    def ASSIGN(self, name: str, type_: Expression | None = None, value: Expression | None = None) -> None:  # NOQA
+        self._parts.append(Assign(target=Variable(name), type=type_, value=value))
 
 
 @dataclasses.dataclass
@@ -174,15 +187,19 @@ class ModuleProxy(Proxy[Module], Container):
 class ClassProxy(StatementProxy, Contained, Container):
     root: Container = None
     name: str = None
+    _mro: list[Expression] = dataclasses.field(default_factory=list)
     _decorators: list[Expression] = dataclasses.field(default_factory=list)
     
     def decorate(self, expr: Expression) -> None:
         self._decorators.append(expr)
     
+    def inherits(self, *supers: Expression) -> None:
+        self._mro.extend(supers)
+    
     def render(self) -> DecoratorGR:
         result = Class(
             name=Variable(self.name),
-            mro=[],
+            mro=self._mro,
             block=block(pep8_e301(self._render_parts()))
         )
         
@@ -190,6 +207,32 @@ class ClassProxy(StatementProxy, Contained, Container):
             result = Decorator(expr=decorator, target=result)
         
         return result
+
+
+@dataclasses.dataclass
+class IfProxy(StatementProxy, Contained):
+    test: Expression
+    block_proxy: BlockProxy
+    
+    def render(self) -> If:
+        return If(
+            test=self.test,
+            block=render(self.block_proxy)
+        )
+
+
+@dataclasses.dataclass
+class ForProxy(StatementProxy, Contained):
+    args: list[Variable]
+    iter: Expression
+    block_proxy: BlockProxy
+    
+    def render(self) -> For:
+        return For(
+            args=self.args,
+            iter=self.iter,
+            block=render(self.block_proxy)
+        )
 
 
 @dataclasses.dataclass
