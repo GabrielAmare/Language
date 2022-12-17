@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import dataclasses
 import functools
-import typing
 
 import utils
 from language.base.bnf.v0_0_1 import *

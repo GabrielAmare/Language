@@ -2,16 +2,15 @@ import dataclasses
 import re
 import typing
 
-from language.base.python import *
+from language.base.bnf import v0_0_1 as bnf
+from language.base.python.v3_10_0 import *
 from .classes import ClassManager, BaseClass, TokenClass, GroupClass, get_static_token_expr
 from .namespaces import Namespace, Attribute
-from language.base.bnf import v0_0_1 as bnf
 
 __all__ = [
     'build_models',
     'build_visitors',
 ]
-
 
 
 def _pascal_case_to_snake_case(class_name: str) -> str:
