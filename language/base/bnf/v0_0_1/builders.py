@@ -30,19 +30,15 @@ class GroupContext(AbstractContext):
     _groups: list[GroupContext] = dataclasses.field(default_factory=list)
     _lemmas: list[LemmaContext] = dataclasses.field(default_factory=list)
     _tokens: list[TokenContext] = dataclasses.field(default_factory=list)
-    _references: list[GroupContext] = dataclasses.field(default_factory=list)
+    _references: list[str] = dataclasses.field(default_factory=list)
     
-    def group(self, name: str | GroupContext) -> GroupContext:
-        if isinstance(name, str):
-            ctx = GroupContext(
-                root=self,
-                name=name,
-            )
-            self._groups.append(ctx)
-            return ctx
-        elif isinstance(name, GroupContext):
-            self._references.append(name)
-            return name
+    def group(self, name: str) -> GroupContext:
+        ctx = GroupContext(
+            root=self,
+            name=name,
+        )
+        self._groups.append(ctx)
+        return ctx
     
     def lemma(self, name: str, rule: ParallelGR, indented: bool = False) -> GroupContext:
         ctx = LemmaContext(
@@ -63,6 +59,11 @@ class GroupContext(AbstractContext):
         self._tokens.append(ctx)
         return self
     
+    def ref(self, name: str) -> GroupContext:
+        """Add an already existing definition in the group. (WARNING: this may break single inheritance)."""
+        self._references.append(name)
+        return self
+    
     def definition(self) -> BuildGroup:
         return BuildGroup(
             type=Variable(self.name),
@@ -70,7 +71,7 @@ class GroupContext(AbstractContext):
                 *(group.name for group in self._groups),
                 *(lemma.name for lemma in self._lemmas),
                 *(token.name for token in self._tokens),
-                *(ref.name for ref in self._references),
+                *self._references,
             ]),
         )
     

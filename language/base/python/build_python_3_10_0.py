@@ -424,7 +424,7 @@ ARGUMENT_GR = (
         match_as('Expression', 'value')
     ]))
 )
-ARGUMENT_GR.group(EXPRESSION)  # This make `Expression` inherits from `ArgumentGR` (introducing multiple inheritance).
+ARGUMENT_GR.ref('Expression')  # This make `Expression` inherits from `ArgumentGR` (introducing multiple inheritance).
 
 ABSTRACT_GR.lemma('ImportPath', sequence(*[
     enum0(

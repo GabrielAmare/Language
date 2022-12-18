@@ -211,7 +211,7 @@ class Else(AltGR):
 
 
 @dataclass
-class Expression(SliceGR, ArgumentGR, ABC):
+class Expression(ArgumentGR, SliceGR, ABC):
     pass
 
 
