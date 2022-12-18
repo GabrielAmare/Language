@@ -299,7 +299,22 @@ def build_models(package: DynamicPackage, class_manager: ClassManager) -> Dynami
     return module
 
 
-def _build_visitor_class_call(cls: DynamicClass, root_class: str, classes: list[str]) -> DynamicFunction:
+def _is_private_constant_token(class_manager: ClassManager, name: str) -> bool:
+    if not name.startswith('_'):
+        return False
+    
+    cls = class_manager.classes[name]
+    if not isinstance(cls, TokenClass):
+        return False
+    
+    if not isinstance(cls.rule.rule, bnf.Literal):
+        return False
+    
+    return True
+
+
+def _build_visitor_class_call(cls: DynamicClass, root_class: str, classes: list[str],
+                              class_manager: ClassManager) -> DynamicFunction:
     function = (
         cls.new_function('__call__')
         .add_param('self')
@@ -311,8 +326,16 @@ def _build_visitor_class_call(cls: DynamicClass, root_class: str, classes: list[
     switch_builder = SwitchBuilder()
     for subclass_name in classes:
         method_name = _pascal_case_to_snake_case(subclass_name)
+        
+        if _is_private_constant_token(class_manager, subclass_name):
+            method_name = method_name[1:]
+            constant_name = method_name.upper().lstrip('_')
+            condition = Is(left=Variable('obj'), right=Variable(constant_name))
+        else:
+            condition = Call(left=Variable('isinstance'), args=[Variable('obj'), Variable(subclass_name)])
+        
         switch_builder.add_case(
-            Call(left=Variable('isinstance'), args=[Variable('obj'), Variable(subclass_name)]),
+            condition,
             [
                 Return([Call(
                     left=GetAttr(left=Variable('self'), right=Variable(method_name)),
@@ -336,6 +359,7 @@ def _build_visitor_class(module: DynamicModule, class_manager: ClassManager, roo
     children_classes = sorted(
         children_classes,
         key=lambda subclass_name: (
+            0 if _is_private_constant_token(class_manager, subclass_name) else 1,
             class_manager.mro_graph.get_origin_order(subclass_name),
             subclass_name
         )
@@ -347,15 +371,23 @@ def _build_visitor_class(module: DynamicModule, class_manager: ClassManager, roo
         .add_super(module.imports.get('ABC', from_='abc'))
     )
     
-    _build_visitor_class_call(cls, root_class, children_classes)
+    _build_visitor_class_call(cls, root_class, children_classes, class_manager)
     
     for class_name in children_classes:
         method_name = _pascal_case_to_snake_case(class_name)
+
+        if _is_private_constant_token(class_manager, class_name):
+            method_name = method_name[1:]
+            constant_name = method_name.upper().lstrip('_')
+            type_hint = Variable(constant_name)
+        else:
+            type_hint = Variable(class_name)
+
         (
             cls.new_function(method_name)
             .add_decorator(module.imports.get('abstractmethod', from_='abc'))
             .add_param('self')
-            .add_param('obj', Variable(class_name))
+            .add_param('obj', type_hint)
             .set_returns(Variable('_E'))
             .add_statement(PASS)
         )
