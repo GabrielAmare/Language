@@ -8,6 +8,7 @@ from language.base.bnf.v0_0_1 import *
 from .namespaces import Namespace, Attribute
 
 __all__ = [
+    'MroGraph',
     'BaseClass',
     'TokenClass',
     'LemmaClass',

@@ -1,11 +1,13 @@
 import dataclasses
 import os
 
+import graphviz
+
 from language.base.bnf.v0_0_1 import Engine
 from language.base.python.v3_10_0 import Environment, DynamicPackage
 from utils.graphs import DirectedGraph
 from utils.graphs.graphviz import GraphvizDotBuilder
-from .classes import ClassManager, TokenClass, LemmaClass, GroupClass
+from .classes import ClassManager, TokenClass, LemmaClass, GroupClass, MroGraph
 from .factories import build_models, build_visitors
 
 __all__ = [
@@ -28,6 +30,57 @@ class CustomGraphvizDotBuilder(GraphvizDotBuilder):
                 TokenClass: "lime"
             }.get(type(self.manager.classes.get(node)), "gray")
         )
+
+
+@dataclasses.dataclass
+class MroGraphvizBuilder(GraphvizDotBuilder):
+    manager: ClassManager
+    
+    def _node_style(self, _graph: MroGraph, node: str):
+        return dict(
+            label=node,
+            shape="rect",
+            style="filled",
+            fillcolor={
+                GroupClass: "orange",
+                LemmaClass: "lightblue",
+                TokenClass: "lime"
+            }.get(type(self.manager.classes.get(node)), "gray")
+        )
+    
+    def build(self, graph: MroGraph) -> graphviz.Digraph:
+        """Custom build method to render the graph in an deterministic way."""
+        dot = graphviz.Digraph()
+        
+        def sort_nodes(name: str):
+            class_type = self.manager.classes.get(name).__class__
+            return (
+                # sort the classes by most generic.
+                graph.get_origin_order(name),
+                # sort the classes by type order (Token -> Lemma -> Group)
+                [TokenClass, LemmaClass, GroupClass, ].index(class_type),
+                # sort the classes by alphabetical order.
+                name,
+            )
+        
+        graph.nodes.sort(key=sort_nodes)
+        
+        for node in graph.nodes:
+            dot.node(
+                name=self._node_name(graph, node),
+                **self._node_style(graph, node)
+            )
+        
+        for origin in graph.nodes:
+            # create the links in the order of the nodes
+            for target in sorted(graph.direct_subclasses(origin), key=sort_nodes):
+                dot.edge(
+                    tail_name=self._node_name(graph, origin),
+                    head_name=self._node_name(graph, target),
+                    **self._link_style(graph, origin, target)
+                )
+        
+        return dot
 
 
 @dataclasses.dataclass
@@ -56,14 +109,15 @@ class LangPackageBuilder:
             with open(f"{self.name}/grammar.bnf", mode="w", encoding="utf-8") as file:
                 file.write(src)
         
-        get_dot = CustomGraphvizDotBuilder(class_manager).build
+        build_mro_dot = MroGraphvizBuilder(class_manager).build
+        build_use_dot = CustomGraphvizDotBuilder(class_manager).build
         
         if self.build_mro_graph:
-            mro_dot = get_dot(class_manager.mro_graph)
+            mro_dot = build_mro_dot(class_manager.mro_graph)
             mro_dot.save(f'{self.name}/mro_graph.gv')
         
         if self.build_use_graph:
-            use_dot = get_dot(class_manager.use_graph)
+            use_dot = build_use_dot(class_manager.use_graph)
             use_dot.save(f'{self.name}/use_graph.gv')
         
         package = DynamicPackage(name=self.name, env=self.python_env)
