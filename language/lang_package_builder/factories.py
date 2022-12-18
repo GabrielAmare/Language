@@ -261,7 +261,7 @@ def build_class(module: DynamicModule, class_manager: ClassManager, class_name: 
     
     cls.add_decorator(decorator)
     
-    mro: list[str] = class_manager.mro_graph.get_origins(class_name)
+    mro: list[str] = class_manager.mro_graph.get_mro(class_name)
     cls.add_supers(map(Variable, mro))
     
     # Build the class attributes.

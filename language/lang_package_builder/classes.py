@@ -108,6 +108,14 @@ class MroGraph(utils.AcyclicDirectedGraph[str]):
     
     def bottom_up_hierarchy(self) -> list[str]:
         return sorted(self.nodes, key=self.get_target_order)
+    
+    def get_mro(self, name: str) -> list[str]:
+        """Return a consistent mro for the class `name`."""
+        superclasses: list[str] = self.direct_superclasses(name)
+        return sorted(superclasses, key=lambda superclass_name: (
+            -self.get_origin_order(superclass_name),  # sort the classes by decreasing origin order.
+            superclass_name,  # sort them by alphabetical order.
+        ))
 
 
 @dataclasses.dataclass
