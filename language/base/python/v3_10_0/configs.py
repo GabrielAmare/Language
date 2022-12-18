@@ -25,7 +25,7 @@ class Environment:
             return False
     
     @classmethod
-    def default(cls, version: tuple[int, int, int]) -> Environment:
+    def default(cls, version: tuple[int, int, int], style: dict = None) -> Environment:
         if version >= (3, 10, 0):
             return cls(
                 version=version,
@@ -36,7 +36,8 @@ class Environment:
                     'itertools',
                     'functools',
                     'collections',
-                ]
+                ],
+                style=style or {}
             )
         
         raise ValueError(f"No default environment defined for version {version!r}")
