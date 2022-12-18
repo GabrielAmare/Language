@@ -37,9 +37,10 @@ ABSTRACT_GR = (
 
 STATEMENT = (
     ABSTRACT_GR.group('Statement')
-    .token('_Pass', literal('pass'))
-    .token('_Continue', literal('continue'))
-    .token('_Break', literal('break'))
+    .literal('_Pass', 'pass')
+    .literal('_Continue', 'continue')
+    .literal('_Break', 'break')
+    .literal('_EmptyLine', '')
     .lemma('If', sequence(*[
         literal('if'),
         canonical(' '),
@@ -62,7 +63,6 @@ STATEMENT = (
         literal(':'),
         match_as('Block', 'block'),
     ]))
-    .token('_EmptyLine', literal(''))
     .lemma('Assign', sequence(*[
         match_as('Primary', 'target'),
         optional(sequence(*[
@@ -352,13 +352,14 @@ ABSTRACT_GR.lemma('IndentedListBody', sequence(*[
 
 ATOM = (
     PRIMARY.group('Atom')
+    .literal('_True', 'True')
+    .literal('_False', 'False')
+    .literal('_None', 'None')
+    .literal('_Ellipsis', '...')
     .token('Variable', sequence(*[
         match_char(string.ascii_letters + '_'),
         repeat0(match_char(string.ascii_letters + string.digits + '_')),
     ]))
-    .token('_True', literal('True'))
-    .token('_False', literal('False'))
-    .token('_None', literal('None'))
     .token('String', parallel(*[
         sequence(*[
             match_char('"'),
@@ -383,7 +384,6 @@ ATOM = (
             repeat1(match_char(string.digits)),
         ]),
     ]))
-    .token('_Ellipsis', literal('...'))
     .lemma('List', sequence(*[
         literal('['),
         optional(enum0(
