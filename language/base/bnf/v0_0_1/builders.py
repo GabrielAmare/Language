@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import abc
+import dataclasses
 import typing
 
+from .factories import *
 from .models import *
 
 __all__ = [
@@ -11,8 +13,6 @@ __all__ = [
     'LemmaContext',
     'TokenContext',
 ]
-
-import dataclasses
 
 
 @dataclasses.dataclass
@@ -58,6 +58,13 @@ class GroupContext(AbstractContext):
         )
         self._tokens.append(ctx)
         return self
+    
+    def literal(self, name: str, expr: str) -> GroupContext:
+        """Generate a literal token rule."""
+        return self.token(
+            name=name,
+            rule=literal(expr)
+        )
     
     def ref(self, name: str) -> GroupContext:
         """Add an already existing definition in the group. (WARNING: this may break single inheritance)."""
