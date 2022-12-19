@@ -48,3 +48,13 @@ class AcyclicDirectedGraph(typing.Generic[T], DirectedGraph[T]):
     
     def get_target_order(self, node: T) -> int:
         return max(map(self.get_target_order, self.get_targets(node)), default=-1) + 1
+    
+    @property
+    def origin_roots(self) -> list[T]:
+        """Return all the nodes that have no origins."""
+        return [node for node in self.nodes if self.get_origin_order(node) == 0]
+    
+    @property
+    def target_roots(self) -> list[T]:
+        """Return all the nodes that have no targets."""
+        return [node for node in self.nodes if self.get_target_order(node) == 0]
