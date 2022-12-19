@@ -24,6 +24,7 @@ __all__ = [
     'ClassProxy',
     'ParamProxy',
     'FunctionProxy',
+    'HasPythonImplementation',
 ]
 
 
@@ -104,9 +105,12 @@ class Container(abc.ABC):
     
     def RAISE(self, exc: Expression, cause: Expression | None = None) -> None:  # NOQA
         self._parts.append(Raise(exc=render(exc), cause=render(cause)))
-
+    
     def ASSIGN(self, name: str, type_: Expression | None = None, value: Expression | None = None) -> None:  # NOQA
         self._parts.append(Assign(target=Variable(name), type=type_, value=value))
+    
+    def implement(self, obj: HasPythonImplementation) -> None:
+        return obj.implement_in(self)
 
 
 @dataclasses.dataclass
@@ -292,3 +296,9 @@ class FunctionProxy(StatementProxy, Contained, Container):
             result = Decorator(expr=decorator, target=result)
         
         return result
+
+
+class HasPythonImplementation(abc.ABC):
+    @abc.abstractmethod
+    def implement_in(self, scope: Container) -> None:
+        """"""
