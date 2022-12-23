@@ -61,9 +61,8 @@ def _build_class_attribute(module: DynamicModule, cls: DynamicClass, name: str, 
             )
     
     if attr.optional:
-        target_type = module.typing.optional(target_type)
-        
         if not attr.multiple or module.env.lint(LintRule.DATACLASS_MULTIPLE_CAN_BE_NONE):
+            target_type = module.typing.optional(target_type)
             default = NONE
     
     cls.new_variable(name=name, type_=target_type, value=default)

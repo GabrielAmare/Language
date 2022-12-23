@@ -464,7 +464,7 @@ class Raise(ReturningStatement):
 
 @dataclass
 class Return(ReturningStatement):
-    expressions: list[Expression] | None = field(default_factory=list)
+    expressions: list[Expression] = field(default_factory=list)
     
     def __tokens__(self) -> Iterator[str]:
         yield 'return'
@@ -479,7 +479,7 @@ class Return(ReturningStatement):
 
 @dataclass
 class Yield(ReturningStatement):
-    expressions: list[Expression] | None = field(default_factory=list)
+    expressions: list[Expression] = field(default_factory=list)
     
     def __tokens__(self) -> Iterator[str]:
         yield 'yield'
@@ -508,7 +508,7 @@ class YieldFrom(ReturningStatement):
 class Class(DecoratorGR):
     name: Variable
     block: Block
-    mro: list[Expression] | None = field(default_factory=list)
+    mro: list[Expression] = field(default_factory=list)
     
     def __tokens__(self) -> Iterator[str]:
         yield 'class'
@@ -1113,7 +1113,7 @@ class Integer(Atom):
 
 @dataclass
 class List(Atom):
-    items: list[Expression] | None = field(default_factory=list)
+    items: list[Expression] = field(default_factory=list)
     
     def __tokens__(self) -> Iterator[str]:
         yield '['
