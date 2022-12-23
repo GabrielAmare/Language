@@ -68,6 +68,15 @@ def _build_class_attribute(module: DynamicModule, cls: DynamicClass, name: str, 
     cls.new_variable(name=name, type_=target_type, value=default)
 
 
+def _get_single_multiple_attribute(obj: bnf.ParallelGR) -> Attribute:
+    namespace = Namespace.from_bnf_rule(obj)
+    attributes = namespace.attrs
+    assert len(attributes) == 1
+    attr = attributes[0]
+    assert attr.multiple
+    return attr
+
+
 @dataclasses.dataclass
 class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]]):
     module: DynamicModule
@@ -80,35 +89,8 @@ class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]])
         for rule in obj.rules:
             yield from self(rule)
     
-    def _enum0(self, obj: bnf.Enum0) -> typing.Iterator[Statement]:
-        namespace: Namespace = Namespace.from_bnf_rule(obj)
-        attributes = namespace.attrs
-        assert len(attributes) == 1
-        attr = attributes[0]
-        assert attr.multiple
-        
-        with self.cardinality(multiple=True):
-            yield For(
-                args=[Variable('i'), Variable('e')],
-                iter=Call(Variable('enumerate'), [
-                    GetAttr(Variable('self'), Variable(attr.name))
-                ]),
-                block=Block(statements=[
-                    If(
-                        test=Variable('i'),
-                        block=Block(statements=list(self(obj.separator)))
-                    ),
-                    *self(obj.item)
-                ])
-            )
-    
-    def _enum1(self, obj: bnf.Enum1) -> typing.Iterator[Statement]:
-        namespace = Namespace.from_bnf_rule(obj)
-        attributes = namespace.attrs
-        assert len(attributes) == 1
-        attr = attributes[0]
-        assert attr.multiple
-        
+    def _on_enum(self, obj: bnf.Enum0 | bnf.Enum1) -> typing.Iterator[Statement]:
+        attr = _get_single_multiple_attribute(obj)
         with self.cardinality(multiple=True):
             yield For(
                 args=[Variable('i'), Variable('e')],
@@ -122,23 +104,30 @@ class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]])
                 ])
             )
     
+    def _enum0(self, obj: bnf.Enum0) -> typing.Iterator[Statement]:
+        yield from self._on_enum(obj)
+    
+    def _enum1(self, obj: bnf.Enum1) -> typing.Iterator[Statement]:
+        yield from self._on_enum(obj)
+    
     def _optional(self, obj: bnf.Optional) -> typing.Iterator[Statement]:
+        namespace = Namespace.from_bnf_rule(obj.rule)
+        attributes = namespace.attrs
+        
+        required = [
+            GetAttr(Variable('self'), Variable(attr.name))
+            for attr in attributes
+            if not attr.optional
+        ]
+        
+        if len(required) == 0:
+            condition = None
+        elif len(required) == 1:
+            condition = required[0]
+        else:
+            condition = And(items=required)
+        
         with self.cardinality(optional=True):
-            namespace = Namespace.from_bnf_rule(obj.rule)
-            attributes = namespace.attrs
-            
-            required = [
-                GetAttr(Variable('self'), Variable(attr.name))
-                for attr in attributes
-                if not attr.optional
-            ]
-            if len(required) == 0:
-                condition = None
-            elif len(required) == 1:
-                condition = required[0]
-            else:
-                condition = And(items=required)
-            
             if condition is None:
                 yield from self(obj.rule)
             else:
@@ -148,12 +137,7 @@ class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]])
                 )
     
     def _repeat0(self, obj: bnf.Repeat0) -> typing.Iterator[Statement]:
-        namespace = Namespace.from_bnf_rule(obj)
-        attributes = namespace.attrs
-        assert len(attributes) == 1
-        attr = attributes[0]
-        assert attr.multiple
-        
+        attr = _get_single_multiple_attribute(obj)
         with self.cardinality(optional=True, multiple=True):
             yield If(
                 test=GetAttr(Variable('self'), Variable(attr.name)),
@@ -167,12 +151,7 @@ class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]])
             )
     
     def _repeat1(self, obj: bnf.Repeat1) -> typing.Iterator[Statement]:
-        namespace = Namespace.from_bnf_rule(obj)
-        attributes = namespace.attrs
-        assert len(attributes) == 1
-        attr = attributes[0]
-        assert attr.multiple
-        
+        attr = _get_single_multiple_attribute(obj)
         with self.cardinality(multiple=True):
             yield For(
                 args=[Variable('e')],
@@ -201,7 +180,7 @@ class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]])
         assert not obj.inverted
         assert len(obj.charset.content[1:-1]) == 1
         yield Yield([String(obj.charset.content)])
-    
+
 
 def _build_class_method__tokens__(module: DynamicModule, cls: DynamicClass, obj: bnf.BuildGR) -> None:
     if isinstance(obj, bnf.BuildGroup):
