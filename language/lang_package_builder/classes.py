@@ -4,7 +4,7 @@ import dataclasses
 import functools
 
 import utils
-from language.base.bnf.v0_0_1 import *
+from .dependencies.bnf import *
 from .namespaces import Namespace, Attribute
 
 __all__ = [

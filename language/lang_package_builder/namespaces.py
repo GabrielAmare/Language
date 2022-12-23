@@ -3,7 +3,7 @@ from __future__ import annotations
 import dataclasses
 import typing
 
-from language.base.bnf.v0_0_1 import *
+from .dependencies.bnf import *
 
 __all__ = [
     'Attribute',

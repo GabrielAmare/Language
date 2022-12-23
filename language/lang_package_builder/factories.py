@@ -1,10 +1,10 @@
 import dataclasses
 import typing
 
-from language.base.bnf import v0_0_1 as bnf
-from language.base.python.v3_10_0 import *
 from .case_converting import pascal_case_to_snake_case
 from .classes import ClassManager, BaseClass, TokenClass, GroupClass, get_static_token_expr
+from .dependencies import bnf
+from .dependencies.python import *
 from .namespaces import Namespace, Attribute
 
 __all__ = [

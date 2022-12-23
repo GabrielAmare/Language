@@ -3,11 +3,11 @@ import os
 
 import graphviz
 
-from language.base.bnf.v0_0_1 import Engine
-from language.base.python.v3_10_0 import Environment, DynamicPackage
 from utils.graphs import DirectedGraph
 from utils.graphs.graphviz import GraphvizDotBuilder
 from .classes import ClassManager, TokenClass, LemmaClass, GroupClass, MroGraph
+from .dependencies.bnf import Engine
+from .dependencies.python import Environment, DynamicPackage
 from .factories import build_models, build_visitors
 
 __all__ = [
