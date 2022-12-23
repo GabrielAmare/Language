@@ -4,6 +4,7 @@ import dataclasses
 import typing
 
 from .dependencies.bnf import *
+from .cardinality_tracker import Cardinality
 
 __all__ = [
     'Attribute',
@@ -44,54 +45,19 @@ class Attribute:
 
 
 @dataclasses.dataclass
-class CardinalityContext:
-    factory: ParallelGRToNamespaceFactory
-    optional: bool = False
-    multiple: bool = False
-    
-    def __enter__(self):
-        if self.optional:
-            self.factory.optional_ctx += 1
-        if self.multiple:
-            self.factory.multiple_ctx += 1
-    
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.optional:
-            self.factory.optional_ctx -= 1
-        if self.multiple:
-            self.factory.multiple_ctx -= 1
-
-
-@dataclasses.dataclass
 class ParallelGRToNamespaceFactory(ParallelGRVisitor):
-    optional_ctx: int = 0
-    multiple_ctx: int = 0
+    cardinality: Cardinality = dataclasses.field(default_factory=Cardinality)
     
-    def context(self, optional: bool = False, multiple: bool = False) -> CardinalityContext:
-        return CardinalityContext(self, optional=optional, multiple=multiple)
-    
-    def _match_char(self, obj: MatchChar) -> Namespace:
+    def _match(self, obj: Match) -> Namespace:
         return Namespace()
     
-    def _match_as(self, obj: MatchAs) -> Namespace:
-        assert self.multiple_ctx == 0
+    def _store(self, obj: Store) -> Namespace:
         namespace = Namespace()
         namespace.set(
             name=str(obj.key),
             types={str(obj.type)},
-            optional=bool(self.optional_ctx),
-            multiple=bool(self.multiple_ctx),
-        )
-        return namespace
-    
-    def _match_in(self, obj: MatchIn) -> Namespace:
-        assert self.multiple_ctx > 0
-        namespace = Namespace()
-        namespace.set(
-            name=str(obj.key),
-            types={str(obj.type)},
-            optional=bool(self.optional_ctx),
-            multiple=bool(self.multiple_ctx),
+            optional=bool(self.cardinality.optional),
+            multiple=bool(self.cardinality.multiple),
         )
         return namespace
     
@@ -105,26 +71,26 @@ class ParallelGRToNamespaceFactory(ParallelGRVisitor):
         return self(obj.rule)
     
     def _repeat0(self, obj: Repeat0) -> Namespace:
-        with self.context(optional=True, multiple=True):
+        with self.cardinality(optional=True, multiple=True):
             return self(obj.rule)
     
     def _repeat1(self, obj: Repeat1) -> Namespace:
-        with self.context(multiple=True):
+        with self.cardinality(multiple=True):
             return self(obj.rule)
     
     def _optional(self, obj: Optional) -> Namespace:
-        with self.context(optional=True):
+        with self.cardinality(optional=True):
             namespace = self(obj.rule)
             return namespace
     
     def _enum0(self, obj: Enum0) -> Namespace:
         assert not self(obj.separator).attrs
-        with self.context(multiple=True):
+        with self.cardinality(multiple=True):
             return self(obj.item)
     
     def _enum1(self, obj: Enum1) -> Namespace:
         assert not self(obj.separator).attrs
-        with self.context(multiple=True):
+        with self.cardinality(multiple=True):
             return self(obj.item)
     
     def _sequence(self, obj: Sequence) -> Namespace:

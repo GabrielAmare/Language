@@ -1,6 +1,6 @@
 import string
 
-from language.base.bnf.v0_0_1 import *
+from language.base.bnf import *
 from language.base.python import Environment, LintRule
 from language.lang_package_builder import LangPackageBuilder
 
@@ -13,37 +13,37 @@ ABSTRACT_GR = (
     .lemma('Engine', sequence(*[
         enum1(
             literal('\n'),
-            match_in('BuildGR', 'rules'),
+            store('BuildGR', 'rules'),
         ),
         literal('\n'),
         literal('entry'),
         canonical(' '),
-        match_as('Variable', 'entry')
+        store('Variable', 'entry')
     ]))
     .token('Variable', sequence(*[
-        match_char(string.ascii_letters + '_'),
-        repeat0(match_char(string.ascii_letters + string.digits + '_')),
+        match(string.ascii_letters + '_'),
+        repeat0(match(string.ascii_letters + string.digits + '_')),
     ]))
     .token('String', parallel(*[
         sequence(
-            match_char('"'),
+            match('"'),
             repeat0(
                 parallel(
-                    sequence(match_char('\\'), match_char('"')),
-                    sequence(match_char('"', inverted=True)),
+                    sequence(match('\\'), match('"')),
+                    sequence(match('"', inverted=True)),
                 )
             ),
-            match_char('"'),
+            match('"'),
         ),
         sequence(
-            match_char("'"),
+            match("'"),
             repeat0(
                 parallel(
-                    sequence(match_char('\\'), match_char("'")),
-                    sequence(match_char("'", inverted=True)),
+                    sequence(match('\\'), match("'")),
+                    sequence(match("'", inverted=True)),
                 )
             ),
-            match_char("'"),
+            match("'"),
         ),
     ]))
     .token('_Inverted', literal('!'))
@@ -55,29 +55,29 @@ BUILD_GR = (
     .lemma('BuildToken', sequence(*[
         literal('token'),
         canonical(' '),
-        match_as('Variable', 'type'),
+        store('Variable', 'type'),
         canonical(' '),
         literal('='),
         canonical(' '),
         # TODO : maybe define an engine to emulate regex lang here instead of using ParallelGR.
-        match_as('ParallelGR', 'rule'),
+        store('ParallelGR', 'rule'),
     ]))
     .lemma('BuildLemma', sequence(*[
         literal('lemma'),
         optional(sequence(*[
-            match_as('_Indented', 'indented'),
+            store('_Indented', 'indented'),
         ])),
         canonical(' '),
-        match_as('Variable', 'type'),
+        store('Variable', 'type'),
         canonical(' '),
         literal('='),
         canonical(' '),
-        match_as('ParallelGR', 'rule'),
+        store('ParallelGR', 'rule'),
     ]))
     .lemma('BuildGroup', sequence(*[
         literal('group'),
         canonical(' '),
-        match_as('Variable', 'type'),
+        store('Variable', 'type'),
         canonical(' '),
         literal('='),
         canonical(' '),
@@ -87,7 +87,7 @@ BUILD_GR = (
                 literal('|'),
                 canonical(' ')
             ),
-            match_in('Variable', 'refs')
+            store('Variable', 'refs')
         )
     ]))
 )
@@ -100,7 +100,7 @@ PARALLEL_GR = (
                 literal('|'),
                 canonical(' '),
             ),
-            match_in('SequenceGR', 'rules')
+            store('SequenceGR', 'rules')
         )
     ]))
 )
@@ -112,7 +112,7 @@ SEQUENCE_GR = (
             sequence(
                 canonical(' '),
             ),
-            match_in('RepeatGR', 'rules')
+            store('RepeatGR', 'rules')
         )
     ]))
 )
@@ -121,32 +121,32 @@ REPEAT_GR = (
     SEQUENCE_GR.group('RepeatGR')
     .lemma('Repeat0', sequence(*[
         literal('*'),
-        match_as('GroupingGR', 'rule'),
+        store('GroupingGR', 'rule'),
     ]))
     .lemma('Repeat1', sequence(*[
         literal('+'),
-        match_as('GroupingGR', 'rule'),
+        store('GroupingGR', 'rule'),
     ]))
     .lemma('Optional', sequence(*[
         literal('?'),
-        match_as('GroupingGR', 'rule'),
+        store('GroupingGR', 'rule'),
     ]))
     .lemma('Enum0', sequence(*[
-        match_as('GroupingGR', 'separator'),
+        store('GroupingGR', 'separator'),
         literal('.'),
-        match_as('GroupingGR', 'item'),
+        store('GroupingGR', 'item'),
     ]))
     .lemma('Enum1', sequence(*[
-        match_as('GroupingGR', 'separator'),
+        store('GroupingGR', 'separator'),
         literal('..'),
-        match_as('GroupingGR', 'item'),
+        store('GroupingGR', 'item'),
     ]))
 )
 GROUPING_GR = (
     REPEAT_GR.group('GroupingGR')
     .lemma('Grouping', sequence(*[
         literal('['),
-        match_as('ParallelGR', 'rule'),
+        store('ParallelGR', 'rule'),
         literal(']'),
     ]))
 )
@@ -154,35 +154,35 @@ GROUPING_GR = (
 MATCH_GR = (
     GROUPING_GR.group('MatchGR')
     .lemma('MatchChar', sequence(*[
-        optional(match_as('_Inverted', 'inverted')),
-        match_as('String', 'charset'),
+        optional(store('_Inverted', 'inverted')),
+        store('String', 'charset'),
     ]))
     .lemma('Literal', sequence(*[
-        match_as('String', 'expr')
+        store('String', 'expr')
     ]))
     .lemma('Canonical', sequence(*[
         literal('$'),
-        match_as('String', 'expr')
+        store('String', 'expr')
     ]))
 )
 LEMMA_MATCH_GR = (
     MATCH_GR.group('LemmaMatchGR')
     .lemma('MatchAs', sequence(*[
         literal('<'),
-        match_as('Variable', 'type'),
+        store('Variable', 'type'),
         canonical(' '),
         literal('as'),
         canonical(' '),
-        match_as('Variable', 'key'),
+        store('Variable', 'key'),
         literal('>'),
     ]))
     .lemma('MatchIn', sequence(*[
         literal('<'),
-        match_as('Variable', 'type'),
+        store('Variable', 'type'),
         canonical(' '),
         literal('in'),
         canonical(' '),
-        match_as('Variable', 'key'),
+        store('Variable', 'key'),
         literal('>'),
     ]))
 )

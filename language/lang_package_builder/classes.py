@@ -123,7 +123,7 @@ def _is_static_rule(rule: ParallelGR) -> bool:
         return all(map(_is_static_rule, rule.rules))
     elif isinstance(rule, Literal):
         return True
-    elif isinstance(rule, MatchChar):
+    elif isinstance(rule, Match):
         return len(eval(rule.charset.content)) == 1 and rule.inverted is None
     else:
         return False

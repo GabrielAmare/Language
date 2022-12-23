@@ -1,26 +1,26 @@
 group AbstractGR = BuildGR | ParallelGR | Engine | Variable | String | _Inverted | _Indented
 group BuildGR = BuildToken | BuildLemma | BuildGroup
-lemma BuildToken = 'token' $' ' <Variable as type> $' ' '=' $' ' <ParallelGR as rule>
-lemma BuildLemma = 'lemma' ?<_Indented as indented> $' ' <Variable as type> $' ' '=' $' ' <ParallelGR as rule>
-lemma BuildGroup = 'group' $' ' <Variable as type> $' ' '=' $' ' [$' ' '|' $' ']..<Variable in refs>
+lemma BuildToken = 'token' $' ' Variable -> type $' ' '=' $' ' ParallelGR -> rule
+lemma BuildLemma = 'lemma' ?_Indented -> indented $' ' Variable -> type $' ' '=' $' ' ParallelGR -> rule
+lemma BuildGroup = 'group' $' ' Variable -> type $' ' '=' $' ' [$' ' '|' $' ']..Variable -> refs
 group ParallelGR = SequenceGR | Parallel
 group SequenceGR = RepeatGR | Sequence
 group RepeatGR = GroupingGR | Repeat0 | Repeat1 | Optional | Enum0 | Enum1
 group GroupingGR = AtomGR | Grouping
 group AtomGR = Match | Literal | Canonical | Store
-lemma Match = ?<_Inverted as inverted> <String as charset>
-lemma Literal = <String as expr>
-lemma Canonical = '$' <String as expr>
-lemma Store = <Variable as type> $' ' '->' $' ' <Variable as key>
-lemma Grouping = '[' <ParallelGR as rule> ']'
-lemma Repeat0 = '*' <GroupingGR as rule>
-lemma Repeat1 = '+' <GroupingGR as rule>
-lemma Optional = '?' <GroupingGR as rule>
-lemma Enum0 = <GroupingGR as separator> '.' <GroupingGR as item>
-lemma Enum1 = <GroupingGR as separator> '..' <GroupingGR as item>
-lemma Sequence = $' '..<RepeatGR in rules>
-lemma Parallel = [$' ' '|' $' ']..<SequenceGR in rules>
-lemma Engine = '\n'..<BuildGR in rules> '\n' 'entry' $' ' <Variable as entry>
+lemma Match = ?_Inverted -> inverted String -> charset
+lemma Literal = String -> expr
+lemma Canonical = '$' String -> expr
+lemma Store = Variable -> type $' ' '->' $' ' Variable -> key
+lemma Grouping = '[' ParallelGR -> rule ']'
+lemma Repeat0 = '*' GroupingGR -> rule
+lemma Repeat1 = '+' GroupingGR -> rule
+lemma Optional = '?' GroupingGR -> rule
+lemma Enum0 = GroupingGR -> separator '.' GroupingGR -> item
+lemma Enum1 = GroupingGR -> separator '..' GroupingGR -> item
+lemma Sequence = $' '..RepeatGR -> rules
+lemma Parallel = [$' ' '|' $' ']..SequenceGR -> rules
+lemma Engine = '\n'..BuildGR -> rules '\n' 'entry' $' ' Variable -> entry
 token Variable = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz' *'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz'
 token String = '"' *['\\' '"' | !'"'] '"' | "'" *['\\' "'" | !"'"] "'"
 token _Inverted = '!'

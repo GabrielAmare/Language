@@ -1,23 +1,23 @@
 import string
 
-from language.base.bnf.v0_0_1 import *
+from language.base.bnf import *
 from language.lang_package_builder import LangPackageBuilder
 
 
 def _op2(left_type: str, operator: ParallelGR, right_type: str):
     return sequence(*[
-        match_as(left_type, 'left'),
+        store(left_type, 'left'),
         canonical(' '),
         operator,
         canonical(' '),
-        match_as(right_type, 'right'),
+        store(right_type, 'right'),
     ])
 
 
 def _op1(operator: str, right_type: str):
     return sequence(*[
         literal(operator),
-        match_as(right_type, 'right'),
+        store(right_type, 'right'),
     ])
 
 
@@ -26,12 +26,12 @@ ABSTRACT_GR = (
     .lemma('Module', sequence(*[
         enum1(
             separator=literal('\n'),
-            item=match_in('Statement', 'statements')
+            item=store('Statement', 'statements')
         )
     ]))
     .lemma('Block', repeat1(sequence(*[
         literal('\n'),
-        match_in('Statement', 'statements'),
+        store('Statement', 'statements'),
     ])), indented=True)
 )
 
@@ -44,41 +44,41 @@ STATEMENT = (
     .lemma('If', sequence(*[
         literal('if'),
         canonical(' '),
-        match_as('Expression', 'test'),
+        store('Expression', 'test'),
         literal(':'),
-        match_as('Block', 'block'),
-        optional(match_as('AltGR', 'alt')),
+        store('Block', 'block'),
+        optional(store('AltGR', 'alt')),
     ]))
     .lemma('For', sequence(*[
         literal('for'),
         canonical(' '),
         enum0(
             separator=sequence(literal(','), canonical(' ')),
-            item=match_in('Variable', 'args')
+            item=store('Variable', 'args')
         ),
         canonical(' '),
         literal('in'),
         canonical(' '),
-        match_as('Expression', 'iter'),
+        store('Expression', 'iter'),
         literal(':'),
-        match_as('Block', 'block'),
+        store('Block', 'block'),
     ]))
     .lemma('Assign', sequence(*[
-        match_as('Primary', 'target'),
+        store('Primary', 'target'),
         optional(sequence(*[
             literal(':'),
             canonical(' '),
-            match_as('Expression', 'type')
+            store('Expression', 'type')
         ])),
         optional(sequence(*[
             canonical(' '),
             literal('='),
             canonical(' '),
-            match_as('Expression', 'value'),
+            store('Expression', 'value'),
         ])),
     ]))
     .lemma('StatementExpression', sequence(*[
-        match_as('Expression', 'expr'),
+        store('Expression', 'expr'),
     ]))
 )
 
@@ -88,16 +88,16 @@ ALT_GR = (
         literal('\n'),
         literal('elif'),
         canonical(' '),
-        match_as('Expression', 'test'),
+        store('Expression', 'test'),
         literal(':'),
-        match_as('Block', 'block'),
-        optional(match_as('AltGR', 'alt')),
+        store('Block', 'block'),
+        optional(store('AltGR', 'alt')),
     ]))
     .lemma('Else', sequence(*[
         literal('\n'),
         literal('else'),
         literal(':'),
-        match_as('Block', 'block'),
+        store('Block', 'block'),
     ]))
 )
 
@@ -107,12 +107,12 @@ RETURNING_STATEMENT = (
         literal('raise'),
         optional(sequence(*[
             canonical(' '),
-            match_as('Expression', 'exc'),
+            store('Expression', 'exc'),
             optional(sequence(*[
                 canonical(' '),
                 canonical('from'),
                 canonical(' '),
-                match_as('Expression', 'cause'),
+                store('Expression', 'cause'),
             ])),
         ])),
     ]))
@@ -125,7 +125,7 @@ RETURNING_STATEMENT = (
                     literal(','),
                     canonical(' '),
                 ]),
-                item=match_in('Expression', 'expressions'),
+                item=store('Expression', 'expressions'),
             ),
         ])),
     ]))
@@ -138,7 +138,7 @@ RETURNING_STATEMENT = (
                     literal(','),
                     canonical(' '),
                 ]),
-                item=match_in('Expression', 'expressions'),
+                item=store('Expression', 'expressions'),
             ),
         ])),
     ]))
@@ -147,7 +147,7 @@ RETURNING_STATEMENT = (
         canonical(' '),
         literal('from'),
         canonical(' '),
-        match_as('Expression', 'expr'),
+        store('Expression', 'expr'),
     ]))
 )
 
@@ -156,35 +156,35 @@ PARAM_GR = (
     # Python has a strict order in how params (with or without type or default) are ordered, we ignore this constraint
     # here.
     .lemma('Param', sequence(*[
-        match_as('Variable', 'name'),
+        store('Variable', 'name'),
         optional(sequence(*[
             literal(':'),
             canonical(' '),
-            match_as('Expression', 'type'),
+            store('Expression', 'type'),
         ])),
         optional(sequence(*[
             canonical(' '),
             literal('='),
             canonical(' '),
-            match_as('Expression', 'default'),
+            store('Expression', 'default'),
         ])),
     ]))
     .lemma('ArgsParam', sequence(*[
         literal('*'),
-        match_as('Variable', 'name'),
+        store('Variable', 'name'),
         optional(sequence(*[
             literal(':'),
             canonical(' '),
-            match_as('Expression', 'type'),
+            store('Expression', 'type'),
         ])),
     ]))
     .lemma('KwargsParam', sequence(*[
         literal('**'),
-        match_as('Variable', 'name'),
+        store('Variable', 'name'),
         optional(sequence(*[
             literal(':'),
             canonical(' '),
-            match_as('Expression', 'type'),
+            store('Expression', 'type'),
         ])),
     ]))
 )
@@ -193,55 +193,55 @@ DECORATOR_GR = (
     STATEMENT.group('DecoratorGR')
     .lemma('Decorator', sequence(*[
         literal('@'),
-        match_as('Expression', 'expr'),
+        store('Expression', 'expr'),
         literal('\n'),
-        match_as('DecoratorGR', 'target'),
+        store('DecoratorGR', 'target'),
     ]))
     .lemma('Class', sequence(*[
         literal('class'),
         canonical(' '),
-        match_as('Variable', 'name'),
+        store('Variable', 'name'),
         optional(sequence(*[
             literal('('),
             enum0(
                 separator=sequence(*[literal(','), canonical(' ')]),
-                item=match_in('Expression', 'mro')
+                item=store('Expression', 'mro')
             ),
             literal(')')
         ])),
         literal(':'),
-        match_as('Block', 'block'),
+        store('Block', 'block'),
     ]))
     .lemma('Function', sequence(*[
         literal('def'),
         canonical(' '),
-        match_as('Variable', 'name'),
+        store('Variable', 'name'),
         literal('('),
         enum0(
             separator=sequence(*[literal(','), canonical(' ')]),
-            item=match_in('ParamGR', 'args')
+            item=store('ParamGR', 'args')
         ),
         literal(')'),
         optional(sequence(*[
             canonical(' '),
             literal('->'),
             canonical(' '),
-            match_as('Expression', 'returns')
+            store('Expression', 'returns')
         ])),
         literal(':'),
-        match_as('Block', 'block'),
+        store('Block', 'block'),
     ]))
 )
 
 SLICE_GR = (
     ABSTRACT_GR.group('SliceGR')
     .lemma('Slice', sequence(*[
-        optional(match_as('Expression', 'first')),
+        optional(store('Expression', 'first')),
         literal(':'),
-        optional(match_as('Expression', 'second')),
+        optional(store('Expression', 'second')),
         optional(sequence(*[
             literal(':'),
-            match_as('Expression', 'third')
+            store('Expression', 'third')
         ])),
     ]))
 )
@@ -253,13 +253,13 @@ EXPRESSION = (
 DISJUNCTION = EXPRESSION.group('Disjunction').lemma('Or', sequence(*[
     enum1(
         separator=sequence(canonical(' '), literal('or'), canonical(' ')),
-        item=match_in('Conjunction', 'items')
+        item=store('Conjunction', 'items')
     )
 ]))
 CONJUNCTION = DISJUNCTION.group('Conjunction').lemma('And', sequence(*[
     enum1(
         separator=sequence(canonical(' '), literal('and'), canonical(' ')),
-        item=match_in('Inversion', 'items')
+        item=store('Inversion', 'items')
     )
 ]))
 INVERSION = CONJUNCTION.group('Inversion').lemma('Not', _op1('not', 'Inversion'))
@@ -307,36 +307,36 @@ POWER = FACTOR.group('Power').lemma('Pow', _op2('AwaitPrimary', literal('**'), '
 AWAITED_PRIMARY = POWER.group('AwaitPrimary').lemma('Awaited', sequence(*[
     literal('await'),
     canonical(' '),
-    match_as('Primary', 'right'),
+    store('Primary', 'right'),
 ]))
 PRIMARY = (
     AWAITED_PRIMARY.group('Primary')
     .lemma('GetAttr', sequence(*[
-        match_as('Primary', 'left'),
+        store('Primary', 'left'),
         literal('.'),
-        match_as('Variable', 'right')
+        store('Variable', 'right')
     ]))
     .lemma('GetItem', sequence(*[
-        match_as('Primary', 'left'),
+        store('Primary', 'left'),
         literal('['),
         enum0(
             separator=sequence(*[
                 literal(','),
                 canonical(' '),
             ]),
-            item=match_in('SliceGR', 'items'),
+            item=store('SliceGR', 'items'),
         ),
         literal(']'),
     ]))
     .lemma('Call', sequence(*[
-        match_as('Primary', 'left'),
+        store('Primary', 'left'),
         literal('('),
         enum0(
             separator=sequence(*[
                 literal(','),
                 canonical(' '),
             ]),
-            item=match_in('ArgumentGR', 'args'),
+            item=store('ArgumentGR', 'args'),
         ),
         literal(')'),
     ]))
@@ -345,7 +345,7 @@ PRIMARY = (
 ABSTRACT_GR.lemma('IndentedListBody', sequence(*[
     repeat1(sequence(*[
         literal('\n'),
-        match_in('Expression', 'items'),
+        store('Expression', 'items'),
         literal(','),
     ])),
 ]), indented=True)
@@ -357,38 +357,38 @@ ATOM = (
     .literal('_None', 'None')
     .literal('_Ellipsis', '...')
     .token('Variable', sequence(*[
-        match_char(string.ascii_letters + '_'),
-        repeat0(match_char(string.ascii_letters + string.digits + '_')),
+        match(string.ascii_letters + '_'),
+        repeat0(match(string.ascii_letters + string.digits + '_')),
     ]))
     .token('String', parallel(*[
         sequence(*[
-            match_char('"'),
-            match_char('"', True),
-            match_char('"'),
+            match('"'),
+            match('"', True),
+            match('"'),
         ]),
         sequence(*[
-            match_char("'"),
-            match_char("'", True),
-            match_char("'"),
+            match("'"),
+            match("'", True),
+            match("'"),
         ]),
     ]))
-    .token('Integer', repeat1(match_char('0123456789')))
+    .token('Integer', repeat1(match('0123456789')))
     .token('Decimal', parallel(*[
         sequence(*[
-            repeat1(match_char(string.digits)),
-            match_char('.'),
-            repeat0(match_char(string.digits)),
+            repeat1(match(string.digits)),
+            match('.'),
+            repeat0(match(string.digits)),
         ]),
         sequence(*[
-            match_char('.'),
-            repeat1(match_char(string.digits)),
+            match('.'),
+            repeat1(match(string.digits)),
         ]),
     ]))
     .lemma('List', sequence(*[
         literal('['),
         optional(enum0(
             separator=sequence(literal(','), canonical(' ')),
-            item=match_in('Expression', 'items')
+            item=store('Expression', 'items')
         )),
         literal(']'),
     ]))
@@ -396,14 +396,14 @@ ATOM = (
         literal('('),
         enum1(
             separator=sequence(literal(','), canonical(' ')),
-            item=match_in('Expression', 'items'),
+            item=store('Expression', 'items'),
         ),
         # TODO : include the case where the tuple has only a single item `(item,)`.
         literal(')'),
     ]))
     .lemma('IndentedList', sequence(*[
         literal('['),
-        match_as('IndentedListBody', 'body'),
+        store('IndentedListBody', 'body'),
         literal('\n'),
         literal(']')
     ]))
@@ -411,17 +411,17 @@ ATOM = (
 ARGUMENT_GR = (
     ABSTRACT_GR.group('ArgumentGR')
     .lemma('Kwarg', sequence(*[
-        match_as('Variable', 'name'),
+        store('Variable', 'name'),
         literal('='),
-        match_as('Expression', 'value')
+        store('Expression', 'value')
     ]))
     .lemma('StarredExpression', sequence(*[
         literal('*'),
-        match_as('Expression', 'value')
+        store('Expression', 'value')
     ]))
     .lemma('DoubleStarred', sequence(*[
         literal('**'),
-        match_as('Expression', 'value')
+        store('Expression', 'value')
     ]))
 )
 ARGUMENT_GR.ref('Expression')  # This make `Expression` inherits from `ArgumentGR` (introducing multiple inheritance).
@@ -429,7 +429,7 @@ ARGUMENT_GR.ref('Expression')  # This make `Expression` inherits from `ArgumentG
 ABSTRACT_GR.lemma('ImportPath', sequence(*[
     enum0(
         separator=literal('.'),
-        item=match_in('Variable', 'parts'),
+        item=store('Variable', 'parts'),
     ),
 ]))
 IMPORT_STATEMENT = (
@@ -439,19 +439,19 @@ IMPORT_STATEMENT = (
         canonical(' '),
         enum0(
             separator=sequence(literal(','), canonical(' ')),
-            item=match_in('ImportPath', 'targets'),
+            item=store('ImportPath', 'targets'),
         ),
     ]))
     .lemma('ImportFrom', sequence(*[
         literal('from'),
         canonical(' '),
-        match_as('ImportPath', 'origin'),
+        store('ImportPath', 'origin'),
         canonical(' '),
         literal('import'),
         canonical(' '),
         enum0(
             separator=sequence(literal(','), canonical(' ')),
-            item=match_in('ImportPath', 'targets'),
+            item=store('ImportPath', 'targets'),
         ),
     ]))
 )

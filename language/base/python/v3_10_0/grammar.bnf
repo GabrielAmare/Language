@@ -1,32 +1,32 @@
 group AbstractGR = Statement | AltGR | ParamGR | SliceGR | ArgumentGR | Module | Block | IndentedListBody | ImportPath
 group Statement = ReturningStatement | DecoratorGR | ImportStatement | If | For | Assign | StatementExpression | _Pass | _Continue | _Break | _EmptyLine
 group ReturningStatement = Raise | Return | Yield | YieldFrom
-lemma Raise = 'raise' ?[$' ' <Expression as exc> ?[$' ' $'from' $' ' <Expression as cause>]]
-lemma Return = 'return' ?[$' ' [',' $' '].<Expression in expressions>]
-lemma Yield = 'yield' ?[$' ' [',' $' '].<Expression in expressions>]
-lemma YieldFrom = 'yield' $' ' 'from' $' ' <Expression as expr>
+lemma Raise = 'raise' ?[$' ' Expression -> exc ?[$' ' $'from' $' ' Expression -> cause]]
+lemma Return = 'return' ?[$' ' [',' $' '].Expression -> expressions]
+lemma Yield = 'yield' ?[$' ' [',' $' '].Expression -> expressions]
+lemma YieldFrom = 'yield' $' ' 'from' $' ' Expression -> expr
 group DecoratorGR = Decorator | Class | Function
-lemma Decorator = '@' <Expression as expr> '\n' <DecoratorGR as target>
-lemma Class = 'class' $' ' <Variable as name> ?['(' [',' $' '].<Expression in mro> ')'] ':' <Block as block>
-lemma Function = 'def' $' ' <Variable as name> '(' [',' $' '].<ParamGR in args> ')' ?[$' ' '->' $' ' <Expression as returns>] ':' <Block as block>
+lemma Decorator = '@' Expression -> expr '\n' DecoratorGR -> target
+lemma Class = 'class' $' ' Variable -> name ?['(' [',' $' '].Expression -> mro ')'] ':' Block -> block
+lemma Function = 'def' $' ' Variable -> name '(' [',' $' '].ParamGR -> args ')' ?[$' ' '->' $' ' Expression -> returns] ':' Block -> block
 group ImportStatement = Import | ImportFrom
-lemma Import = 'import' $' ' [',' $' '].<ImportPath in targets>
-lemma ImportFrom = 'from' $' ' <ImportPath as origin> $' ' 'import' $' ' [',' $' '].<ImportPath in targets>
-lemma If = 'if' $' ' <Expression as test> ':' <Block as block> ?<AltGR as alt>
-lemma For = 'for' $' ' [',' $' '].<Variable in args> $' ' 'in' $' ' <Expression as iter> ':' <Block as block>
-lemma Assign = <Primary as target> ?[':' $' ' <Expression as type>] ?[$' ' '=' $' ' <Expression as value>]
-lemma StatementExpression = <Expression as expr>
+lemma Import = 'import' $' ' [',' $' '].ImportPath -> targets
+lemma ImportFrom = 'from' $' ' ImportPath -> origin $' ' 'import' $' ' [',' $' '].ImportPath -> targets
+lemma If = 'if' $' ' Expression -> test ':' Block -> block ?AltGR -> alt
+lemma For = 'for' $' ' [',' $' '].Variable -> args $' ' 'in' $' ' Expression -> iter ':' Block -> block
+lemma Assign = Primary -> target ?[':' $' ' Expression -> type] ?[$' ' '=' $' ' Expression -> value]
+lemma StatementExpression = Expression -> expr
 token _Pass = 'pass'
 token _Continue = 'continue'
 token _Break = 'break'
 token _EmptyLine = ''
 group AltGR = Elif | Else
-lemma Elif = '\n' 'elif' $' ' <Expression as test> ':' <Block as block> ?<AltGR as alt>
-lemma Else = '\n' 'else' ':' <Block as block>
+lemma Elif = '\n' 'elif' $' ' Expression -> test ':' Block -> block ?AltGR -> alt
+lemma Else = '\n' 'else' ':' Block -> block
 group ParamGR = Param | ArgsParam | KwargsParam
-lemma Param = <Variable as name> ?[':' $' ' <Expression as type>] ?[$' ' '=' $' ' <Expression as default>]
-lemma ArgsParam = '*' <Variable as name> ?[':' $' ' <Expression as type>]
-lemma KwargsParam = '**' <Variable as name> ?[':' $' ' <Expression as type>]
+lemma Param = Variable -> name ?[':' $' ' Expression -> type] ?[$' ' '=' $' ' Expression -> default]
+lemma ArgsParam = '*' Variable -> name ?[':' $' ' Expression -> type]
+lemma KwargsParam = '**' Variable -> name ?[':' $' ' Expression -> type]
 group SliceGR = Expression | Slice
 group Expression = Disjunction
 group Disjunction = Conjunction | Or
@@ -44,9 +44,9 @@ group Power = AwaitPrimary | Pow
 group AwaitPrimary = Primary | Awaited
 group Primary = Atom | GetAttr | GetItem | Call
 group Atom = List | Tuple | IndentedList | _True | _False | _None | _Ellipsis | Variable | String | Integer | Decimal
-lemma List = '[' ?[[',' $' '].<Expression in items>] ']'
-lemma Tuple = '(' [',' $' ']..<Expression in items> ')'
-lemma IndentedList = '[' <IndentedListBody as body> '\n' ']'
+lemma List = '[' ?[[',' $' '].Expression -> items] ']'
+lemma Tuple = '(' [',' $' ']..Expression -> items ')'
+lemma IndentedList = '[' IndentedListBody -> body '\n' ']'
 token _True = 'True'
 token _False = 'False'
 token _None = 'None'
@@ -55,46 +55,46 @@ token Variable = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz' *'01234
 token String = '"' !'"' '"' | "'" !"'" "'"
 token Integer = +'0123456789'
 token Decimal = +'0123456789' '.' *'0123456789' | '.' +'0123456789'
-lemma GetAttr = <Primary as left> '.' <Variable as right>
-lemma GetItem = <Primary as left> '[' [',' $' '].<SliceGR in items> ']'
-lemma Call = <Primary as left> '(' [',' $' '].<ArgumentGR in args> ')'
-lemma Awaited = 'await' $' ' <Primary as right>
-lemma Pow = <AwaitPrimary as left> $' ' '**' $' ' <Factor as right>
-lemma Pos = '+' <Factor as right>
-lemma Neg = '-' <Factor as right>
-lemma Inv = '~' <Factor as right>
-lemma Mul = <Term as left> $' ' '*' $' ' <Factor as right>
-lemma TrueDiv = <Term as left> $' ' '/' $' ' <Factor as right>
-lemma FloorDiv = <Term as left> $' ' '//' $' ' <Factor as right>
-lemma Mod = <Term as left> $' ' '%' $' ' <Factor as right>
-lemma MatMul = <Term as left> $' ' '@' $' ' <Factor as right>
-lemma Add = <Sum as left> $' ' '+' $' ' <Term as right>
-lemma Sub = <Sum as left> $' ' '-' $' ' <Term as right>
-lemma LShift = <ShiftGR as left> $' ' '<<' $' ' <Sum as right>
-lemma RShift = <ShiftGR as left> $' ' '>>' $' ' <Sum as right>
-lemma BitwiseAnd = <BitwiseAndGR as left> $' ' '&' $' ' <ShiftGR as right>
-lemma BitwiseXor = <BitwiseXorGR as left> $' ' '^' $' ' <BitwiseAndGR as right>
-lemma BitwiseOr = <BitwiseOrGR as left> $' ' '|' $' ' <BitwiseXorGR as right>
-lemma Eq = <Comparison as left> $' ' '==' $' ' <BitwiseOrGR as right>
-lemma Ne = <Comparison as left> $' ' '!=' $' ' <BitwiseOrGR as right>
-lemma Le = <Comparison as left> $' ' '<=' $' ' <BitwiseOrGR as right>
-lemma Lt = <Comparison as left> $' ' '<' $' ' <BitwiseOrGR as right>
-lemma Ge = <Comparison as left> $' ' '>=' $' ' <BitwiseOrGR as right>
-lemma Gt = <Comparison as left> $' ' '>' $' ' <BitwiseOrGR as right>
-lemma In = <Comparison as left> $' ' 'in' $' ' <BitwiseOrGR as right>
-lemma NotIn = <Comparison as left> $' ' 'not' $' ' 'in' $' ' <BitwiseOrGR as right>
-lemma Is = <Comparison as left> $' ' 'is' $' ' <BitwiseOrGR as right>
-lemma IsNot = <Comparison as left> $' ' 'is' $' ' 'not' $' ' <BitwiseOrGR as right>
-lemma Not = 'not' <Inversion as right>
-lemma And = [$' ' 'and' $' ']..<Inversion in items>
-lemma Or = [$' ' 'or' $' ']..<Conjunction in items>
-lemma Slice = ?<Expression as first> ':' ?<Expression as second> ?[':' <Expression as third>]
+lemma GetAttr = Primary -> left '.' Variable -> right
+lemma GetItem = Primary -> left '[' [',' $' '].SliceGR -> items ']'
+lemma Call = Primary -> left '(' [',' $' '].ArgumentGR -> args ')'
+lemma Awaited = 'await' $' ' Primary -> right
+lemma Pow = AwaitPrimary -> left $' ' '**' $' ' Factor -> right
+lemma Pos = '+' Factor -> right
+lemma Neg = '-' Factor -> right
+lemma Inv = '~' Factor -> right
+lemma Mul = Term -> left $' ' '*' $' ' Factor -> right
+lemma TrueDiv = Term -> left $' ' '/' $' ' Factor -> right
+lemma FloorDiv = Term -> left $' ' '//' $' ' Factor -> right
+lemma Mod = Term -> left $' ' '%' $' ' Factor -> right
+lemma MatMul = Term -> left $' ' '@' $' ' Factor -> right
+lemma Add = Sum -> left $' ' '+' $' ' Term -> right
+lemma Sub = Sum -> left $' ' '-' $' ' Term -> right
+lemma LShift = ShiftGR -> left $' ' '<<' $' ' Sum -> right
+lemma RShift = ShiftGR -> left $' ' '>>' $' ' Sum -> right
+lemma BitwiseAnd = BitwiseAndGR -> left $' ' '&' $' ' ShiftGR -> right
+lemma BitwiseXor = BitwiseXorGR -> left $' ' '^' $' ' BitwiseAndGR -> right
+lemma BitwiseOr = BitwiseOrGR -> left $' ' '|' $' ' BitwiseXorGR -> right
+lemma Eq = Comparison -> left $' ' '==' $' ' BitwiseOrGR -> right
+lemma Ne = Comparison -> left $' ' '!=' $' ' BitwiseOrGR -> right
+lemma Le = Comparison -> left $' ' '<=' $' ' BitwiseOrGR -> right
+lemma Lt = Comparison -> left $' ' '<' $' ' BitwiseOrGR -> right
+lemma Ge = Comparison -> left $' ' '>=' $' ' BitwiseOrGR -> right
+lemma Gt = Comparison -> left $' ' '>' $' ' BitwiseOrGR -> right
+lemma In = Comparison -> left $' ' 'in' $' ' BitwiseOrGR -> right
+lemma NotIn = Comparison -> left $' ' 'not' $' ' 'in' $' ' BitwiseOrGR -> right
+lemma Is = Comparison -> left $' ' 'is' $' ' BitwiseOrGR -> right
+lemma IsNot = Comparison -> left $' ' 'is' $' ' 'not' $' ' BitwiseOrGR -> right
+lemma Not = 'not' Inversion -> right
+lemma And = [$' ' 'and' $' ']..Inversion -> items
+lemma Or = [$' ' 'or' $' ']..Conjunction -> items
+lemma Slice = ?Expression -> first ':' ?Expression -> second ?[':' Expression -> third]
 group ArgumentGR = Kwarg | StarredExpression | DoubleStarred | Expression
-lemma Kwarg = <Variable as name> '=' <Expression as value>
-lemma StarredExpression = '*' <Expression as value>
-lemma DoubleStarred = '**' <Expression as value>
-lemma Module = '\n'..<Statement in statements>
-lemma:i Block = +['\n' <Statement in statements>]
-lemma:i IndentedListBody = +['\n' <Expression in items> ',']
-lemma ImportPath = '.'.<Variable in parts>
+lemma Kwarg = Variable -> name '=' Expression -> value
+lemma StarredExpression = '*' Expression -> value
+lemma DoubleStarred = '**' Expression -> value
+lemma Module = '\n'..Statement -> statements
+lemma:i Block = +['\n' Statement -> statements]
+lemma:i IndentedListBody = +['\n' Expression -> items ',']
+lemma ImportPath = '.'.Variable -> parts
 entry AbstractGR
