@@ -13,15 +13,30 @@ __all__ = [
 
 @dataclasses.dataclass
 class Attribute:
+    name: str
     types: set[str]
     optional: bool
     multiple: bool
     
     def __ior__(self, other: Attribute) -> Attribute:
+        assert self.name == other.name
         if self.multiple != other.multiple:
             raise ValueError("Cannot merge two attributes with a different cardinality in a parallel manner.")
         
         return Attribute(
+            name=self.name,
+            types=self.types.union(other.types),
+            optional=self.optional or other.optional,
+            multiple=self.multiple
+        )
+    
+    def __or__(self, other: Attribute) -> Attribute:
+        assert self.name == other.name
+        if self.multiple != other.multiple:
+            raise ValueError("Cannot merge two attributes with a different cardinality in a parallel manner.")
+        
+        return Attribute(
+            name=self.name,
             types=self.types.union(other.types),
             optional=self.optional or other.optional,
             multiple=self.multiple
@@ -29,137 +44,201 @@ class Attribute:
 
 
 @dataclasses.dataclass
+class CardinalityContext:
+    factory: ParallelGRToNamespaceFactory
+    optional: bool = False
+    multiple: bool = False
+    
+    def __enter__(self):
+        if self.optional:
+            self.factory.optional_ctx += 1
+        if self.multiple:
+            self.factory.multiple_ctx += 1
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.optional:
+            self.factory.optional_ctx -= 1
+        if self.multiple:
+            self.factory.multiple_ctx -= 1
+
+
+@dataclasses.dataclass
+class ParallelGRToNamespaceFactory(ParallelGRVisitor):
+    optional_ctx: int = 0
+    multiple_ctx: int = 0
+    
+    def context(self, optional: bool = False, multiple: bool = False) -> CardinalityContext:
+        return CardinalityContext(self, optional=optional, multiple=multiple)
+    
+    def _match_char(self, obj: MatchChar) -> Namespace:
+        return Namespace()
+    
+    def _match_as(self, obj: MatchAs) -> Namespace:
+        assert self.multiple_ctx == 0
+        namespace = Namespace()
+        namespace.set(
+            name=str(obj.key),
+            types={str(obj.type)},
+            optional=bool(self.optional_ctx),
+            multiple=bool(self.multiple_ctx),
+        )
+        return namespace
+    
+    def _match_in(self, obj: MatchIn) -> Namespace:
+        assert self.multiple_ctx > 0
+        namespace = Namespace()
+        namespace.set(
+            name=str(obj.key),
+            types={str(obj.type)},
+            optional=bool(self.optional_ctx),
+            multiple=bool(self.multiple_ctx),
+        )
+        return namespace
+    
+    def _literal(self, obj: Literal) -> Namespace:
+        return Namespace()
+    
+    def _canonical(self, obj: Canonical) -> Namespace:
+        return Namespace()
+    
+    def _grouping(self, obj: Grouping) -> Namespace:
+        return self(obj.rule)
+    
+    def _repeat0(self, obj: Repeat0) -> Namespace:
+        with self.context(optional=True, multiple=True):
+            return self(obj.rule)
+    
+    def _repeat1(self, obj: Repeat1) -> Namespace:
+        with self.context(multiple=True):
+            return self(obj.rule)
+    
+    def _optional(self, obj: Optional) -> Namespace:
+        with self.context(optional=True):
+            namespace = self(obj.rule)
+            return namespace
+    
+    def _enum0(self, obj: Enum0) -> Namespace:
+        assert not self(obj.separator).attrs
+        with self.context(multiple=True):
+            return self(obj.item)
+    
+    def _enum1(self, obj: Enum1) -> Namespace:
+        assert not self(obj.separator).attrs
+        with self.context(multiple=True):
+            return self(obj.item)
+    
+    def _sequence(self, obj: Sequence) -> Namespace:
+        namespace = Namespace()
+        for rule in obj.rules:
+            namespace &= self(rule)
+        return namespace
+    
+    def _parallel(self, obj: Parallel) -> Namespace:
+        namespace = Namespace()
+        for rule in obj.rules:
+            namespace |= self(rule)
+        return namespace
+
+
+@dataclasses.dataclass
 class Namespace:
-    # attributes: dict[str, Attribute] = dataclasses.field(default_factory=dict)
-    names: list[str] = dataclasses.field(default_factory=list)
     attrs: list[Attribute] = dataclasses.field(default_factory=list)
     
-    def items(self) -> typing.Iterator[tuple[str, Attribute]]:
-        return zip(self.names, self.attrs)
+    def has(self, name: str) -> bool:
+        return any(attr.name == name for attr in self.attrs)
+    
+    def get(self, name: str) -> Attribute:
+        for attr in self.attrs:
+            if attr.name == name:
+                return attr
+        else:
+            raise KeyError(name)
+    
+    def set(self, name: str, types: set[str], optional: bool, multiple: bool) -> None:
+        if self.has(name):
+            raise KeyError(f"Duplicate of {name!r}.")
+        
+        attr = Attribute(
+            name=name,
+            types=types,
+            optional=optional,
+            multiple=multiple
+        )
+        
+        self.attrs.append(attr)
+    
+    def add(self, attr: Attribute) -> None:
+        self.attrs.append(attr)
+    
+    def __iter__(self) -> typing.Iterator[Attribute]:
+        return iter(self.attrs)
+    
+    def copy(self) -> Namespace:
+        return Namespace(
+            attrs=[dataclasses.replace(attr) for attr in self.attrs]
+        )
     
     def optional(self) -> Namespace:
         return Namespace(
-            names=self.names[:],
             attrs=[dataclasses.replace(attr, optional=True) for attr in self.attrs]
         )
     
     def __iand__(self, other: Namespace) -> Namespace:
-        names = self.names[:]
-        attrs = self.attrs[:]
-        for name, attr in other.items():
-            if name in names:
+        result = self.copy()
+        
+        for attr in other:
+            if result.has(attr.name):
                 raise ValueError("Cannot merge two attributes with the same name in a sequential manner.")
             else:
-                names.append(name)
-                attrs.append(attr)
-        return Namespace(names, attrs)
+                result.add(attr)
+        return result
     
     def __ior__(self, other: Namespace) -> Namespace:
-        names = self.names[:]
-        attrs = self.attrs[:]
-        for name, attr in other.items():
-            if name in names:
-                index = names.index(name)
-                attrs[index] |= attr
+        result = self.copy()
+        
+        for attr in other:
+            if result.has(attr.name):
+                a = result.get(attr.name)
+                index = result.attrs.index(a)
+                result.attrs[index] = a | attr
             else:
-                names.append(name)
-                attrs.append(attr)
-        return Namespace(names, attrs)
+                result.add(attr)
+        return result
     
-    class NamespaceBuilderVisitor(ParallelGRVisitor):
-        def _match_char(self, obj: MatchChar) -> Namespace:
-            return Namespace()
-        
-        def _match_as(self, obj: MatchAs) -> Namespace:
-            return Namespace(names=[str(obj.key)],
-                             attrs=[Attribute(types={str(obj.type)}, optional=False, multiple=False)])
-        
-        def _match_in(self, obj: MatchIn) -> Namespace:
-            return Namespace(names=[str(obj.key)],
-                             attrs=[Attribute(types={str(obj.type)}, optional=False, multiple=True)])
-        
-        def _literal(self, obj: Literal) -> Namespace:
-            return Namespace()
-        
-        def _canonical(self, obj: Canonical) -> Namespace:
-            return Namespace()
-        
-        def _grouping(self, obj: Grouping) -> Namespace:
-            return self(obj.rule)
-        
-        def _repeat0(self, obj: Repeat0) -> Namespace:
-            namespace = self(obj.rule)
-            assert all(attr.multiple for attr in namespace.attrs)
-            return namespace.optional()
-        
-        def _repeat1(self, obj: Repeat1) -> Namespace:
-            namespace = self(obj.rule)
-            assert all(attr.multiple for attr in namespace.attrs)
-            return namespace
-        
-        def _optional(self, obj: Optional) -> Namespace:
-            namespace = self(obj.rule)
-            return namespace.optional()
-        
-        def _enum0(self, obj: Enum0) -> Namespace:
-            assert not self(obj.separator).attrs
-            namespace = self(obj.item)
-            assert all(attr.multiple for attr in namespace.attrs)
-            return namespace
-        
-        def _enum1(self, obj: Enum1) -> Namespace:
-            assert not self(obj.separator).attrs
-            namespace = self(obj.item)
-            assert all(attr.multiple for attr in namespace.attrs)
-            return namespace
-        
-        def _sequence(self, obj: Sequence) -> Namespace:
-            namespace = Namespace()
-            for rule in obj.rules:
-                namespace &= self(rule)
-            return namespace
-        
-        def _parallel(self, obj: Parallel) -> Namespace:
-            namespace = Namespace()
-            for rule in obj.rules:
-                namespace |= self(rule)
-            return namespace
+    @classmethod
+    def from_bnf_rule(cls, rule: ParallelGR) -> Namespace:
+        factory = ParallelGRToNamespaceFactory()
+        return factory(rule)
     
-    from_bnf_rule = staticmethod(NamespaceBuilderVisitor())
-    
+    # deprecated
     def __contains__(self, name: str) -> bool:
-        return name in self.names
+        return self.has(name)
     
+    # deprecated
     def __setitem__(self, name: str, attr: Attribute) -> None:
-        if name in self.names:
+        if self.has(name):
             raise KeyError(f"{name!r} is already defined in the Namespace.")
         
-        self.names.append(name)
         self.attrs.append(attr)
     
+    # deprecated
     def __getitem__(self, name: str) -> Attribute:
-        try:
-            index = self.names.index(name)
-        except IndexError:
-            raise KeyError(f"{name!r} is not defined in the Namespace.")
-        
-        return self.attrs[index]
+        return self.get(name)
     
     def intersection(self, other: Namespace) -> Namespace:
         """Return a Namespace with only the common attributes."""
         result: Namespace = Namespace()
         
-        for name in self.names:
-            if name not in other:
+        for self_attr in self.attrs:
+            if not other.has(self_attr.name):
                 continue
             
-            self_attr = self[name]
-            other_attr = other[name]
+            other_attr = other.get(self_attr.name)
             
             if self_attr != other_attr:
                 continue
             
-            result[name] = self_attr
+            result.attrs.append(self_attr)
         
         return result
     
@@ -167,14 +246,14 @@ class Namespace:
         """Return a merged `Namespace` of `self` and `other`."""
         result: Namespace = Namespace()
         
-        for name, attr in self.items():
-            result[name] = attr
+        for attr in self:
+            result[attr.name] = attr
         
-        for name, attr in other.items():
-            if name in result and result[name] != attr:
+        for attr in other:
+            if attr.name in result and result[attr.name] != attr:
                 raise ValueError
             
-            result[name] = attr
+            result[attr.name] = attr
         
         return result
     
@@ -182,10 +261,10 @@ class Namespace:
         """Return a copy of `self` without the attributes of `other`."""
         result: Namespace = Namespace()
         
-        for name, attr in self.items():
-            if name in other:
+        for attr in self:
+            if attr.name in other:
                 continue
             
-            result[name] = attr
+            result[attr.name] = attr
         
         return result

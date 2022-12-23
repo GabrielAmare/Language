@@ -55,10 +55,9 @@ class BaseClass:
             if static_expr is None:
                 return TokenClass(
                     name=str(obj.type),
-                    namespace=Namespace(
-                        names=['content'],
-                        attrs=[Attribute(types={'str'}, optional=False, multiple=False)]
-                    ),
+                    namespace=Namespace(attrs=[
+                        Attribute(name='content', types={'str'}, optional=False, multiple=False)
+                    ]),
                     rule=obj,
                     subclasses=set(),
                 )

@@ -13,8 +13,7 @@ __all__ = [
 ]
 
 
-def _order_attribute(item: tuple[str, Attribute]) -> tuple[bool, bool]:
-    attr = item[1]
+def _order_attribute(attr: Attribute) -> tuple[bool, bool]:
     return (
         attr.optional,  # sort the optional fields in the end
         attr.multiple,  # sort the multiple fields in the end
@@ -80,16 +79,16 @@ class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]])
             yield from self(rule)
     
     def _enum0(self, obj: bnf.Enum0) -> typing.Iterator[Statement]:
-        namespace = Namespace.from_bnf_rule(obj)
-        attributes = list(namespace.items())
+        namespace: Namespace = Namespace.from_bnf_rule(obj)
+        attributes = namespace.attrs
         assert len(attributes) == 1
-        name, attr = attributes[0]
+        attr = attributes[0]
         assert attr.multiple
         
         yield For(
             args=[Variable('i'), Variable('e')],
             iter=Call(Variable('enumerate'), [
-                GetAttr(Variable('self'), Variable(name))
+                GetAttr(Variable('self'), Variable(attr.name))
             ]),
             block=Block(statements=[
                 If(
@@ -102,14 +101,14 @@ class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]])
     
     def _enum1(self, obj: bnf.Enum1) -> typing.Iterator[Statement]:
         namespace = Namespace.from_bnf_rule(obj)
-        attributes = list(namespace.items())
+        attributes = namespace.attrs
         assert len(attributes) == 1
-        name, attr = attributes[0]
+        attr = attributes[0]
         assert attr.multiple
         
         yield For(
             args=[Variable('i'), Variable('e')],
-            iter=Call(Variable('enumerate'), [GetAttr(Variable('self'), Variable(name))]),
+            iter=Call(Variable('enumerate'), [GetAttr(Variable('self'), Variable(attr.name))]),
             block=Block(statements=[
                 If(
                     test=Variable('i'),
@@ -121,11 +120,11 @@ class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]])
     
     def _optional(self, obj: bnf.Optional) -> typing.Iterator[Statement]:
         namespace = Namespace.from_bnf_rule(obj.rule)
-        attributes = list(namespace.items())
+        attributes = namespace.attrs
         
         required = [
-            GetAttr(Variable('self'), Variable(name))
-            for name, attr in attributes
+            GetAttr(Variable('self'), Variable(attr.name))
+            for attr in attributes
             if not attr.optional
         ]
         if len(required) == 0:
@@ -145,17 +144,17 @@ class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]])
     
     def _repeat0(self, obj: bnf.Repeat0) -> typing.Iterator[Statement]:
         namespace = Namespace.from_bnf_rule(obj)
-        attributes = list(namespace.attributes.items())
+        attributes = namespace.attrs
         assert len(attributes) == 1
-        name, attr = attributes[0]
+        attr = attributes[0]
         assert attr.multiple
         
         yield If(
-            test=GetAttr(Variable('self'), Variable(name)),
+            test=GetAttr(Variable('self'), Variable(attr.name)),
             block=Block([
                 For(
                     args=[Variable('e')],
-                    iter=GetAttr(Variable('self'), Variable(name)),
+                    iter=GetAttr(Variable('self'), Variable(attr.name)),
                     block=Block(statements=list(self(obj.rule)))
                 )
             ])
@@ -163,14 +162,14 @@ class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]])
     
     def _repeat1(self, obj: bnf.Repeat1) -> typing.Iterator[Statement]:
         namespace = Namespace.from_bnf_rule(obj)
-        attributes = list(namespace.items())
+        attributes = namespace.attrs
         assert len(attributes) == 1
-        name, attr = attributes[0]
+        attr = attributes[0]
         assert attr.multiple
         
         yield For(
             args=[Variable('e')],
-            iter=GetAttr(Variable('self'), Variable(name)),
+            iter=GetAttr(Variable('self'), Variable(attr.name)),
             block=Block(statements=list(self(obj.rule)))
         )
     
@@ -243,8 +242,8 @@ def build_class(module: DynamicModule, class_manager: ClassManager, class_name: 
     cls.add_supers(map(Variable, mro))
     
     # Build the class attributes.
-    for attr_name, attr in sorted(definition.namespace.items(), key=_order_attribute):
-        _build_class_attribute(module, cls, attr_name, attr)
+    for attr in sorted(definition.namespace, key=_order_attribute):
+        _build_class_attribute(module, cls, attr.name, attr)
     
     # Build the class methods
     _build_class_method__tokens__(module, cls, definition.rule)
