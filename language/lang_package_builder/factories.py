@@ -278,20 +278,6 @@ def build_models(package: DynamicPackage, class_manager: ClassManager) -> Dynami
     return module
 
 
-def _is_private_constant_token(class_manager: ClassManager, name: str) -> bool:
-    if not name.startswith('_'):
-        return False
-    
-    cls = class_manager.classes[name]
-    if not isinstance(cls, TokenClass):
-        return False
-    
-    if not isinstance(cls.rule.rule, bnf.Literal):
-        return False
-    
-    return True
-
-
 def _build_visitor_class_call(cls: DynamicClass, root_class: str, classes: list[str],
                               class_manager: ClassManager) -> DynamicFunction:
     function = (
@@ -306,7 +292,7 @@ def _build_visitor_class_call(cls: DynamicClass, root_class: str, classes: list[
     for subclass_name in classes:
         method_name = pascal_case_to_snake_case(subclass_name)
         
-        if _is_private_constant_token(class_manager, subclass_name):
+        if class_manager.is_private_constant_token(subclass_name):
             method_name = method_name[1:]
             constant_name = method_name.upper().lstrip('_')
             condition = Is(left=Variable('obj'), right=Variable(constant_name))
@@ -338,7 +324,7 @@ def _build_visitor_class(module: DynamicModule, class_manager: ClassManager, roo
     children_classes = sorted(
         children_classes,
         key=lambda subclass_name: (
-            0 if _is_private_constant_token(class_manager, subclass_name) else 1,
+            0 if class_manager.is_private_constant_token(subclass_name) else 1,
             class_manager.mro_graph.get_origin_order(subclass_name),
             subclass_name
         )
@@ -355,7 +341,7 @@ def _build_visitor_class(module: DynamicModule, class_manager: ClassManager, roo
     for class_name in children_classes:
         method_name = pascal_case_to_snake_case(class_name)
         
-        if _is_private_constant_token(class_manager, class_name):
+        if class_manager.is_private_constant_token(class_name):
             method_name = method_name[1:]
             constant_name = method_name.upper().lstrip('_')
             type_hint = Variable(constant_name)

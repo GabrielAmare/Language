@@ -119,6 +119,17 @@ class MroGraph(utils.AcyclicDirectedGraph[str]):
         ))
 
 
+def _is_static_rule(rule: ParallelGR) -> bool:
+    if isinstance(rule, Sequence):
+        return all(map(_is_static_rule, rule.rules))
+    elif isinstance(rule, Literal):
+        return True
+    elif isinstance(rule, MatchChar):
+        return len(eval(rule.charset.content)) == 1 and rule.inverted is None
+    else:
+        return False
+
+
 @dataclasses.dataclass
 class ClassManager:
     classes: dict[str, BaseClass] = dataclasses.field(default_factory=dict)
@@ -195,3 +206,17 @@ class ClassManager:
                 
                 for subclass in subclasses:
                     subclass.namespace = subclass.namespace.difference(common_namespace)
+    
+    def is_private_constant_token(self, name: str) -> bool:
+        """
+        Return True when the given `name` correspond to the nomenclature for the private tokens.
+        1) the name must start with '_'
+        2) the corresponding class must be a TokenClass
+        3) the corresponding class rule must be static.
+        """
+        if not name.startswith('_'):
+            return False
+        
+        cls = self.classes[name]
+        
+        return isinstance(cls, TokenClass) and _is_static_rule(cls.rule.rule)
