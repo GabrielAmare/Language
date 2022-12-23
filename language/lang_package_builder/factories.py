@@ -1,9 +1,9 @@
 import dataclasses
-import re
 import typing
 
 from language.base.bnf import v0_0_1 as bnf
 from language.base.python.v3_10_0 import *
+from .case_converting import pascal_case_to_snake_case
 from .classes import ClassManager, BaseClass, TokenClass, GroupClass, get_static_token_expr
 from .namespaces import Namespace, Attribute
 
@@ -11,27 +11,6 @@ __all__ = [
     'build_models',
     'build_visitors',
 ]
-
-
-def _pascal_case_to_snake_case(class_name: str) -> str:
-    """
-    Extract the method name from a class name in PascalCase format and convert it to snake_case format.
-
-    Args:
-    - class_name (str): The class name in PascalCase format to process.
-
-    Returns:
-    - str: The method name in snake_case format.
-
-    Examples:
-    - _extract_method_name("FooBarBaz") -> "_foo_bar_baz"
-    - _extract_method_name("Foo123Bar456Baz") -> "_foo123_bar456_baz"
-    - _extract_method_name("ExampleGR") -> "_example_g_r"
-    """
-    if not re.match(r'^_?(?:[A-Z][a-z\d_]*)+$', class_name):
-        raise ValueError('`class_name` must be in PascalCase format.')
-    
-    return re.sub(r'[A-Z][a-z\d_]*', lambda m: '_' + m.group(0).lower(), class_name)
 
 
 def _order_attribute(item: tuple[str, Attribute]) -> tuple[bool, bool]:
@@ -281,7 +260,7 @@ def build_class(module: DynamicModule, class_manager: ClassManager, class_name: 
     
     # Build the token constant when the class is a static token.
     if isinstance(definition, TokenClass) and get_static_token_expr(definition.rule) is not None:
-        constant_name = _pascal_case_to_snake_case(class_name).upper().lstrip('_')
+        constant_name = pascal_case_to_snake_case(class_name).upper().lstrip('_')
         module.new_variable(name=constant_name, type_=Variable(class_name), value=Call(Variable(class_name), []))
 
 
@@ -325,7 +304,7 @@ def _build_visitor_class_call(cls: DynamicClass, root_class: str, classes: list[
     # Build the function body
     switch_builder = SwitchBuilder()
     for subclass_name in classes:
-        method_name = _pascal_case_to_snake_case(subclass_name)
+        method_name = pascal_case_to_snake_case(subclass_name)
         
         if _is_private_constant_token(class_manager, subclass_name):
             method_name = method_name[1:]
@@ -374,15 +353,15 @@ def _build_visitor_class(module: DynamicModule, class_manager: ClassManager, roo
     _build_visitor_class_call(cls, root_class, children_classes, class_manager)
     
     for class_name in children_classes:
-        method_name = _pascal_case_to_snake_case(class_name)
-
+        method_name = pascal_case_to_snake_case(class_name)
+        
         if _is_private_constant_token(class_manager, class_name):
             method_name = method_name[1:]
             constant_name = method_name.upper().lstrip('_')
             type_hint = Variable(constant_name)
         else:
             type_hint = Variable(class_name)
-
+        
         (
             cls.new_function(method_name)
             .add_decorator(module.imports.get('abstractmethod', from_='abc'))
