@@ -215,7 +215,12 @@ def _build_class_method__tokens__(module: DynamicModule, cls: DynamicClass, obj:
 
 
 def build_class(module: DynamicModule, class_manager: ClassManager, class_name: str, definition: BaseClass):
-    cls = module.new_class(class_name)
+def _get_constant_name(name: str) -> str:
+    return pascal_case_to_snake_case(name).upper().lstrip('_')
+
+
+def build_class(module: DynamicModule, class_manager: ClassManager, definition: BaseClass):
+    cls = module.new_class(definition.name)
     
     decorator = module.imports.get('dataclass', from_='dataclasses')
     
@@ -224,7 +229,7 @@ def build_class(module: DynamicModule, class_manager: ClassManager, class_name: 
     
     cls.add_decorator(decorator)
     
-    mro: list[str] = class_manager.mro_graph.get_mro(class_name)
+    mro: list[str] = class_manager.mro_graph.get_mro(definition.name)
     cls.add_supers(map(Variable, mro))
     
     # Build the class attributes.
@@ -244,8 +249,9 @@ def build_class(module: DynamicModule, class_manager: ClassManager, class_name: 
     
     # Build the token constant when the class is a static token.
     if isinstance(definition, TokenClass) and get_static_token_expr(definition.rule) is not None:
-        constant_name = pascal_case_to_snake_case(class_name).upper().lstrip('_')
-        module.new_variable(name=constant_name, type_=Variable(class_name), value=Call(Variable(class_name), []))
+        constant_name = _get_constant_name(definition.name)
+        module.new_variable(name=constant_name, type_=Variable(definition.name),
+                            value=Call(Variable(definition.name), []))
 
 
 def build_models(package: DynamicPackage, class_manager: ClassManager) -> DynamicModule:
@@ -253,7 +259,7 @@ def build_models(package: DynamicPackage, class_manager: ClassManager) -> Dynami
     
     # Build all the classes.
     for class_name, class_def in sorted(class_manager.classes.items(), key=_order_class(class_manager)):
-        build_class(module, class_manager, class_name, class_def)
+        build_class(module, class_manager, class_def)
     
     import_future_annotations: bool = True  # TODO : set to true only when necessary.
     if import_future_annotations:
@@ -278,7 +284,7 @@ def _build_visitor_class_call(cls: DynamicClass, root_class: str, classes: list[
         
         if class_manager.is_private_constant_token(subclass_name):
             method_name = method_name[1:]
-            constant_name = method_name.upper().lstrip('_')
+            constant_name = _get_constant_name(subclass_name)
             condition = Is(left=Variable('obj'), right=Variable(constant_name))
         else:
             condition = Call(left=Variable('isinstance'), args=[Variable('obj'), Variable(subclass_name)])
@@ -327,7 +333,7 @@ def _build_visitor_class(module: DynamicModule, class_manager: ClassManager, roo
         
         if class_manager.is_private_constant_token(class_name):
             method_name = method_name[1:]
-            constant_name = method_name.upper().lstrip('_')
+            constant_name = _get_constant_name(class_name)
             type_hint = Variable(constant_name)
         else:
             type_hint = Variable(class_name)
