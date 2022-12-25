@@ -23,12 +23,11 @@ def _order_attribute(attr: Attribute) -> tuple[bool, bool]:
 
 
 def _order_class(class_manager: ClassManager) -> typing.Callable[[typing.Any], tuple[int, int, str]]:
-    def wrapped(item: typing.Tuple[str, BaseClass]) -> tuple[int, int, str]:
-        name = item[0]
+    def wrapped(cls: BaseClass) -> tuple[int, int, str]:
         return (
-            class_manager.mro_graph.get_origin_order(name),  # sort the classes by inheritance order.
-            class_manager.use_graph.get_target_order(name),  # sort the classes by references order.
-            name,  # sort by name in alphabetical order
+            class_manager.mro_graph.get_origin_order(cls.name),  # sort the classes by inheritance order.
+            class_manager.use_graph.get_target_order(cls.name),  # sort the classes by references order.
+            cls.name,  # sort by name in alphabetical order
         )
     
     return wrapped
@@ -280,7 +279,7 @@ def build_models(package: DynamicPackage, class_manager: ClassManager) -> Dynami
     module = package.new_module('models')
     
     # Build all the classes.
-    for class_name, class_def in sorted(class_manager.classes.items(), key=_order_class(class_manager)):
+    for class_def in sorted(class_manager.classes.values(), key=_order_class(class_manager)):
         build_class(module, class_manager, class_def)
     
     import_future_annotations: bool = True  # TODO : set to true only when necessary.
