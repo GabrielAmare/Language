@@ -236,3 +236,10 @@ class ClassManager:
         # we then replace all the references to the transformed tokens with appropriate types.
         for target in self.classes.values():
             target.namespace = target.namespace.apply_casters(casters=casters)
+    
+    def order_class(self, cls: BaseClass) -> tuple[int, int, str]:
+        return (
+            self.mro_graph.get_origin_order(cls.name),  # sort the classes by inheritance order.
+            self.use_graph.get_target_order(cls.name),  # sort the classes by references order.
+            cls.name,  # sort by name in alphabetical order
+        )
