@@ -158,10 +158,10 @@ class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]])
         yield from self(obj.rule)
     
     def _canonical(self, obj: bnf.Canonical) -> typing.Iterator[Statement]:
-        yield Yield([String(obj.expr.content)])
+        yield Yield([String(obj.expr)])
     
     def _literal(self, obj: bnf.Literal) -> typing.Iterator[Statement]:
-        yield Yield([String(obj.expr.content)])
+        yield Yield([String(obj.expr)])
     
     def _store(self, obj: bnf.Store) -> typing.Iterator[Statement]:
         _type = str(obj.type)
@@ -174,14 +174,13 @@ class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]])
             if self.cardinality.multiple:
                 ref = Variable('e')
             else:
-                ref = GetAttr(Variable('self'), Variable(obj.key.content))
+                ref = GetAttr(Variable('self'), Variable(obj.key))
             
             yield YieldFrom(expr=Call(left=self.module.imports.get('tok', from_='language.base.abstract'), args=[ref]))
     
     def _match(self, obj: bnf.Match) -> typing.Iterator[Statement]:
-        assert not obj.inverted
-        assert len(obj.charset.content[1:-1]) == 1
-        yield Yield([String(obj.charset.content)])
+        assert len(eval(obj.charset)) == 1 and not obj.inverted
+        yield Yield([String(obj.charset)])
 
 
 def _build_class_method__tokens__(module: DynamicModule, cls: DynamicClass, definition: BaseClass,
@@ -217,7 +216,7 @@ def _build_class_method__tokens__(module: DynamicModule, cls: DynamicClass, defi
     
     function.add_statements(tokens_body_method_factory(definition.rule.rule))
     
-    if definition.rule.indented is bnf.INDENTED:
+    if definition.rule.indented:
         function.add_decorator(module.imports.get('indented', from_='language.base.abstract'))
 
 

@@ -21,7 +21,7 @@ __all__ = [
 
 def get_static_token_expr(obj: BuildToken) -> str | None:
     if isinstance(obj.rule, Literal):
-        return obj.rule.expr.content[1:-1]
+        return eval(obj.rule.expr)
     else:
         return None
 
@@ -126,7 +126,7 @@ def _is_static_rule(rule: ParallelGR) -> bool:
     elif isinstance(rule, Literal):
         return True
     elif isinstance(rule, Match):
-        return len(eval(rule.charset.content)) == 1 and rule.inverted is None
+        return len(eval(rule.charset)) == 1 and rule.inverted is None
     else:
         return False
 
