@@ -3,7 +3,7 @@ import typing
 
 from .cardinality_tracker import Cardinality
 from .case_converting import pascal_case_to_snake_case
-from .classes import ClassManager, BaseClass, TokenClass, GroupClass, get_static_token_expr
+from .classes import ClassManager, BaseClass, TokenClass, LemmaClass, GroupClass, get_static_token_expr
 from .dependencies import bnf
 from .dependencies.python import *
 from .namespaces import Namespace, Attribute
@@ -49,6 +49,10 @@ def _on_multiple_attributes(module: DynamicModule, type_: BitwiseOrGR) -> tuple[
 
 def _build_class_attribute(module: DynamicModule, cls: DynamicClass, name: str, attr: Attribute) -> None:
     default: BitwiseXorGR | None = None
+    
+    if attr.default is not None:
+        default = atom(attr.default)
+    
     target_type = module.typing.union(*map(Variable, sorted(attr.types)))
     
     if attr.multiple:
@@ -62,8 +66,9 @@ def _build_class_attribute(module: DynamicModule, cls: DynamicClass, name: str, 
     
     if attr.optional:
         if not attr.multiple or module.env.lint(LintRule.DATACLASS_MULTIPLE_CAN_BE_NONE):
-            target_type = module.typing.optional(target_type)
-            default = NONE
+            if attr.default is None:
+                target_type = module.typing.optional(target_type)
+                default = NONE
     
     cls.new_variable(name=name, type_=target_type, value=default)
 
@@ -80,6 +85,8 @@ def _get_single_multiple_attribute(obj: bnf.ParallelGR) -> Attribute:
 @dataclasses.dataclass
 class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]]):
     module: DynamicModule
+    definition: BaseClass
+    class_manager: ClassManager
     cardinality: Cardinality = dataclasses.field(default_factory=Cardinality)
     
     def _parallel(self, obj: bnf.Parallel) -> typing.Iterator[Statement]:
@@ -169,12 +176,19 @@ class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]])
         yield Yield([String(obj.expr.content)])
     
     def _store(self, obj: bnf.Store) -> typing.Iterator[Statement]:
-        if self.cardinality.multiple:
-            ref = Variable('e')
+        _type = str(obj.type)
+        definition = self.class_manager.classes.get(_type)
+        if isinstance(definition, TokenClass) and (static_expr := get_static_token_expr(definition.rule)) is not None:
+            yield Yield(expressions=[
+                atom(static_expr)
+            ])
         else:
-            ref = GetAttr(Variable('self'), Variable(obj.key.content))
-        
-        yield YieldFrom(expr=Call(left=self.module.imports.get('tok', from_='language.base.abstract'), args=[ref]))
+            if self.cardinality.multiple:
+                ref = Variable('e')
+            else:
+                ref = GetAttr(Variable('self'), Variable(obj.key.content))
+            
+            yield YieldFrom(expr=Call(left=self.module.imports.get('tok', from_='language.base.abstract'), args=[ref]))
     
     def _match(self, obj: bnf.Match) -> typing.Iterator[Statement]:
         assert not obj.inverted
@@ -182,8 +196,9 @@ class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]])
         yield Yield([String(obj.charset.content)])
 
 
-def _build_class_method__tokens__(module: DynamicModule, cls: DynamicClass, obj: bnf.BuildGR) -> None:
-    if isinstance(obj, bnf.BuildGroup):
+def _build_class_method__tokens__(module: DynamicModule, cls: DynamicClass, definition: BaseClass,
+                                  class_manager: ClassManager) -> None:
+    if isinstance(definition, GroupClass):
         return
     
     function = (
@@ -192,8 +207,8 @@ def _build_class_method__tokens__(module: DynamicModule, cls: DynamicClass, obj:
         .set_returns(module.typing.iterator(Variable('str')))
     )
     
-    if isinstance(obj, bnf.BuildToken):
-        static_expr = get_static_token_expr(obj)
+    if isinstance(definition, TokenClass):
+        static_expr = get_static_token_expr(definition.rule)
         if static_expr is None:
             # TODO : Find if the token is bound to a certain type (int, str, float, bool, ...) and use the correct
             #  writing function accordingly.
@@ -204,22 +219,29 @@ def _build_class_method__tokens__(module: DynamicModule, cls: DynamicClass, obj:
         function.add_statement(statement)
         return
     
-    assert isinstance(obj, bnf.BuildLemma)
+    assert isinstance(definition, LemmaClass)
     
-    tokens_body_method_factory: TokensBodyMethodFactory = TokensBodyMethodFactory(module=module)
+    tokens_body_method_factory: TokensBodyMethodFactory = TokensBodyMethodFactory(
+        module=module,
+        definition=definition,
+        class_manager=class_manager,
+    )
     
-    function.add_statements(tokens_body_method_factory(obj.rule))
+    function.add_statements(tokens_body_method_factory(definition.rule.rule))
     
-    if obj.indented is bnf.INDENTED:
+    if definition.rule.indented is bnf.INDENTED:
         function.add_decorator(module.imports.get('indented', from_='language.base.abstract'))
 
 
-def build_class(module: DynamicModule, class_manager: ClassManager, class_name: str, definition: BaseClass):
 def _get_constant_name(name: str) -> str:
     return pascal_case_to_snake_case(name).upper().lstrip('_')
 
 
 def build_class(module: DynamicModule, class_manager: ClassManager, definition: BaseClass):
+    if isinstance(definition, TokenClass) and definition.caster is not None:
+        # in this case we don't build the class as the token should be turned into an external class.
+        return
+    
     cls = module.new_class(definition.name)
     
     decorator = module.imports.get('dataclass', from_='dataclasses')
@@ -237,7 +259,7 @@ def build_class(module: DynamicModule, class_manager: ClassManager, definition: 
         _build_class_attribute(module, cls, attr.name, attr)
     
     # Build the class methods
-    _build_class_method__tokens__(module, cls, definition.rule)
+    _build_class_method__tokens__(module, cls, definition, class_manager)
     
     # Make the class inherit from `Writable` if it has no other super class.
     if not mro:

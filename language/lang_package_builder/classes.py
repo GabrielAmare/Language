@@ -4,6 +4,7 @@ import dataclasses
 import functools
 
 import utils
+from .casters import Caster
 from .dependencies.bnf import *
 from .namespaces import Namespace, Attribute
 
@@ -80,6 +81,7 @@ class KeywordClass(BaseClass):
 @dataclasses.dataclass
 class TokenClass(BaseClass):
     rule: BuildToken
+    caster: Caster | None = None
 
 
 @dataclasses.dataclass
@@ -219,3 +221,18 @@ class ClassManager:
         cls = self.classes[name]
         
         return isinstance(cls, TokenClass) and _is_static_rule(cls.rule.rule)
+    
+    def apply_casters(self, casters: dict[str, Caster]) -> None:
+        """This operation will apply casters on the tokens."""
+        for target in self.classes.values():
+            if not isinstance(target, TokenClass):
+                continue
+            
+            if target.name not in casters:
+                continue
+            
+            target.caster = casters[target.name]
+        
+        # we then replace all the references to the transformed tokens with appropriate types.
+        for target in self.classes.values():
+            target.namespace = target.namespace.apply_casters(casters=casters)

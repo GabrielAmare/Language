@@ -115,7 +115,7 @@ class BuildLemma(BuildGR):
     def __tokens__(self) -> Iterator[str]:
         yield 'lemma'
         if self.indented:
-            yield from tok(self.indented)
+            yield ':i'
         yield ' '
         yield from tok(self.type)
         yield ' '
@@ -279,7 +279,7 @@ class Match(AtomGR):
     
     def __tokens__(self) -> Iterator[str]:
         if self.inverted:
-            yield from tok(self.inverted)
+            yield '!'
         yield from tok(self.charset)
 
 

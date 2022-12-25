@@ -3,8 +3,9 @@ from __future__ import annotations
 import dataclasses
 import typing
 
-from .dependencies.bnf import *
 from .cardinality_tracker import Cardinality
+from .casters import Caster
+from .dependencies.bnf import *
 
 __all__ = [
     'Attribute',
@@ -18,6 +19,7 @@ class Attribute:
     types: set[str]
     optional: bool
     multiple: bool
+    default: bool | str | int | float | None = None
     
     def __ior__(self, other: Attribute) -> Attribute:
         assert self.name == other.name
@@ -42,6 +44,28 @@ class Attribute:
             optional=self.optional or other.optional,
             multiple=self.multiple
         )
+    
+    def apply_casters(self, casters: dict[str, Caster]) -> Attribute:
+        types: set[str] = set()
+        default: object | None = self.default
+        
+        for name in self.types:
+            if name not in casters:
+                types.add(name)
+                continue
+            
+            caster = casters[name]
+            types.add(caster.name)
+            
+            if caster.default is None:
+                continue
+            
+            if default is not None:
+                raise NotImplementedError("Cannot have multiple default values for an attribute.")
+            
+            default = caster.default
+        
+        return dataclasses.replace(self, types=types, default=default)
 
 
 @dataclasses.dataclass
@@ -234,3 +258,6 @@ class Namespace:
             result[attr.name] = attr
         
         return result
+    
+    def apply_casters(self, casters: dict[str, Caster]) -> Namespace:
+        return dataclasses.replace(self, attrs=[attr.apply_casters(casters) for attr in self.attrs])

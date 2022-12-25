@@ -5,6 +5,7 @@ import graphviz
 
 from utils.graphs import DirectedGraph
 from utils.graphs.graphviz import GraphvizDotBuilder
+from .casters import Caster
 from .classes import ClassManager, TokenClass, LemmaClass, GroupClass, MroGraph
 from .dependencies.bnf import Engine
 from .dependencies.python import Environment, DynamicPackage
@@ -92,6 +93,7 @@ class LangPackageBuilder:
     build_models: bool = True
     build_visitors: list[str] | None = None
     python_env: Environment = Environment.default((3, 10, 0))
+    casters: dict[str, Caster] = dataclasses.field(default_factory=dict)
     
     def build(self, grammar: Engine):
         if os.path.exists(self.name):
@@ -101,6 +103,8 @@ class LangPackageBuilder:
             os.mkdir(self.name)
         
         class_manager = ClassManager.from_grammar(grammar)
+        
+        class_manager.apply_casters(self.casters)
         
         class_manager.simplify_common_signatures()
         
