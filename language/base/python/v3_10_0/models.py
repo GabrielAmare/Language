@@ -50,6 +50,7 @@ __all__ = [
     'GetAttr',
     'GetItem',
     'Gt',
+    'IAdd',
     'If',
     'Import',
     'ImportFrom',
@@ -104,6 +105,7 @@ __all__ = [
     'TrueDiv',
     'Tuple',
     'Variable',
+    'While',
     'Yield',
     'YieldFrom',
 ]
@@ -296,6 +298,19 @@ class DoubleStarred(ArgumentGR):
 
 
 @dataclass
+class IAdd(Statement):
+    target: Primary
+    value: Expression
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield from tok(self.target)
+        yield ' '
+        yield '+='
+        yield ' '
+        yield from tok(self.value)
+
+
+@dataclass
 class Param(ParamGR):
     default: Expression | None = None
     
@@ -377,6 +392,19 @@ class Kwarg(ArgumentGR):
         yield from tok(self.name)
         yield '='
         yield from tok(self.value)
+
+
+@dataclass
+class While(Statement):
+    test: Expression
+    block: Block
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield 'while'
+        yield ' '
+        yield from tok(self.test)
+        yield ':'
+        yield from tok(self.block)
 
 
 @dataclass

@@ -1,5 +1,5 @@
 group AbstractGR = Statement | AltGR | ParamGR | SliceGR | ArgumentGR | Module | Block | IndentedListBody | ImportPath
-group Statement = ReturningStatement | DecoratorGR | ImportStatement | If | For | Assign | StatementExpression | _Pass | _Continue | _Break | _EmptyLine
+group Statement = ReturningStatement | DecoratorGR | ImportStatement | If | While | For | Assign | StatementExpression | IAdd | _Pass | _Continue | _Break | _EmptyLine
 group ReturningStatement = Raise | Return | Yield | YieldFrom
 lemma Raise = 'raise' ?[$' ' Expression -> exc ?[$' ' $'from' $' ' Expression -> cause]]
 lemma Return = 'return' ?[$' ' [',' $' '].Expression -> expressions]
@@ -13,9 +13,11 @@ group ImportStatement = Import | ImportFrom
 lemma Import = 'import' $' ' [',' $' '].ImportPath -> targets
 lemma ImportFrom = 'from' $' ' ImportPath -> origin $' ' 'import' $' ' [',' $' '].ImportPath -> targets
 lemma If = 'if' $' ' Expression -> test ':' Block -> block ?AltGR -> alt
+lemma While = 'while' $' ' Expression -> test ':' Block -> block
 lemma For = 'for' $' ' [',' $' '].Variable -> args $' ' 'in' $' ' Expression -> iter ':' Block -> block
 lemma Assign = Primary -> target ?[':' $' ' Expression -> type] ?[$' ' '=' $' ' Expression -> value]
 lemma StatementExpression = Expression -> expr
+lemma IAdd = Primary -> target $' ' '+=' $' ' Expression -> value
 token _Pass = 'pass'
 token _Continue = 'continue'
 token _Break = 'break'

@@ -49,6 +49,13 @@ STATEMENT = (
         store('Block', 'block'),
         optional(store('AltGR', 'alt')),
     ]))
+    .lemma('While', sequence(*[
+        literal('while'),
+        canonical(' '),
+        store('Expression', 'test'),
+        literal(':'),
+        store('Block', 'block'),
+    ]))
     .lemma('For', sequence(*[
         literal('for'),
         canonical(' '),
@@ -79,6 +86,13 @@ STATEMENT = (
     ]))
     .lemma('StatementExpression', sequence(*[
         store('Expression', 'expr'),
+    ]))
+    .lemma('IAdd', sequence(*[
+        store('Primary', 'target'),
+        canonical(' '),
+        literal('+='),
+        canonical(' '),
+        store('Expression', 'value'),
     ]))
 )
 
