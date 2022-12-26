@@ -198,7 +198,8 @@ def build_models(package: Package, class_manager: ClassManager) -> None:
                                 # TODO : Find if the token is bound to a certain type (int, str, float, bool, ...) and use the correct
                                 #  writing function accordingly.
                                 to_yield = [
-                                    Call(Variable('str'), [GetAttr(left=Variable('self'), right=Variable('content'))])]
+                                    Call(Variable('str'), [GetAttr(left=Variable('self'), right=Variable('content'))])
+                                ]
                             else:
                                 to_yield = [atom(static_expr)]
                             
