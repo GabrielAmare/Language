@@ -10,6 +10,8 @@ __all__ = [
     'build_visitors',
 ]
 
+MATERIALS_PATH = 'language.base.abstract'
+
 
 def _order_attribute(attr: Attribute) -> tuple[bool, bool]:
     return (
@@ -119,7 +121,7 @@ def implement_tokens_method_body(class_manager: ClassManager, initial_scope: Con
                     ref = GetAttr(Variable('self'), Variable(obj.key))
                 
                 scope.YIELD_FROM(
-                    Call(left=scope.imports.get('tok', from_='language.base.abstract'), args=[ref])
+                    Call(left=scope.imports.get('tok', from_=MATERIALS_PATH), args=[ref])
                 )
         elif isinstance(obj, bnf.Match):
             assert len(eval(obj.charset)) == 1 and not obj.inverted
@@ -153,7 +155,7 @@ def build_models(package: Package, class_manager: ClassManager) -> None:
                 
                 # Make the class inherit from `Writable` if it has no other super class.
                 if not mro:
-                    cls.inherits(module.imports.get('Writable', from_='language.base.abstract'))
+                    cls.inherits(module.imports.get('Writable', from_=MATERIALS_PATH))
                 
                 # Make the class abstract when it's a `GroupClass`
                 if isinstance(definition, GroupClass):
@@ -205,7 +207,7 @@ def build_models(package: Package, class_manager: ClassManager) -> None:
                             implement_tokens_method_body(class_manager, function, definition)
                             
                             if definition.rule.indented:
-                                function.decorate(module.imports.get('indented', from_='language.base.abstract'))
+                                function.decorate(module.imports.get('indented', from_=MATERIALS_PATH))
                         
                         else:
                             raise NotImplementedError
