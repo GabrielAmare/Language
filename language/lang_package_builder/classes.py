@@ -28,33 +28,55 @@ def get_static_token_expr(obj: BuildToken) -> str | None:
 
 @dataclasses.dataclass
 class BaseClass:
+    manager: ClassManager
     name: str
     namespace: Namespace
     rule: BuildGR
     subclasses: set[str]
     
-    class _BaseClassConstructor(BuildGRVisitor['BaseClass']):
-        def _build_group(self, obj: BuildGroup) -> GroupClass:
+    @property
+    def mro(self) -> list[BaseClass]:
+        """Return a consistent mro for the class `name`."""
+        names = self.manager.mro_graph.direct_superclasses(self.name)
+        classes = map(self.manager.classes.get, names)
+        sorted_classes = sorted(classes, key=BaseClass.mro_order)
+        return list(sorted_classes)
+    
+    def mro_order(self) -> tuple[int, str]:
+        """
+            Sorting criteria for direct superclasses of a common class.
+            1) It will make sure that the mro is consistent
+            2) It will make sure the output mro does not rely on the order of inputs.
+        """
+        return (
+            -self.manager.mro_graph.get_origin_order(self.name),  # sort the classes by decreasing origin order.
+            self.name,  # sort them by alphabetical order.
+        )
+    
+    @staticmethod
+    def from_rule(manager: ClassManager, obj: BuildGR):
+        if isinstance(obj, BuildGroup):
             return GroupClass(
+                manager=manager,
                 name=str(obj.type),
                 namespace=Namespace(),
                 rule=obj,
                 subclasses=set(map(str, obj.refs)),
             )
-        
-        def _build_lemma(self, obj: BuildLemma) -> LemmaClass:
+        elif isinstance(obj, BuildLemma):
             return LemmaClass(
+                manager=manager,
                 name=str(obj.type),
                 namespace=Namespace.from_bnf_rule(obj.rule),
                 rule=obj,
                 subclasses=set(),
             )
-        
-        def _build_token(self, obj: BuildToken) -> TokenClass | KeywordClass:
+        elif isinstance(obj, BuildToken):
             static_expr: str | None = get_static_token_expr(obj)
             
             if static_expr is None:
                 return TokenClass(
+                    manager=manager,
                     name=str(obj.type),
                     namespace=Namespace(attrs=[
                         Attribute(name='content', types={'str'}, optional=False, multiple=False)
@@ -64,13 +86,14 @@ class BaseClass:
                 )
             else:
                 return TokenClass(
+                    manager=manager,
                     name=str(obj.type),
                     namespace=Namespace(),
                     rule=obj,
                     subclasses=set(),
                 )
-    
-    from_rule = staticmethod(_BaseClassConstructor())
+        else:
+            raise ValueError(obj)
 
 
 @dataclasses.dataclass
@@ -110,14 +133,6 @@ class MroGraph(utils.AcyclicDirectedGraph[str]):
     
     def bottom_up_hierarchy(self) -> list[str]:
         return sorted(self.nodes, key=self.get_target_order)
-    
-    def get_mro(self, name: str) -> list[str]:
-        """Return a consistent mro for the class `name`."""
-        superclasses: list[str] = self.direct_superclasses(name)
-        return sorted(superclasses, key=lambda superclass_name: (
-            -self.get_origin_order(superclass_name),  # sort the classes by decreasing origin order.
-            superclass_name,  # sort them by alphabetical order.
-        ))
 
 
 def _is_static_rule(rule: ParallelGR) -> bool:
@@ -179,11 +194,10 @@ class ClassManager:
     
     @classmethod
     def from_grammar(cls, grammar: Engine) -> ClassManager:
-        return cls({
-            str(obj.type): BaseClass.from_rule(obj)
-            for obj in grammar.rules
-            if isinstance(obj, (BuildGroup, BuildLemma, BuildToken))
-        })
+        self = cls({})
+        for obj in grammar.rules:
+            self.classes[obj.type] = BaseClass.from_rule(self, obj)
+        return self
     
     def simplify_common_signatures(self) -> None:
         """

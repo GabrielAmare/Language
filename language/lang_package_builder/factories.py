@@ -43,7 +43,7 @@ def _get_single_multiple_attribute(obj: bnf.ParallelGR) -> Attribute:
     return attr
 
 
-def implement_tokens_method_body(class_manager: ClassManager, initial_scope: Container, definition: LemmaClass):
+def implement_tokens_method_body(initial_scope: Container, definition: LemmaClass):
     cardinality = Cardinality()
     
     def self(scope: Container, obj: bnf.ParallelGR) -> None:
@@ -111,7 +111,7 @@ def implement_tokens_method_body(class_manager: ClassManager, initial_scope: Con
             scope.YIELD(String(obj.expr))
         elif isinstance(obj, bnf.Store):
             _type = str(obj.type)
-            target = class_manager.classes.get(_type)
+            target = definition.manager.classes.get(_type)
             if isinstance(target, TokenClass) and (static_expr := get_static_token_expr(target.rule)) is not None:
                 scope.YIELD(atom(static_expr))
             else:
@@ -149,12 +149,12 @@ def build_models(package: Package, class_manager: ClassManager) -> None:
             
             with module.CLASS(definition.name) as cls:
                 cls.decorate(decorator)
-                
-                mro: list[str] = class_manager.mro_graph.get_mro(definition.name)
-                cls.inherits(*map(Variable, mro))
-                
+
                 # Make the class inherit from `Writable` if it has no other super class.
-                if not mro:
+                mro = [Variable(superclass.name) for superclass in definition.mro]
+                if mro:
+                    cls.inherits(*mro)
+                else:
                     cls.inherits(module.imports.get('Writable', from_=MATERIALS_PATH))
                 
                 # Make the class abstract when it's a `GroupClass`
@@ -204,7 +204,7 @@ def build_models(package: Package, class_manager: ClassManager) -> None:
                             
                             function.YIELD(*to_yield)
                         elif isinstance(definition, LemmaClass):
-                            implement_tokens_method_body(class_manager, function, definition)
+                            implement_tokens_method_body(function, definition)
                             
                             if definition.rule.indented:
                                 function.decorate(module.imports.get('indented', from_=MATERIALS_PATH))
