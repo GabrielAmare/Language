@@ -190,7 +190,7 @@ def build_models(package: Package, class_manager: ClassManager) -> None:
                 # Build the class `__tokens__` method.
                 if not isinstance(definition, GroupClass):
                     with cls.METHOD('__tokens__') as function:
-                        function.returns(module.typing.iterator(Variable('str')))
+                        function.returns(module.typing.iterator(str))
                         
                         if isinstance(definition, TokenClass):
                             static_expr = get_static_token_expr(definition.rule)
