@@ -73,7 +73,7 @@ class GroupContext(AbstractContext):
     
     def definition(self) -> BuildGroup:
         return BuildGroup(
-            type=Variable(self.name),
+            type=self.name,
             refs=tuple([
                 *(group.name for group in self._groups),
                 *(lemma.name for lemma in self._lemmas),
@@ -93,7 +93,7 @@ class GroupContext(AbstractContext):
     
     def engine(self) -> Engine:
         return Engine(
-            entry=Variable(self.name),
+            entry=self.name,
             rules=tuple(self.definitions()),
         )
 
@@ -105,9 +105,9 @@ class LemmaContext(AbstractContext):
     
     def definition(self) -> BuildLemma:
         return BuildLemma(
-            type=Variable(self.name),
+            type=self.name,
             rule=self.rule,
-            indented=INDENTED if self.indented else None,
+            indented=self.indented,
         )
 
 
@@ -117,6 +117,6 @@ class TokenContext(AbstractContext):
     
     def definition(self) -> BuildToken:
         return BuildToken(
-            type=Variable(self.name),
+            type=self.name,
             rule=self.rule,
         )

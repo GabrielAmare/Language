@@ -129,16 +129,16 @@ def grouping(rule: ParallelGR) -> GroupingGR:
 
 
 def canonical(__expr: str) -> Canonical:
-    return Canonical(expr=__expr)
+    return Canonical(expr=repr(__expr))
 
 
 def literal(__expr: str) -> Literal:
-    return Literal(expr=__expr)
+    return Literal(expr=repr(__expr))
 
 
 def match(__expr: str, inverted: bool = False) -> Match:
     return Match(
-        charset=''.join(sorted(set(__expr))),
+        charset=repr(''.join(sorted(set(__expr)))),
         inverted=inverted
     )
 

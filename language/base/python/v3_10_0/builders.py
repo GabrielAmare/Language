@@ -8,6 +8,7 @@ __all__ = [
 ]
 
 
+# TODO : remove occurrences of this class.
 @dataclasses.dataclass
 class SwitchBuilder:
     cases: list[tuple[Expression, Block]] = dataclasses.field(default_factory=list)

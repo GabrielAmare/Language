@@ -8,7 +8,7 @@ from utils.graphs.graphviz import GraphvizDotBuilder
 from .casters import Caster
 from .classes import ClassManager, TokenClass, LemmaClass, GroupClass, MroGraph
 from .dependencies.bnf import Engine
-from .dependencies.python import Environment, DynamicPackage
+from .dependencies.python import Environment, Package
 from .factories import build_models, build_visitors
 
 __all__ = [
@@ -96,40 +96,31 @@ class LangPackageBuilder:
     casters: dict[str, Caster] = dataclasses.field(default_factory=dict)
     
     def build(self, grammar: Engine):
-        if os.path.exists(self.name):
-            if not os.path.isdir(self.name):
-                raise NotADirectoryError(self.name)
-        else:
-            os.mkdir(self.name)
-        
         class_manager = ClassManager.from_grammar(grammar)
-        
         class_manager.apply_casters(self.casters)
-        
         class_manager.simplify_common_signatures()
         
+        with Package(name=self.name, env=self.python_env) as package:
+            if self.build_models:
+                build_models(package, class_manager)
+            
+            if self.build_visitors:
+                build_visitors(package, class_manager, self.build_visitors)
+            
+            package.save()
+
         if self.build_grammar_file:
             src = str(grammar)
             with open(f"{self.name}/grammar.bnf", mode="w", encoding="utf-8") as file:
                 file.write(src)
-        
+
         build_mro_dot = MroGraphvizBuilder(class_manager).build
         build_use_dot = CustomGraphvizDotBuilder(class_manager).build
-        
+
         if self.build_mro_graph:
             mro_dot = build_mro_dot(class_manager.mro_graph)
             mro_dot.save(f'{self.name}/mro_graph.gv')
-        
+
         if self.build_use_graph:
             use_dot = build_use_dot(class_manager.use_graph)
             use_dot.save(f'{self.name}/use_graph.gv')
-        
-        package = DynamicPackage(name=self.name, env=self.python_env)
-        
-        if self.build_models:
-            build_models(package, class_manager)
-        
-        if self.build_visitors:
-            build_visitors(package, class_manager, self.build_visitors)
-        
-        package.save()
