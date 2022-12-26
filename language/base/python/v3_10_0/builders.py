@@ -151,6 +151,11 @@ class Container(Context, abc.ABC):
     def typing(self) -> TypingHelper:
         pass
     
+    @functools.cached_property
+    @abc.abstractmethod
+    def env(self) -> Environment:
+        pass
+    
     def _render_parts(self) -> typing.Iterator[Statement]:
         yield from map(build, self._parts)
     
@@ -238,6 +243,10 @@ class Contained:
     @functools.cached_property
     def typing(self) -> TypingHelper:
         return self.root.typing
+    
+    @functools.cached_property
+    def env(self) -> Environment:
+        return self.root.env
 
 
 @dataclasses.dataclass

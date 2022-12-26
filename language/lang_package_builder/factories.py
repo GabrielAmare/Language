@@ -1,9 +1,6 @@
-import dataclasses
-import typing
-
 from .cardinality_tracker import Cardinality
 from .case_converting import pascal_case_to_snake_case
-from .classes import ClassManager, BaseClass, TokenClass, LemmaClass, GroupClass, get_static_token_expr
+from .classes import ClassManager, TokenClass, LemmaClass, GroupClass, get_static_token_expr
 from .dependencies import bnf
 from .dependencies.python import *
 from .namespaces import Namespace, Attribute
@@ -22,19 +19,17 @@ def _order_attribute(attr: Attribute) -> tuple[bool, bool]:
     )
 
 
-def _on_multiple_attributes(module: DynamicModule, type_: BitwiseOrGR) -> tuple[GetItem, Variable]:
-    if module.env.lint(LintRule.DATACLASS_FROZEN):
-        if module.env.lint(LintRule.DATACLASS_MULTIPLE_NO_REPEATS):
-            return module.typing.frozenset(type_), Variable('frozenset')
+def _on_multiple_attributes(scope: Container, type_: BitwiseOrGR) -> tuple[GetItem, Variable]:
+    if scope.env.lint(LintRule.DATACLASS_FROZEN):
+        if scope.env.lint(LintRule.DATACLASS_MULTIPLE_NO_REPEATS):
+            return scope.typing.frozenset(type_), Variable('frozenset')
         else:
-            return module.typing.tuple(type_, ELLIPSIS), Variable('tuple')
+            return scope.typing.tuple(type_, ELLIPSIS), Variable('tuple')
     else:
-        if module.env.lint(LintRule.DATACLASS_MULTIPLE_NO_REPEATS):
-            return module.typing.set(type_), Variable('set')
+        if scope.env.lint(LintRule.DATACLASS_MULTIPLE_NO_REPEATS):
+            return scope.typing.set(type_), Variable('set')
         else:
-            return module.typing.list(type_), Variable('list')
-
-
+            return scope.typing.list(type_), Variable('list')
 
 
 def _get_single_multiple_attribute(obj: bnf.ParallelGR) -> Attribute:
@@ -46,117 +41,91 @@ def _get_single_multiple_attribute(obj: bnf.ParallelGR) -> Attribute:
     return attr
 
 
-@dataclasses.dataclass
-class TokensBodyMethodFactory(bnf.ParallelGRVisitor[typing.Iterator[Statement]]):
-    module: DynamicModule
-    definition: BaseClass
-    class_manager: ClassManager
-    cardinality: Cardinality = dataclasses.field(default_factory=Cardinality)
+def implement_tokens_method_body(class_manager: ClassManager, initial_scope: Container, definition: LemmaClass):
+    cardinality = Cardinality()
     
-    def _parallel(self, obj: bnf.Parallel) -> typing.Iterator[Statement]:
-        raise NotImplementedError
-    
-    def _sequence(self, obj: bnf.Sequence) -> typing.Iterator[Statement]:
-        for rule in obj.rules:
-            yield from self(rule)
-    
-    def _on_enum(self, obj: bnf.Enum0 | bnf.Enum1) -> typing.Iterator[Statement]:
-        attr = _get_single_multiple_attribute(obj)
-        with self.cardinality(multiple=True):
-            yield For(
-                args=[Variable('i'), Variable('e')],
-                iter=Call(Variable('enumerate'), [GetAttr(Variable('self'), Variable(attr.name))]),
-                block=Block(statements=[
-                    If(
-                        test=Variable('i'),
-                        block=Block(statements=list(self(obj.separator)))
-                    ),
-                    *self(obj.item)
-                ])
-            )
-    
-    def _enum0(self, obj: bnf.Enum0) -> typing.Iterator[Statement]:
-        yield from self._on_enum(obj)
-    
-    def _enum1(self, obj: bnf.Enum1) -> typing.Iterator[Statement]:
-        yield from self._on_enum(obj)
-    
-    def _optional(self, obj: bnf.Optional) -> typing.Iterator[Statement]:
-        namespace = Namespace.from_bnf_rule(obj.rule)
-        attributes = namespace.attrs
-        
-        required = [
-            GetAttr(Variable('self'), Variable(attr.name))
-            for attr in attributes
-            if not attr.optional
-        ]
-        
-        if len(required) == 0:
-            condition = None
-        elif len(required) == 1:
-            condition = required[0]
-        else:
-            condition = And(items=required)
-        
-        with self.cardinality(optional=True):
-            if condition is None:
-                yield from self(obj.rule)
-            else:
-                yield If(
-                    test=condition,
-                    block=Block(statements=list(self(obj.rule)))
-                )
-    
-    def _repeat0(self, obj: bnf.Repeat0) -> typing.Iterator[Statement]:
-        attr = _get_single_multiple_attribute(obj)
-        with self.cardinality(optional=True, multiple=True):
-            yield If(
-                test=GetAttr(Variable('self'), Variable(attr.name)),
-                block=Block([
-                    For(
-                        args=[Variable('e')],
-                        iter=GetAttr(Variable('self'), Variable(attr.name)),
-                        block=Block(statements=list(self(obj.rule)))
-                    )
-                ])
-            )
-    
-    def _repeat1(self, obj: bnf.Repeat1) -> typing.Iterator[Statement]:
-        attr = _get_single_multiple_attribute(obj)
-        with self.cardinality(multiple=True):
-            yield For(
-                args=[Variable('e')],
-                iter=GetAttr(Variable('self'), Variable(attr.name)),
-                block=Block(statements=list(self(obj.rule)))
-            )
-    
-    def _grouping(self, obj: bnf.Grouping) -> typing.Iterator[Statement]:
-        yield from self(obj.rule)
-    
-    def _canonical(self, obj: bnf.Canonical) -> typing.Iterator[Statement]:
-        yield Yield([String(obj.expr)])
-    
-    def _literal(self, obj: bnf.Literal) -> typing.Iterator[Statement]:
-        yield Yield([String(obj.expr)])
-    
-    def _store(self, obj: bnf.Store) -> typing.Iterator[Statement]:
-        _type = str(obj.type)
-        definition = self.class_manager.classes.get(_type)
-        if isinstance(definition, TokenClass) and (static_expr := get_static_token_expr(definition.rule)) is not None:
-            yield Yield(expressions=[
-                atom(static_expr)
-            ])
-        else:
-            if self.cardinality.multiple:
-                ref = Variable('e')
-            else:
-                ref = GetAttr(Variable('self'), Variable(obj.key))
+    def self(scope: Container, obj: bnf.ParallelGR) -> None:
+        if isinstance(obj, bnf.Parallel):
+            raise NotImplementedError
+        elif isinstance(obj, bnf.Sequence):
+            for rule in obj.rules:
+                self(scope, rule)
+        elif isinstance(obj, (bnf.Enum0, bnf.Enum1)):
+            attr = _get_single_multiple_attribute(obj)
+            with cardinality(multiple=True):
+                with scope.FOR(
+                        args=[Variable('i'), Variable('e')],
+                        iter=Call(Variable('enumerate'), [GetAttr(Variable('self'), Variable(attr.name))])
+                ) as for_block:
+                    with for_block.IF(Variable('i')) as if_block:
+                        self(if_block, obj.separator)
+                    
+                    self(for_block, obj.item)
+        elif isinstance(obj, bnf.Optional):
+            namespace = Namespace.from_bnf_rule(obj.rule)
+            attributes = namespace.attrs
             
-            yield YieldFrom(expr=Call(left=self.module.imports.get('tok', from_='language.base.abstract'), args=[ref]))
+            required = [
+                GetAttr(Variable('self'), Variable(attr.name))
+                for attr in attributes
+                if not attr.optional
+            ]
+            
+            if len(required) == 0:
+                condition = None
+            elif len(required) == 1:
+                condition = required[0]
+            else:
+                condition = And(items=required)
+            
+            with cardinality(optional=True):
+                if condition is None:
+                    self(scope, obj.rule)
+                else:
+                    with scope.IF(condition) as if_block:
+                        self(if_block, obj.rule)
+        elif isinstance(obj, bnf.Repeat0):
+            attr = _get_single_multiple_attribute(obj)
+            with cardinality(optional=True, multiple=True):
+                with scope.IF(GetAttr(Variable('self'), Variable(attr.name))) as if_block:
+                    with if_block.FOR(
+                            args=[Variable('e')],
+                            iter=GetAttr(Variable('self'), Variable(attr.name))
+                    ) as for_block:
+                        self(for_block, obj.rule)
+        elif isinstance(obj, bnf.Repeat1):
+            attr = _get_single_multiple_attribute(obj)
+            with cardinality(multiple=True):
+                with scope.FOR(
+                        args=[Variable('e')],
+                        iter=GetAttr(Variable('self'), Variable(attr.name))
+                ) as for_block:
+                    self(for_block, obj.rule)
+        elif isinstance(obj, bnf.Grouping):
+            self(scope, obj.rule)
+        elif isinstance(obj, bnf.Canonical):
+            scope.YIELD(String(obj.expr))
+        elif isinstance(obj, bnf.Literal):
+            scope.YIELD(String(obj.expr))
+        elif isinstance(obj, bnf.Store):
+            _type = str(obj.type)
+            target = class_manager.classes.get(_type)
+            if isinstance(target, TokenClass) and (static_expr := get_static_token_expr(target.rule)) is not None:
+                scope.YIELD(atom(static_expr))
+            else:
+                if cardinality.multiple:
+                    ref = Variable('e')
+                else:
+                    ref = GetAttr(Variable('self'), Variable(obj.key))
+                
+                scope.YIELD_FROM(
+                    Call(left=scope.imports.get('tok', from_='language.base.abstract'), args=[ref])
+                )
+        elif isinstance(obj, bnf.Match):
+            assert len(eval(obj.charset)) == 1 and not obj.inverted
+            scope.YIELD(String(obj.charset))
     
-    def _match(self, obj: bnf.Match) -> typing.Iterator[Statement]:
-        assert len(eval(obj.charset)) == 1 and not obj.inverted
-        yield Yield([String(obj.charset)])
+    self(initial_scope, definition.rule.rule)
 
 
 def _get_constant_name(name: str) -> str:
@@ -233,14 +202,7 @@ def build_models(package: Package, class_manager: ClassManager) -> None:
                             
                             function.YIELD(*to_yield)
                         elif isinstance(definition, LemmaClass):
-                            tokens_body_method_factory: TokensBodyMethodFactory = TokensBodyMethodFactory(
-                                module=module,
-                                definition=definition,
-                                class_manager=class_manager,
-                            )
-                            
-                            for statement in tokens_body_method_factory(definition.rule.rule):
-                                function += statement
+                            implement_tokens_method_body(class_manager, function, definition)
                             
                             if definition.rule.indented:
                                 function.decorate(module.imports.get('indented', from_='language.base.abstract'))
