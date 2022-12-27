@@ -21,7 +21,7 @@ __all__ = [
 
 def get_static_token_expr(obj: BuildToken) -> str | None:
     if isinstance(obj.rule, Literal):
-        return eval(obj.rule.expr)
+        return obj.rule.expr[1:-1]
     else:
         return None
 

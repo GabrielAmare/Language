@@ -46,8 +46,6 @@ ABSTRACT_GR = (
             match("'"),
         ),
     ]))
-    .token('_Inverted', literal('!'))
-    .token('_Indented', literal(':i'))
 )
 
 BUILD_GR = (
@@ -64,9 +62,7 @@ BUILD_GR = (
     ]))
     .lemma('BuildLemma', sequence(*[
         literal('lemma'),
-        optional(sequence(*[
-            store('_Indented', 'indented'),
-        ])),
+        literal_if(':i', 'indented'),
         canonical(' '),
         store('Variable', 'type'),
         canonical(' '),
@@ -154,11 +150,18 @@ GROUPING_GR = (
 ATOM_GR = (
     GROUPING_GR.group('AtomGR')
     .lemma('Match', sequence(*[
-        optional(store('_Inverted', 'inverted')),
+        literal_if('!', 'inverted'),
         store('String', 'charset'),
     ]))
     .lemma('Literal', sequence(*[
         store('String', 'expr')
+    ]))
+    .lemma('LiteralIf', sequence(*[
+        store('String', 'expr'),
+        canonical(' '),
+        literal('->'),
+        canonical(' '),
+        store('Variable', 'key'),
     ]))
     .lemma('Canonical', sequence(*[
         literal('$'),
@@ -188,8 +191,6 @@ builder = LangPackageBuilder(
     casters={
         'Variable': CAST_TO_VAR,
         'String': CAST_TO_STRING,
-        '_Inverted': CAST_TO_BOOL,
-        '_Indented': CAST_TO_BOOL,
     },
     build_visitors=['ParallelGR', 'BuildGR']
 )

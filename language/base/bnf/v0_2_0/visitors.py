@@ -32,6 +32,8 @@ class ParallelGRVisitor(Generic[_E], ABC):
             return self._canonical(obj)
         elif isinstance(obj, Literal):
             return self._literal(obj)
+        elif isinstance(obj, LiteralIf):
+            return self._literal_if(obj)
         elif isinstance(obj, Match):
             return self._match(obj)
         elif isinstance(obj, Store):
@@ -77,6 +79,10 @@ class ParallelGRVisitor(Generic[_E], ABC):
     
     @abstractmethod
     def _literal(self, obj: Literal) -> _E:
+        pass
+    
+    @abstractmethod
+    def _literal_if(self, obj: LiteralIf) -> _E:
         pass
     
     @abstractmethod

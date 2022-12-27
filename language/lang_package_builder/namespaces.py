@@ -12,6 +12,8 @@ __all__ = [
     'Namespace',
 ]
 
+_DEFAULT = bool | str | int | float | None
+
 
 @dataclasses.dataclass
 class Attribute:
@@ -19,7 +21,7 @@ class Attribute:
     types: set[str]
     optional: bool
     multiple: bool
-    default: bool | str | int | float | None = None
+    default: _DEFAULT = None
     
     def __ior__(self, other: Attribute) -> Attribute:
         assert self.name == other.name
@@ -37,17 +39,20 @@ class Attribute:
         assert self.name == other.name
         if self.multiple != other.multiple:
             raise ValueError("Cannot merge two attributes with a different cardinality in a parallel manner.")
+        if self.default != other.default and self.default is not None:
+            raise ValueError("Incompatible default values between the two attributes.")
         
         return Attribute(
             name=self.name,
             types=self.types.union(other.types),
             optional=self.optional or other.optional,
-            multiple=self.multiple
+            multiple=self.multiple,
+            default=self.default if self.default is not None else other.default
         )
     
     def apply_casters(self, casters: dict[str, Caster]) -> Attribute:
         types: set[str] = set()
-        default: object | None = self.default
+        default: _DEFAULT = self.default
         
         for name in self.types:
             if name not in casters:
@@ -84,6 +89,19 @@ class ParallelGRToNamespaceFactory(ParallelGRVisitor):
             multiple=bool(self.cardinality.multiple),
         )
         return namespace
+    
+    def _literal_if(self, obj: LiteralIf) -> Namespace:
+        with self.cardinality(optional=True):
+            assert not self.cardinality.multiple
+            namespace = Namespace()
+            namespace.set(
+                name=str(obj.key),
+                types={'bool'},
+                optional=bool(self.cardinality.optional),
+                multiple=bool(self.cardinality.multiple),
+                default=False,
+            )
+            return namespace
     
     def _literal(self, obj: Literal) -> Namespace:
         return Namespace()
@@ -144,7 +162,7 @@ class Namespace:
         else:
             raise KeyError(name)
     
-    def set(self, name: str, types: set[str], optional: bool, multiple: bool) -> None:
+    def set(self, name: str, types: set[str], optional: bool, multiple: bool, default: _DEFAULT = None) -> None:
         if self.has(name):
             raise KeyError(f"Duplicate of {name!r}.")
         
@@ -152,7 +170,8 @@ class Namespace:
             name=name,
             types=types,
             optional=optional,
-            multiple=multiple
+            multiple=multiple,
+            default=default
         )
         
         self.attrs.append(attr)

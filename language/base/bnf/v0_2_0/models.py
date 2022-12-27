@@ -20,6 +20,7 @@ __all__ = [
     'Grouping',
     'GroupingGR',
     'Literal',
+    'LiteralIf',
     'Match',
     'Optional',
     'Parallel',
@@ -232,6 +233,19 @@ class Literal(AtomGR):
     
     def __tokens__(self) -> Iterator[str]:
         yield from tok(self.expr)
+
+
+@dataclass(frozen=True)
+class LiteralIf(AtomGR):
+    expr: str
+    key: str
+    
+    def __tokens__(self) -> Iterator[str]:
+        yield from tok(self.expr)
+        yield ' '
+        yield '->'
+        yield ' '
+        yield from tok(self.key)
 
 
 @dataclass(frozen=True)

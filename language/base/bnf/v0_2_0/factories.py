@@ -18,6 +18,7 @@ __all__ = [
     'grouping',
     'canonical',
     'literal',
+    'literal_if',
     'match',
     'store',
 ]
@@ -134,6 +135,10 @@ def canonical(__expr: str) -> Canonical:
 
 def literal(__expr: str) -> Literal:
     return Literal(expr=repr(__expr))
+
+
+def literal_if(__expr: str, key: str) -> LiteralIf:
+    return LiteralIf(expr=repr(__expr), key=key)
 
 
 def match(__expr: str, inverted: bool = False) -> Match:

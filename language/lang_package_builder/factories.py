@@ -109,6 +109,9 @@ def implement_tokens_method_body(initial_scope: Container, definition: LemmaClas
             scope.YIELD(String(obj.expr))
         elif isinstance(obj, bnf.Literal):
             scope.YIELD(String(obj.expr))
+        elif isinstance(obj, bnf.LiteralIf):
+            with scope.IF(GetAttr(Variable('self'), Variable(obj.key))) as if_block:
+                if_block.YIELD(String(obj.expr))
         elif isinstance(obj, bnf.Store):
             _type = str(obj.type)
             target = definition.manager.classes.get(_type)
