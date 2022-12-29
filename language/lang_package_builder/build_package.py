@@ -5,6 +5,8 @@ import graphviz
 
 from utils.graphs import DirectedGraph
 from utils.graphs.graphviz import GraphvizDotBuilder
+from .build_graph import ClassManagerGraph
+from .case_converting import pascal_case_to_snake_case
 from .casters import Caster
 from .classes import ClassManager, TokenClass, LemmaClass, GroupClass, MroGraph
 from .dependencies.bnf import Engine
@@ -38,15 +40,26 @@ class MroGraphvizBuilder(GraphvizDotBuilder):
     manager: ClassManager
     
     def _node_style(self, _graph: MroGraph, node: str):
+        cls = self.manager.classes.get(node)
+        label = node
+        if isinstance(cls, GroupClass):
+            fillcolor = "orange"
+        elif isinstance(cls, LemmaClass):
+            fillcolor = "lightblue"
+        elif isinstance(cls, TokenClass):
+            if self.manager.is_private_constant_token(node):
+                fillcolor = "#844de3"
+                label = pascal_case_to_snake_case(node).upper().lstrip('_')
+            else:
+                fillcolor = "lime"
+        else:
+            fillcolor = "gray"
+        
         return dict(
-            label=node,
+            label=label,
             shape="rect",
             style="filled",
-            fillcolor={
-                GroupClass: "orange",
-                LemmaClass: "lightblue",
-                TokenClass: "lime"
-            }.get(type(self.manager.classes.get(node)), "gray")
+            fillcolor=fillcolor
         )
     
     def build(self, graph: MroGraph) -> graphviz.Digraph:
@@ -95,7 +108,7 @@ class LangPackageBuilder:
     python_env: Environment = Environment.default((3, 10, 0))
     casters: dict[str, Caster] = dataclasses.field(default_factory=dict)
     
-    def build(self, grammar: Engine):
+    def build(self, grammar: Engine, root: str = os.curdir):
         class_manager = ClassManager.from_grammar(grammar)
         class_manager.apply_casters(self.casters)
         class_manager.simplify_common_signatures()
@@ -107,20 +120,22 @@ class LangPackageBuilder:
             if self.build_visitors:
                 build_visitors(package, class_manager, self.build_visitors)
             
-            package.save()
-
+            package.save(root=root)
+        
         if self.build_grammar_file:
             src = str(grammar)
-            with open(f"{self.name}/grammar.bnf", mode="w", encoding="utf-8") as file:
+            with open(f"{root}/{self.name}/grammar.bnf", mode="w", encoding="utf-8") as file:
                 file.write(src)
-
+        
+        ClassManagerGraph(class_manager).build_dot().save(f'{root}/{self.name}/graph.gv')
+        
         build_mro_dot = MroGraphvizBuilder(class_manager).build
         build_use_dot = CustomGraphvizDotBuilder(class_manager).build
-
+        
         if self.build_mro_graph:
             mro_dot = build_mro_dot(class_manager.mro_graph)
-            mro_dot.save(f'{self.name}/mro_graph.gv')
-
+            mro_dot.save(f'{root}/{self.name}/mro_graph.gv')
+        
         if self.build_use_graph:
             use_dot = build_use_dot(class_manager.use_graph)
-            use_dot.save(f'{self.name}/use_graph.gv')
+            use_dot.save(f'{root}/{self.name}/use_graph.gv')
