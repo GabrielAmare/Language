@@ -238,7 +238,7 @@ def build_visitors(package: Package, class_manager: ClassManager, root_classes: 
         module.ASSIGN(name='_E', value=Call(module.imports.get('TypeVar', from_='typing'), [atom('_E')]))
         
         for root_class in root_classes:
-            children_classes = class_manager.mro_graph.get_all_targets(root_class)
+            children_classes = class_manager.mro_graph.explore_targets(root_class)
             
             children_classes = filter(
                 lambda subclass_name: not isinstance(class_manager.classes.get(subclass_name), GroupClass),

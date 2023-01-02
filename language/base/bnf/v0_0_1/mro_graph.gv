@@ -1,59 +1,59 @@
 digraph {
-	0 [label=AbstractGR fillcolor=orange shape=rect style=filled]
-	1 [label=String fillcolor=lime shape=rect style=filled]
-	2 [label=Variable fillcolor=lime shape=rect style=filled]
-	3 [label=INDENTED fillcolor="#844de3" shape=rect style=filled]
-	4 [label=INVERTED fillcolor="#844de3" shape=rect style=filled]
-	5 [label=Engine fillcolor=lightblue shape=rect style=filled]
-	6 [label=BuildGR fillcolor=orange shape=rect style=filled]
-	7 [label=ParallelGR fillcolor=orange shape=rect style=filled]
-	8 [label=BuildGroup fillcolor=lightblue shape=rect style=filled]
-	9 [label=BuildLemma fillcolor=lightblue shape=rect style=filled]
-	10 [label=BuildToken fillcolor=lightblue shape=rect style=filled]
-	11 [label=Parallel fillcolor=lightblue shape=rect style=filled]
-	12 [label=SequenceGR fillcolor=orange shape=rect style=filled]
-	13 [label=Sequence fillcolor=lightblue shape=rect style=filled]
-	14 [label=RepeatGR fillcolor=orange shape=rect style=filled]
-	15 [label=Enum0 fillcolor=lightblue shape=rect style=filled]
-	16 [label=Enum1 fillcolor=lightblue shape=rect style=filled]
-	17 [label=Optional fillcolor=lightblue shape=rect style=filled]
-	18 [label=Repeat0 fillcolor=lightblue shape=rect style=filled]
-	19 [label=Repeat1 fillcolor=lightblue shape=rect style=filled]
-	20 [label=GroupingGR fillcolor=orange shape=rect style=filled]
-	21 [label=Grouping fillcolor=lightblue shape=rect style=filled]
-	22 [label=MatchGR fillcolor=orange shape=rect style=filled]
-	23 [label=Canonical fillcolor=lightblue shape=rect style=filled]
-	24 [label=Literal fillcolor=lightblue shape=rect style=filled]
-	25 [label=MatchChar fillcolor=lightblue shape=rect style=filled]
-	26 [label=LemmaMatchGR fillcolor=orange shape=rect style=filled]
-	27 [label=MatchAs fillcolor=lightblue shape=rect style=filled]
-	28 [label=MatchIn fillcolor=lightblue shape=rect style=filled]
-	0 -> 1
-	0 -> 2
-	0 -> 3
-	0 -> 4
-	0 -> 5
-	0 -> 6
-	0 -> 7
-	6 -> 8
-	6 -> 9
-	6 -> 10
-	7 -> 11
-	7 -> 12
-	12 -> 13
-	12 -> 14
-	14 -> 15
-	14 -> 16
-	14 -> 17
-	14 -> 18
-	14 -> 19
-	14 -> 20
-	20 -> 21
-	20 -> 22
-	22 -> 23
-	22 -> 24
-	22 -> 25
-	22 -> 26
-	26 -> 27
-	26 -> 28
+	AbstractGR [label=AbstractGR fillcolor=orange shape=rect style=filled]
+	AbstractGR -> _Indented
+	AbstractGR -> _Inverted
+	AbstractGR -> String
+	AbstractGR -> Variable
+	AbstractGR -> Engine
+	AbstractGR -> BuildGR
+	AbstractGR -> ParallelGR
+	_Indented [label=INDENTED fillcolor="#844de3" shape=rect style=filled]
+	_Inverted [label=INVERTED fillcolor="#844de3" shape=rect style=filled]
+	String [label=String fillcolor=lime shape=rect style=filled]
+	Variable [label=Variable fillcolor=lime shape=rect style=filled]
+	Engine [label=Engine fillcolor=lightblue shape=rect style=filled]
+	BuildGR [label=BuildGR fillcolor=orange shape=rect style=filled]
+	BuildGR -> BuildGroup
+	BuildGR -> BuildLemma
+	BuildGR -> BuildToken
+	ParallelGR [label=ParallelGR fillcolor=orange shape=rect style=filled]
+	ParallelGR -> Parallel
+	ParallelGR -> SequenceGR
+	BuildGroup [label=BuildGroup fillcolor=lightblue shape=rect style=filled]
+	BuildLemma [label=BuildLemma fillcolor=lightblue shape=rect style=filled]
+	BuildToken [label=BuildToken fillcolor=lightblue shape=rect style=filled]
+	Parallel [label=Parallel fillcolor=lightblue shape=rect style=filled]
+	SequenceGR [label=SequenceGR fillcolor=orange shape=rect style=filled]
+	SequenceGR -> Sequence
+	SequenceGR -> RepeatGR
+	Sequence [label=Sequence fillcolor=lightblue shape=rect style=filled]
+	RepeatGR [label=RepeatGR fillcolor=orange shape=rect style=filled]
+	RepeatGR -> Enum0
+	RepeatGR -> Enum1
+	RepeatGR -> Optional
+	RepeatGR -> Repeat0
+	RepeatGR -> Repeat1
+	RepeatGR -> GroupingGR
+	Enum0 [label=Enum0 fillcolor=lightblue shape=rect style=filled]
+	Enum1 [label=Enum1 fillcolor=lightblue shape=rect style=filled]
+	Optional [label=Optional fillcolor=lightblue shape=rect style=filled]
+	Repeat0 [label=Repeat0 fillcolor=lightblue shape=rect style=filled]
+	Repeat1 [label=Repeat1 fillcolor=lightblue shape=rect style=filled]
+	GroupingGR [label=GroupingGR fillcolor=orange shape=rect style=filled]
+	GroupingGR -> Grouping
+	GroupingGR -> MatchGR
+	Grouping [label=Grouping fillcolor=lightblue shape=rect style=filled]
+	MatchGR [label=MatchGR fillcolor=orange shape=rect style=filled]
+	MatchGR -> Canonical
+	MatchGR -> Literal
+	MatchGR -> MatchChar
+	MatchGR -> LemmaMatchGR
+	Canonical [label=Canonical fillcolor=lightblue shape=rect style=filled]
+	Literal [label=Literal fillcolor=lightblue shape=rect style=filled]
+	MatchChar [label=MatchChar fillcolor=lightblue shape=rect style=filled]
+	LemmaMatchGR [label=LemmaMatchGR fillcolor=orange shape=rect style=filled]
+	LemmaMatchGR -> MatchAs
+	LemmaMatchGR -> MatchIn
+	MatchAs [label=MatchAs fillcolor=lightblue shape=rect style=filled]
+	MatchIn [label=MatchIn fillcolor=lightblue shape=rect style=filled]
 }

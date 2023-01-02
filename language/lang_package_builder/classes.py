@@ -4,12 +4,12 @@ import dataclasses
 import functools
 
 import utils
+from utils.graphs.structures import DirectedAcyclicGraph
 from .casters import Caster
 from .dependencies.bnf import *
 from .namespaces import Namespace, Attribute
 
 __all__ = [
-    'MroGraph',
     'BaseClass',
     'TokenClass',
     'LemmaClass',
@@ -37,7 +37,7 @@ class BaseClass:
     @property
     def mro(self) -> list[BaseClass]:
         """Return a consistent mro for the class `name`."""
-        names = self.manager.mro_graph.direct_superclasses(self.name)
+        names = self.manager.mro_graph.origins(self.name)
         classes = map(self.manager.classes.get, names)
         sorted_classes = sorted(classes, key=BaseClass.mro_order)
         return list(sorted_classes)
@@ -117,24 +117,6 @@ class GroupClass(BaseClass):
     rule: BuildGroup
 
 
-@dataclasses.dataclass
-class MroGraph(utils.AcyclicDirectedGraph[str]):
-    def all_subclasses(self, name: str) -> list[str]:
-        return self.get_all_targets(name)
-    
-    def direct_subclasses(self, name: str) -> list[str]:
-        return self.get_targets(name)
-    
-    def all_superclasses(self, name: str) -> list[str]:
-        return self.get_all_origins(name)
-    
-    def direct_superclasses(self, name: str) -> list[str]:
-        return self.get_origins(name)
-    
-    def bottom_up_hierarchy(self) -> list[str]:
-        return sorted(self.nodes, key=self.get_target_order)
-
-
 def _is_static_rule(rule: ParallelGR) -> bool:
     if isinstance(rule, Sequence):
         return all(map(_is_static_rule, rule.rules))
@@ -166,18 +148,15 @@ class ClassManager:
     """
     
     @functools.cached_property
-    def mro_graph(self) -> MroGraph:
+    def mro_graph(self) -> DirectedAcyclicGraph[str]:
         """
         Returns an acyclic directed graph that represents the inheritance relations
         between the classes in the `classes` dictionary.
         """
-        
-        mro_graph: MroGraph = MroGraph()
-        for class_name, class_definition in self.classes.items():
-            for subclass_name in class_definition.subclasses:
-                mro_graph.add_link(class_name, subclass_name)
-        
-        return mro_graph
+        return DirectedAcyclicGraph.from_dict({
+            class_name: set(class_definition.subclasses)
+            for class_name, class_definition in self.classes.items()
+        })
     
     @functools.cached_property
     def use_graph(self) -> utils.AcyclicDirectedGraph:
@@ -204,10 +183,17 @@ class ClassManager:
             If all direct subclasses of A, A_0 -> A_n share the same attributes, move them to the signature of A.
             - we want to move all the attributes without a default value (that could break the behaviour of dataclasses)
         """
-        all_classes: list[BaseClass] = [self.classes[name] for name in self.mro_graph.bottom_up_hierarchy()]
+        
+        all_classes: list[BaseClass] = [
+            self.classes[name]
+            for name in sorted(self.mro_graph, key=self.mro_graph.get_target_order)
+        ]
         
         for superclass in all_classes:
-            subclasses = [self.classes[name] for name in self.mro_graph.direct_subclasses(superclass.name)]
+            subclasses = [
+                self.classes[name]
+                for name in self.mro_graph.targets(superclass.name)
+            ]
             
             if not subclasses:
                 continue

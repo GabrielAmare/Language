@@ -79,9 +79,9 @@ class DirectedGraph(typing.Mapping[NODE, set[NODE]]):
             if target in targets
         )
     
-    def explore_from(self, origin: NODE):
+    def explore_targets(self, initial: NODE) -> typing.Iterator[NODE]:
         """Yields the nodes that can be reached from `origin`."""
-        queue = [origin]
+        queue = [initial]
         index = 0
         while index < len(queue):
             node = queue[index]
@@ -93,10 +93,24 @@ class DirectedGraph(typing.Mapping[NODE, set[NODE]]):
                 if target not in queue:
                     queue.append(target)
     
+    def explore_origins(self, initial: NODE) -> typing.Iterator[NODE]:
+        """Yields the nodes that can be reversed reached from `targets`."""
+        queue = [initial]
+        index = 0
+        while index < len(queue):
+            node = queue[index]
+            index += 1
+            
+            for origin in self.origins(node):
+                yield origin
+                
+                if origin not in queue:
+                    queue.append(origin)
+    
     def can_reach(self, origin: NODE, target: NODE) -> bool:
         """Return True when it exists a path to link `origin` to `target`."""
         
-        for node in self.explore_from(origin):
+        for node in self.explore_targets(origin):
             if node == target:
                 return True
         
@@ -123,6 +137,20 @@ class DirectedAcyclicGraph(DirectedGraph):
             raise Exception(f"No loop allowed in a {self.__class__.__name__} structure.")
         
         super().add_link(origin, target)
+    
+    def get_origin_order(self, node: NODE) -> int:
+        origins = self.origins(node)
+        if not origins:
+            return 0
+        
+        return max(map(self.get_origin_order, origins)) + 1
+    
+    def get_target_order(self, node: NODE) -> int:
+        targets = self.targets(node)
+        if not targets:
+            return 0
+        
+        return max(map(self.get_target_order, targets)) + 1
 
 
 @dataclasses.dataclass
@@ -139,7 +167,7 @@ class List(Tree):
     def add_link(self, origin: NODE, target: NODE) -> None:
         if self.origins(target):
             raise Exception(f"Cannot add more than 1 origin to a node in a {self.__class__.__name__} structure.")
-
+        
         if self.targets(origin):
             raise Exception(f"Cannot add more than 1 target to a node in a {self.__class__.__name__} structure.")
         
