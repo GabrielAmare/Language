@@ -16,9 +16,19 @@ __all__ = [
 NODE = typing.TypeVar('NODE')
 
 
-@dataclasses.dataclass
 class DirectedGraph(typing.Mapping[NODE, set[NODE]]):
-    _data: dict[NODE, set[NODE]] = dataclasses.field(default_factory=dict)
+    def __init__(self, __data: typing.Mapping[NODE, typing.Iterable[NODE]] | None = None):
+        self._data: dict[NODE, set[NODE]] = {}
+        
+        if __data:
+            for origin, targets in __data.items():
+                if not self.has_node(origin):
+                    self.add_node(origin)
+                for target in targets:
+                    if not self.has_node(target):
+                        self.add_node(target)
+                    if not self.has_link(origin, target):
+                        self.add_link(origin, target)
     
     def __iter__(self):
         return iter(self._data)
@@ -116,21 +126,7 @@ class DirectedGraph(typing.Mapping[NODE, set[NODE]]):
         
         return False
     
-    @classmethod
-    def from_dict(cls, graph: typing.Mapping[NODE, typing.Iterable[NODE]]):
-        self = cls()
-        for origin, targets in graph.items():
-            if not self.has_node(origin):
-                self.add_node(origin)
-            for target in targets:
-                if not self.has_node(target):
-                    self.add_node(target)
-                if not self.has_link(origin, target):
-                    self.add_link(origin, target)
-        return self
 
-
-@dataclasses.dataclass
 class DirectedAcyclicGraph(DirectedGraph):
     def add_link(self, origin: NODE, target: NODE) -> None:
         if origin == target or self.can_reach(target, origin):
@@ -153,7 +149,6 @@ class DirectedAcyclicGraph(DirectedGraph):
         return max(map(self.get_target_order, targets)) + 1
 
 
-@dataclasses.dataclass
 class Tree(DirectedAcyclicGraph):
     def add_link(self, origin: NODE, target: NODE) -> None:
         if self.origins(target):
@@ -162,7 +157,6 @@ class Tree(DirectedAcyclicGraph):
         super().add_link(origin, target)
 
 
-@dataclasses.dataclass
 class List(Tree):
     def add_link(self, origin: NODE, target: NODE) -> None:
         if self.origins(target):
@@ -174,7 +168,6 @@ class List(Tree):
         super().add_link(origin, target)
 
 
-@dataclasses.dataclass
 class Set(List):
     def add_link(self, origin: NODE, target: NODE) -> None:
         raise Exception(f"Cannot add links in a {self.__class__.__name__} structure.")

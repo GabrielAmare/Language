@@ -3,8 +3,7 @@ from __future__ import annotations
 import dataclasses
 import functools
 
-import utils
-from utils.graphs.structures import DirectedAcyclicGraph
+from utils.graphs.structures import DirectedAcyclicGraph, DirectedGraph, Ordering
 from .casters import Caster
 from .dependencies.bnf import *
 from .namespaces import Namespace, Attribute
@@ -153,23 +152,33 @@ class ClassManager:
         Returns an acyclic directed graph that represents the inheritance relations
         between the classes in the `classes` dictionary.
         """
-        return DirectedAcyclicGraph.from_dict({
+        return DirectedAcyclicGraph({
             class_name: set(class_definition.subclasses)
             for class_name, class_definition in self.classes.items()
         })
     
     @functools.cached_property
-    def use_graph(self) -> utils.AcyclicDirectedGraph:
+    def use_graph(self) -> DirectedGraph:
         """
         Returns an acyclic directed graph that represents the references from a class
         to another via attributes in the `classes` dictionary.
         """
-        use_graph: utils.AcyclicDirectedGraph[str] = utils.AcyclicDirectedGraph()
-        for class_name, class_definition in self.classes.items():
-            for attr in class_definition.namespace.attrs:
-                for attr_type in attr.types:
-                    use_graph.add_link(class_name, attr_type)
-        return use_graph
+        
+        def get_type(name: str):
+            cls = self.classes.get(name)
+            if isinstance(cls, TokenClass) and cls.caster:
+                return cls.caster.name
+            else:
+                return name
+        
+        return DirectedGraph({
+            class_name: {
+                get_type(attr_type)
+                for attr in class_definition.namespace.attrs
+                for attr_type in attr.types
+            }
+            for class_name, class_definition in self.classes.items()
+        })
     
     @classmethod
     def from_grammar(cls, grammar: Engine) -> ClassManager:
@@ -238,8 +247,9 @@ class ClassManager:
             target.namespace = target.namespace.apply_casters(casters=casters)
     
     def order_class(self, cls: BaseClass) -> tuple[int, int, str]:
+        use_ordering = Ordering(self.use_graph)
         return (
             self.mro_graph.get_origin_order(cls.name),  # sort the classes by inheritance order.
-            self.use_graph.get_target_order(cls.name),  # sort the classes by references order.
+            use_ordering.get_node_order(cls.name),  # sort the classes by references order.
             cls.name,  # sort by name in alphabetical order
         )

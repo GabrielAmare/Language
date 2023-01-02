@@ -1,51 +1,53 @@
 digraph {
-	0 [label=BuildGR fillcolor=orange shape=rect style=filled]
-	1 [label=str fillcolor=gray shape=rect style=filled]
-	2 [label=BuildToken fillcolor=lightblue shape=rect style=filled]
-	3 [label=ParallelGR fillcolor=orange shape=rect style=filled]
-	4 [label=BuildLemma fillcolor=lightblue shape=rect style=filled]
-	5 [label=bool fillcolor=gray shape=rect style=filled]
-	6 [label=BuildGroup fillcolor=lightblue shape=rect style=filled]
-	7 [label=Match fillcolor=lightblue shape=rect style=filled]
-	8 [label=Literal fillcolor=lightblue shape=rect style=filled]
-	9 [label=LiteralIf fillcolor=lightblue shape=rect style=filled]
-	10 [label=Canonical fillcolor=lightblue shape=rect style=filled]
-	11 [label=Store fillcolor=lightblue shape=rect style=filled]
-	12 [label=Grouping fillcolor=lightblue shape=rect style=filled]
-	13 [label=Repeat0 fillcolor=lightblue shape=rect style=filled]
-	14 [label=GroupingGR fillcolor=orange shape=rect style=filled]
-	15 [label=Repeat1 fillcolor=lightblue shape=rect style=filled]
-	16 [label=Optional fillcolor=lightblue shape=rect style=filled]
-	17 [label=Enum0 fillcolor=lightblue shape=rect style=filled]
-	18 [label=Enum1 fillcolor=lightblue shape=rect style=filled]
-	19 [label=Sequence fillcolor=lightblue shape=rect style=filled]
-	20 [label=RepeatGR fillcolor=orange shape=rect style=filled]
-	21 [label=Parallel fillcolor=lightblue shape=rect style=filled]
-	22 [label=SequenceGR fillcolor=orange shape=rect style=filled]
-	23 [label=Engine fillcolor=lightblue shape=rect style=filled]
-	24 [label=Variable fillcolor=lime shape=rect style=filled]
-	25 [label=String fillcolor=lime shape=rect style=filled]
-	0 -> 1
-	2 -> 3
-	4 -> 5
-	4 -> 3
-	6 -> 1
-	7 -> 5
-	7 -> 1
-	8 -> 1
-	9 -> 1
-	10 -> 1
-	11 -> 1
-	12 -> 3
-	13 -> 14
-	15 -> 14
-	16 -> 14
-	17 -> 14
-	18 -> 14
-	19 -> 20
-	21 -> 22
-	23 -> 0
-	23 -> 1
-	24 -> 1
-	25 -> 1
+	AbstractGR [label=AbstractGR fillcolor=orange shape=rect style=filled]
+	AtomGR [label=AtomGR fillcolor=orange shape=rect style=filled]
+	GroupingGR [label=GroupingGR fillcolor=orange shape=rect style=filled]
+	ParallelGR [label=ParallelGR fillcolor=orange shape=rect style=filled]
+	RepeatGR [label=RepeatGR fillcolor=orange shape=rect style=filled]
+	SequenceGR [label=SequenceGR fillcolor=orange shape=rect style=filled]
+	bool [label=bool fillcolor=gray shape=rect style=filled]
+	str [label=str fillcolor=gray shape=rect style=filled]
+	String [label=String fillcolor=lime shape=rect style=filled]
+	String -> str
+	Variable [label=Variable fillcolor=lime shape=rect style=filled]
+	Variable -> str
+	BuildGroup [label=BuildGroup fillcolor=lightblue shape=rect style=filled]
+	BuildGroup -> str
+	BuildLemma [label=BuildLemma fillcolor=lightblue shape=rect style=filled]
+	BuildLemma -> ParallelGR
+	BuildLemma -> bool
+	BuildToken [label=BuildToken fillcolor=lightblue shape=rect style=filled]
+	BuildToken -> ParallelGR
+	Canonical [label=Canonical fillcolor=lightblue shape=rect style=filled]
+	Canonical -> str
+	Enum0 [label=Enum0 fillcolor=lightblue shape=rect style=filled]
+	Enum0 -> GroupingGR
+	Enum1 [label=Enum1 fillcolor=lightblue shape=rect style=filled]
+	Enum1 -> GroupingGR
+	Grouping [label=Grouping fillcolor=lightblue shape=rect style=filled]
+	Grouping -> ParallelGR
+	Literal [label=Literal fillcolor=lightblue shape=rect style=filled]
+	Literal -> str
+	LiteralIf [label=LiteralIf fillcolor=lightblue shape=rect style=filled]
+	LiteralIf -> str
+	Match [label=Match fillcolor=lightblue shape=rect style=filled]
+	Match -> bool
+	Match -> str
+	Optional [label=Optional fillcolor=lightblue shape=rect style=filled]
+	Optional -> GroupingGR
+	Parallel [label=Parallel fillcolor=lightblue shape=rect style=filled]
+	Parallel -> SequenceGR
+	Repeat0 [label=Repeat0 fillcolor=lightblue shape=rect style=filled]
+	Repeat0 -> GroupingGR
+	Repeat1 [label=Repeat1 fillcolor=lightblue shape=rect style=filled]
+	Repeat1 -> GroupingGR
+	Sequence [label=Sequence fillcolor=lightblue shape=rect style=filled]
+	Sequence -> RepeatGR
+	Store [label=Store fillcolor=lightblue shape=rect style=filled]
+	Store -> str
+	BuildGR [label=BuildGR fillcolor=orange shape=rect style=filled]
+	BuildGR -> str
+	Engine [label=Engine fillcolor=lightblue shape=rect style=filled]
+	Engine -> str
+	Engine -> BuildGR
 }
