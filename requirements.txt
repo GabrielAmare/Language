@@ -1,3 +1,4 @@
 graphviz~=0.20.1
 git+https://github.com/GabrielAmare/word_classification@v0.0.1#egg=semantic
 Jinja2~=3.1.2
+git+https://github.com/GabrielAmare/Graphs.git@v1.0.1#egg=graphs

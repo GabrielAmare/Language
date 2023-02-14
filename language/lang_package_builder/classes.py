@@ -3,7 +3,7 @@ from __future__ import annotations
 import dataclasses
 import functools
 
-from utils.graphs.structures import DirectedAcyclicGraph, DirectedGraph, Ordering
+from graphs import DirectedAcyclicGraph, DirectedGraph, Ordering
 from .casters import Caster
 from .dependencies.bnf import *
 from .namespaces import Namespace, Attribute
