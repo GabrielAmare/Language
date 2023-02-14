@@ -1,196 +1,213 @@
 digraph {
-	0 [label=Raise fillcolor=lightblue shape=rect style=filled]
-	1 [label=Expression fillcolor=orange shape=rect style=filled]
-	2 [label=Return fillcolor=lightblue shape=rect style=filled]
-	3 [label=Yield fillcolor=lightblue shape=rect style=filled]
-	4 [label=YieldFrom fillcolor=lightblue shape=rect style=filled]
-	5 [label=Decorator fillcolor=lightblue shape=rect style=filled]
-	6 [label=DecoratorGR fillcolor=orange shape=rect style=filled]
-	7 [label=Class fillcolor=lightblue shape=rect style=filled]
-	8 [label=Variable fillcolor=lime shape=rect style=filled]
-	9 [label=Block fillcolor=lightblue shape=rect style=filled]
-	10 [label=Function fillcolor=lightblue shape=rect style=filled]
-	11 [label=ParamGR fillcolor=orange shape=rect style=filled]
-	12 [label=ImportStatement fillcolor=orange shape=rect style=filled]
-	13 [label=ImportPath fillcolor=lightblue shape=rect style=filled]
-	14 [label=ImportFrom fillcolor=lightblue shape=rect style=filled]
-	15 [label=If fillcolor=lightblue shape=rect style=filled]
-	16 [label=AltGR fillcolor=orange shape=rect style=filled]
-	17 [label=While fillcolor=lightblue shape=rect style=filled]
-	18 [label=For fillcolor=lightblue shape=rect style=filled]
-	19 [label=Assign fillcolor=lightblue shape=rect style=filled]
-	20 [label=Primary fillcolor=orange shape=rect style=filled]
-	21 [label=StatementExpression fillcolor=lightblue shape=rect style=filled]
-	22 [label=IAdd fillcolor=lightblue shape=rect style=filled]
-	23 [label=Elif fillcolor=lightblue shape=rect style=filled]
-	24 [label=Param fillcolor=lightblue shape=rect style=filled]
-	25 [label=List fillcolor=lightblue shape=rect style=filled]
-	26 [label=Tuple fillcolor=lightblue shape=rect style=filled]
-	27 [label=IndentedList fillcolor=lightblue shape=rect style=filled]
-	28 [label=IndentedListBody fillcolor=lightblue shape=rect style=filled]
-	29 [label=str fillcolor=gray shape=rect style=filled]
-	30 [label=String fillcolor=lime shape=rect style=filled]
-	31 [label=Integer fillcolor=lime shape=rect style=filled]
-	32 [label=Decimal fillcolor=lime shape=rect style=filled]
-	33 [label=GetAttr fillcolor=lightblue shape=rect style=filled]
-	34 [label=GetItem fillcolor=lightblue shape=rect style=filled]
-	35 [label=SliceGR fillcolor=orange shape=rect style=filled]
-	36 [label=Call fillcolor=lightblue shape=rect style=filled]
-	37 [label=ArgumentGR fillcolor=orange shape=rect style=filled]
-	38 [label=Awaited fillcolor=lightblue shape=rect style=filled]
-	39 [label=Pow fillcolor=lightblue shape=rect style=filled]
-	40 [label=AwaitPrimary fillcolor=orange shape=rect style=filled]
-	41 [label=Factor fillcolor=orange shape=rect style=filled]
-	42 [label=Pos fillcolor=lightblue shape=rect style=filled]
-	43 [label=Neg fillcolor=lightblue shape=rect style=filled]
-	44 [label=Inv fillcolor=lightblue shape=rect style=filled]
-	45 [label=Mul fillcolor=lightblue shape=rect style=filled]
-	46 [label=Term fillcolor=orange shape=rect style=filled]
-	47 [label=TrueDiv fillcolor=lightblue shape=rect style=filled]
-	48 [label=FloorDiv fillcolor=lightblue shape=rect style=filled]
-	49 [label=Mod fillcolor=lightblue shape=rect style=filled]
-	50 [label=MatMul fillcolor=lightblue shape=rect style=filled]
-	51 [label=Add fillcolor=lightblue shape=rect style=filled]
-	52 [label=Sum fillcolor=orange shape=rect style=filled]
-	53 [label=Sub fillcolor=lightblue shape=rect style=filled]
-	54 [label=LShift fillcolor=lightblue shape=rect style=filled]
-	55 [label=ShiftGR fillcolor=orange shape=rect style=filled]
-	56 [label=RShift fillcolor=lightblue shape=rect style=filled]
-	57 [label=BitwiseAnd fillcolor=lightblue shape=rect style=filled]
-	58 [label=BitwiseAndGR fillcolor=orange shape=rect style=filled]
-	59 [label=BitwiseXor fillcolor=lightblue shape=rect style=filled]
-	60 [label=BitwiseXorGR fillcolor=orange shape=rect style=filled]
-	61 [label=BitwiseOr fillcolor=lightblue shape=rect style=filled]
-	62 [label=BitwiseOrGR fillcolor=orange shape=rect style=filled]
-	63 [label=Eq fillcolor=lightblue shape=rect style=filled]
-	64 [label=Comparison fillcolor=orange shape=rect style=filled]
-	65 [label=Ne fillcolor=lightblue shape=rect style=filled]
-	66 [label=Le fillcolor=lightblue shape=rect style=filled]
-	67 [label=Lt fillcolor=lightblue shape=rect style=filled]
-	68 [label=Ge fillcolor=lightblue shape=rect style=filled]
-	69 [label=Gt fillcolor=lightblue shape=rect style=filled]
-	70 [label=In fillcolor=lightblue shape=rect style=filled]
-	71 [label=NotIn fillcolor=lightblue shape=rect style=filled]
-	72 [label=Is fillcolor=lightblue shape=rect style=filled]
-	73 [label=IsNot fillcolor=lightblue shape=rect style=filled]
-	74 [label=Not fillcolor=lightblue shape=rect style=filled]
-	75 [label=Inversion fillcolor=orange shape=rect style=filled]
-	76 [label=And fillcolor=lightblue shape=rect style=filled]
-	77 [label=Or fillcolor=lightblue shape=rect style=filled]
-	78 [label=Conjunction fillcolor=orange shape=rect style=filled]
-	79 [label=Slice fillcolor=lightblue shape=rect style=filled]
-	80 [label=Kwarg fillcolor=lightblue shape=rect style=filled]
-	81 [label=StarredExpression fillcolor=lightblue shape=rect style=filled]
-	82 [label=DoubleStarred fillcolor=lightblue shape=rect style=filled]
-	83 [label=Module fillcolor=lightblue shape=rect style=filled]
-	84 [label=Statement fillcolor=orange shape=rect style=filled]
-	0 -> 1
-	2 -> 1
-	3 -> 1
-	4 -> 1
-	5 -> 1
-	5 -> 6
-	7 -> 8
-	7 -> 1
-	7 -> 9
-	10 -> 8
-	10 -> 11
-	10 -> 1
-	10 -> 9
-	12 -> 13
-	14 -> 13
-	15 -> 1
-	15 -> 9
-	15 -> 16
-	17 -> 1
-	17 -> 9
-	18 -> 8
-	18 -> 1
-	18 -> 9
-	19 -> 20
-	19 -> 1
-	21 -> 1
-	22 -> 20
-	22 -> 1
-	16 -> 9
-	23 -> 1
-	23 -> 16
-	11 -> 8
-	11 -> 1
-	24 -> 1
-	25 -> 1
-	26 -> 1
-	27 -> 28
-	8 -> 29
-	30 -> 29
-	31 -> 29
-	32 -> 29
-	33 -> 20
-	33 -> 8
-	34 -> 20
-	34 -> 35
-	36 -> 20
-	36 -> 37
-	38 -> 20
-	39 -> 40
-	39 -> 41
-	42 -> 41
-	43 -> 41
-	44 -> 41
-	45 -> 46
-	45 -> 41
-	47 -> 46
-	47 -> 41
-	48 -> 46
-	48 -> 41
-	49 -> 46
-	49 -> 41
-	50 -> 46
-	50 -> 41
-	51 -> 52
-	51 -> 46
-	53 -> 52
-	53 -> 46
-	54 -> 55
-	54 -> 52
-	56 -> 55
-	56 -> 52
-	57 -> 58
-	57 -> 55
-	59 -> 60
-	59 -> 58
-	61 -> 62
-	61 -> 60
-	63 -> 64
-	63 -> 62
-	65 -> 64
-	65 -> 62
-	66 -> 64
-	66 -> 62
-	67 -> 64
-	67 -> 62
-	68 -> 64
-	68 -> 62
-	69 -> 64
-	69 -> 62
-	70 -> 64
-	70 -> 62
-	71 -> 64
-	71 -> 62
-	72 -> 64
-	72 -> 62
-	73 -> 64
-	73 -> 62
-	74 -> 75
-	76 -> 75
-	77 -> 78
-	79 -> 1
-	80 -> 8
-	80 -> 1
-	81 -> 1
-	82 -> 1
-	83 -> 84
-	9 -> 84
-	28 -> 1
-	13 -> 8
+	_Break [label=BREAK fillcolor="#844de3" shape=rect style=filled]
+	_Continue [label=CONTINUE fillcolor="#844de3" shape=rect style=filled]
+	_Ellipsis [label=ELLIPSIS fillcolor="#844de3" shape=rect style=filled]
+	_EmptyLine [label=EMPTY_LINE fillcolor="#844de3" shape=rect style=filled]
+	_False [label=FALSE fillcolor="#844de3" shape=rect style=filled]
+	_None [label=NONE fillcolor="#844de3" shape=rect style=filled]
+	_Pass [label=PASS fillcolor="#844de3" shape=rect style=filled]
+	_True [label=TRUE fillcolor="#844de3" shape=rect style=filled]
+	ArgsParam [label=ArgsParam fillcolor=lightblue shape=rect style=filled]
+	Else [label=Else fillcolor=lightblue shape=rect style=filled]
+	Import [label=Import fillcolor=lightblue shape=rect style=filled]
+	KwargsParam [label=KwargsParam fillcolor=lightblue shape=rect style=filled]
+	AbstractGR [label=AbstractGR fillcolor=orange shape=rect style=filled]
+	ArgumentGR [label=ArgumentGR fillcolor=orange shape=rect style=filled]
+	Atom [label=Atom fillcolor=orange shape=rect style=filled]
+	AwaitPrimary [label=AwaitPrimary fillcolor=orange shape=rect style=filled]
+	BitwiseAndGR [label=BitwiseAndGR fillcolor=orange shape=rect style=filled]
+	BitwiseOrGR [label=BitwiseOrGR fillcolor=orange shape=rect style=filled]
+	BitwiseXorGR [label=BitwiseXorGR fillcolor=orange shape=rect style=filled]
+	Comparison [label=Comparison fillcolor=orange shape=rect style=filled]
+	Conjunction [label=Conjunction fillcolor=orange shape=rect style=filled]
+	DecoratorGR [label=DecoratorGR fillcolor=orange shape=rect style=filled]
+	Disjunction [label=Disjunction fillcolor=orange shape=rect style=filled]
+	Expression [label=Expression fillcolor=orange shape=rect style=filled]
+	Factor [label=Factor fillcolor=orange shape=rect style=filled]
+	Inversion [label=Inversion fillcolor=orange shape=rect style=filled]
+	Power [label=Power fillcolor=orange shape=rect style=filled]
+	Primary [label=Primary fillcolor=orange shape=rect style=filled]
+	ReturningStatement [label=ReturningStatement fillcolor=orange shape=rect style=filled]
+	ShiftGR [label=ShiftGR fillcolor=orange shape=rect style=filled]
+	SliceGR [label=SliceGR fillcolor=orange shape=rect style=filled]
+	Statement [label=Statement fillcolor=orange shape=rect style=filled]
+	Sum [label=Sum fillcolor=orange shape=rect style=filled]
+	Term [label=Term fillcolor=orange shape=rect style=filled]
+	str [label=str fillcolor=gray shape=rect style=filled]
+	Decimal [label=Decimal fillcolor=lime shape=rect style=filled]
+	Decimal -> str
+	Integer [label=Integer fillcolor=lime shape=rect style=filled]
+	Integer -> str
+	String [label=String fillcolor=lime shape=rect style=filled]
+	String -> str
+	Variable [label=Variable fillcolor=lime shape=rect style=filled]
+	Variable -> str
+	Add [label=Add fillcolor=lightblue shape=rect style=filled]
+	Add -> Sum
+	Add -> Term
+	And [label=And fillcolor=lightblue shape=rect style=filled]
+	And -> Inversion
+	Assign [label=Assign fillcolor=lightblue shape=rect style=filled]
+	Assign -> Expression
+	Assign -> Primary
+	Awaited [label=Awaited fillcolor=lightblue shape=rect style=filled]
+	Awaited -> Primary
+	BitwiseAnd [label=BitwiseAnd fillcolor=lightblue shape=rect style=filled]
+	BitwiseAnd -> BitwiseAndGR
+	BitwiseAnd -> ShiftGR
+	BitwiseOr [label=BitwiseOr fillcolor=lightblue shape=rect style=filled]
+	BitwiseOr -> BitwiseOrGR
+	BitwiseOr -> BitwiseXorGR
+	BitwiseXor [label=BitwiseXor fillcolor=lightblue shape=rect style=filled]
+	BitwiseXor -> BitwiseAndGR
+	BitwiseXor -> BitwiseXorGR
+	Block [label=Block fillcolor=lightblue shape=rect style=filled]
+	Block -> Statement
+	Call [label=Call fillcolor=lightblue shape=rect style=filled]
+	Call -> ArgumentGR
+	Call -> Primary
+	Decorator [label=Decorator fillcolor=lightblue shape=rect style=filled]
+	Decorator -> DecoratorGR
+	Decorator -> Expression
+	DoubleStarred [label=DoubleStarred fillcolor=lightblue shape=rect style=filled]
+	DoubleStarred -> Expression
+	Eq [label=Eq fillcolor=lightblue shape=rect style=filled]
+	Eq -> BitwiseOrGR
+	Eq -> Comparison
+	FloorDiv [label=FloorDiv fillcolor=lightblue shape=rect style=filled]
+	FloorDiv -> Factor
+	FloorDiv -> Term
+	Ge [label=Ge fillcolor=lightblue shape=rect style=filled]
+	Ge -> BitwiseOrGR
+	Ge -> Comparison
+	GetItem [label=GetItem fillcolor=lightblue shape=rect style=filled]
+	GetItem -> Primary
+	GetItem -> SliceGR
+	Gt [label=Gt fillcolor=lightblue shape=rect style=filled]
+	Gt -> BitwiseOrGR
+	Gt -> Comparison
+	IAdd [label=IAdd fillcolor=lightblue shape=rect style=filled]
+	IAdd -> Expression
+	IAdd -> Primary
+	In [label=In fillcolor=lightblue shape=rect style=filled]
+	In -> BitwiseOrGR
+	In -> Comparison
+	IndentedListBody [label=IndentedListBody fillcolor=lightblue shape=rect style=filled]
+	IndentedListBody -> Expression
+	Inv [label=Inv fillcolor=lightblue shape=rect style=filled]
+	Inv -> Factor
+	Is [label=Is fillcolor=lightblue shape=rect style=filled]
+	Is -> BitwiseOrGR
+	Is -> Comparison
+	IsNot [label=IsNot fillcolor=lightblue shape=rect style=filled]
+	IsNot -> BitwiseOrGR
+	IsNot -> Comparison
+	LShift [label=LShift fillcolor=lightblue shape=rect style=filled]
+	LShift -> ShiftGR
+	LShift -> Sum
+	Le [label=Le fillcolor=lightblue shape=rect style=filled]
+	Le -> BitwiseOrGR
+	Le -> Comparison
+	List [label=List fillcolor=lightblue shape=rect style=filled]
+	List -> Expression
+	Lt [label=Lt fillcolor=lightblue shape=rect style=filled]
+	Lt -> BitwiseOrGR
+	Lt -> Comparison
+	MatMul [label=MatMul fillcolor=lightblue shape=rect style=filled]
+	MatMul -> Factor
+	MatMul -> Term
+	Mod [label=Mod fillcolor=lightblue shape=rect style=filled]
+	Mod -> Factor
+	Mod -> Term
+	Module [label=Module fillcolor=lightblue shape=rect style=filled]
+	Module -> Statement
+	Mul [label=Mul fillcolor=lightblue shape=rect style=filled]
+	Mul -> Factor
+	Mul -> Term
+	Ne [label=Ne fillcolor=lightblue shape=rect style=filled]
+	Ne -> BitwiseOrGR
+	Ne -> Comparison
+	Neg [label=Neg fillcolor=lightblue shape=rect style=filled]
+	Neg -> Factor
+	Not [label=Not fillcolor=lightblue shape=rect style=filled]
+	Not -> Inversion
+	NotIn [label=NotIn fillcolor=lightblue shape=rect style=filled]
+	NotIn -> BitwiseOrGR
+	NotIn -> Comparison
+	Or [label=Or fillcolor=lightblue shape=rect style=filled]
+	Or -> Conjunction
+	Param [label=Param fillcolor=lightblue shape=rect style=filled]
+	Param -> Expression
+	Pos [label=Pos fillcolor=lightblue shape=rect style=filled]
+	Pos -> Factor
+	Pow [label=Pow fillcolor=lightblue shape=rect style=filled]
+	Pow -> AwaitPrimary
+	Pow -> Factor
+	RShift [label=RShift fillcolor=lightblue shape=rect style=filled]
+	RShift -> ShiftGR
+	RShift -> Sum
+	Raise [label=Raise fillcolor=lightblue shape=rect style=filled]
+	Raise -> Expression
+	Return [label=Return fillcolor=lightblue shape=rect style=filled]
+	Return -> Expression
+	Slice [label=Slice fillcolor=lightblue shape=rect style=filled]
+	Slice -> Expression
+	StarredExpression [label=StarredExpression fillcolor=lightblue shape=rect style=filled]
+	StarredExpression -> Expression
+	StatementExpression [label=StatementExpression fillcolor=lightblue shape=rect style=filled]
+	StatementExpression -> Expression
+	Sub [label=Sub fillcolor=lightblue shape=rect style=filled]
+	Sub -> Sum
+	Sub -> Term
+	TrueDiv [label=TrueDiv fillcolor=lightblue shape=rect style=filled]
+	TrueDiv -> Factor
+	TrueDiv -> Term
+	Tuple [label=Tuple fillcolor=lightblue shape=rect style=filled]
+	Tuple -> Expression
+	Yield [label=Yield fillcolor=lightblue shape=rect style=filled]
+	Yield -> Expression
+	YieldFrom [label=YieldFrom fillcolor=lightblue shape=rect style=filled]
+	YieldFrom -> Expression
+	Class [label=Class fillcolor=lightblue shape=rect style=filled]
+	Class -> Expression
+	Class -> Variable
+	Class -> Block
+	For [label=For fillcolor=lightblue shape=rect style=filled]
+	For -> Expression
+	For -> Variable
+	For -> Block
+	GetAttr [label=GetAttr fillcolor=lightblue shape=rect style=filled]
+	GetAttr -> Primary
+	GetAttr -> Variable
+	ImportPath [label=ImportPath fillcolor=lightblue shape=rect style=filled]
+	ImportPath -> Variable
+	IndentedList [label=IndentedList fillcolor=lightblue shape=rect style=filled]
+	IndentedList -> IndentedListBody
+	Kwarg [label=Kwarg fillcolor=lightblue shape=rect style=filled]
+	Kwarg -> Expression
+	Kwarg -> Variable
+	While [label=While fillcolor=lightblue shape=rect style=filled]
+	While -> Expression
+	While -> Block
+	AltGR [label=AltGR fillcolor=orange shape=rect style=filled]
+	AltGR -> Block
+	ParamGR [label=ParamGR fillcolor=orange shape=rect style=filled]
+	ParamGR -> Expression
+	ParamGR -> Variable
+	Elif [label=Elif fillcolor=lightblue shape=rect style=filled]
+	Elif -> Expression
+	Elif -> AltGR
+	Function [label=Function fillcolor=lightblue shape=rect style=filled]
+	Function -> Expression
+	Function -> Variable
+	Function -> Block
+	Function -> ParamGR
+	If [label=If fillcolor=lightblue shape=rect style=filled]
+	If -> Expression
+	If -> Block
+	If -> AltGR
+	ImportFrom [label=ImportFrom fillcolor=lightblue shape=rect style=filled]
+	ImportFrom -> ImportPath
+	ImportStatement [label=ImportStatement fillcolor=orange shape=rect style=filled]
+	ImportStatement -> ImportPath
 }
