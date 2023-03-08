@@ -1,6 +1,6 @@
 from .cardinality_tracker import Cardinality
 from .case_converting import pascal_case_to_snake_case
-from .classes import ClassManager, TokenClass, LemmaClass, GroupClass, get_static_token_expr
+from .classes import ClassManager, TokenClass, LemmaClass, GroupClass, KeywordClass, get_static_token_expr
 from .dependencies import bnf
 from .dependencies.python import *
 from .namespaces import Namespace, Attribute
@@ -152,7 +152,7 @@ def build_models(package: Package, class_manager: ClassManager) -> None:
             
             with module.CLASS(definition.name) as cls:
                 cls.decorate(decorator)
-
+                
                 # Make the class inherit from `Writable` if it has no other super class.
                 mro = [Variable(superclass.name) for superclass in definition.mro]
                 if mro:
@@ -240,18 +240,32 @@ def build_visitors(package: Package, class_manager: ClassManager, root_classes: 
         for root_class in root_classes:
             children_classes = class_manager.mro_graph.explore_targets(root_class)
             
-            children_classes = filter(
-                lambda subclass_name: not isinstance(class_manager.classes.get(subclass_name), GroupClass),
-                children_classes
-            )
-            children_classes = sorted(
-                children_classes,
-                key=lambda subclass_name: (
-                    0 if class_manager.is_private_constant_token(subclass_name) else 1,
-                    class_manager.mro_graph.get_origin_order(subclass_name),
-                    subclass_name
+            def filter_classes(_subclass_name: str) -> bool:
+                _cls = class_manager.classes.get(_subclass_name)
+                
+                if isinstance(_cls, GroupClass):
+                    return False  # this class cannot be instanced directly.
+                
+                if isinstance(_cls, KeywordClass):
+                    return False  # this class will be cast to native python type `bool`.
+                
+                if isinstance(_cls, TokenClass) and _cls.caster:
+                    return False  # this class will be cast to a native python type.
+                
+                return True
+            
+            def sort_classes(_subclass_name: str) -> tuple:
+                return (
+                    # singletons go first.
+                    0 if class_manager.is_private_constant_token(_subclass_name) else 1,
+                    # sort classes in a mro compliant way (superclasses then subclasses).
+                    class_manager.mro_graph.get_origin_order(_subclass_name),
+                    # sort classes per name.
+                    _subclass_name,
                 )
-            )
+            
+            children_classes = filter(filter_classes, children_classes)
+            children_classes = sorted(children_classes, key=sort_classes)
             
             with module.CLASS(f"{root_class}Visitor") as cls:
                 cls.inherits(module.typing.generic(Variable('_E')))
