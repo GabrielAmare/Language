@@ -192,7 +192,7 @@ builder = LangPackageBuilder(
         'Variable': CAST_TO_VAR,
         'String': CAST_TO_STRING,
     },
-    build_visitors=['ParallelGR', 'BuildGR']
+    build_visitors=['ParallelGR', 'BuildGR', 'AbstractGR']
 )
 
 builder.build(definition)
